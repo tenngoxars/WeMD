@@ -1,0 +1,241 @@
+#wemd {
+    padding: 30px 20px;
+    max-width: 677px;
+    margin: 0 auto;
+    /* 混合字体栈：西文Times + 中文宋体 */
+    font-family: "Times New Roman", "Songti SC", "SimSun", serif;
+    color: #000;
+    background-color: #fff;
+    word-break: break-word;
+}
+
+/* 正文 - 移除首行缩进，改用段间距适应移动端 */
+#wemd p {
+    margin: 16px 0;
+    line-height: 1.7;
+    text-align: justify;
+    text-indent: 0;
+    color: #1a1a1a;
+    font-size: 16px;
+}
+
+/* 一级标题 - 居中论文题 */
+#wemd h1 {
+    margin: 40px 0 30px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+#wemd h1 .content {
+    font-size: 22px;
+    font-weight: bold;
+    color: #000;
+}
+
+#wemd h1 .prefix,
+#wemd h1 .suffix {
+    display: none;
+}
+
+/* 二级标题 - 章节 Section */
+#wemd h2 {
+    margin: 30px 0 15px;
+    text-align: left;
+    border-bottom: 2px solid #000;
+    /* 加粗底线 */
+    padding-bottom: 8px;
+}
+
+#wemd h2 .content {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+}
+
+#wemd h2 .prefix,
+#wemd h2 .suffix {
+    display: none;
+}
+
+/* 三级标题 - Subsection */
+#wemd h3 {
+    margin: 20px 0 10px;
+}
+
+#wemd h3 .content {
+    font-size: 16px;
+    font-weight: bold;
+    color: #800000;
+    /* 栗色，区分层级 */
+}
+
+#wemd h3 .prefix,
+#wemd h3 .suffix {
+    display: none;
+}
+
+/* 四级标题 */
+#wemd h4 {
+    margin: 15px 0 5px;
+}
+
+#wemd h4 .content {
+    font-size: 16px;
+    font-weight: bold;
+    font-style: italic;
+    /* 斜体标题 */
+    color: #333;
+}
+
+#wemd h4 .prefix,
+#wemd h4 .suffix {
+    display: none;
+}
+
+/* 引用 - Abstract 摘要风格 */
+#wemd .multiquote-1 {
+    margin: 20px 0;
+    padding: 16px 20px;
+    background: #f8f8f8;
+    border: 1px solid #eee;
+    font-size: 14px;
+}
+
+#wemd .multiquote-1 p {
+    margin: 0;
+    color: #555;
+    font-family: sans-serif;
+    /* 摘要用无衬线体区分 */
+    text-indent: 0;
+}
+
+/* 列表 */
+#wemd ul,
+#wemd ol {
+    margin: 15px 0 15px 20px;
+    padding: 0;
+}
+
+#wemd li section {
+    color: #1a1a1a;
+}
+
+/* 链接 - 经典深蓝 */
+#wemd a {
+    color: #000080;
+    text-decoration: underline;
+}
+
+/* 加粗 */
+#wemd strong {
+    color: #000;
+    font-weight: bold;
+}
+
+/* 
+ * 行内代码 - LaTeX \texttt 风格 (修复重点)
+ * 纯黑文字 + 极淡灰底 + 等宽字体
+ */
+#wemd p code,
+#wemd li code {
+    color: #000;
+    /* 纯黑 */
+    background: #f4f4f4;
+    /* 极淡灰 */
+    border: 1px solid #eee;
+    /* 极细边框 */
+    padding: 1px 4px;
+    margin: 0 2px;
+    border-radius: 2px;
+    font-size: 14px;
+    font-family: "Courier New", Courier, monospace;
+    /* 强制等宽 */
+}
+
+/* 代码块 - 简单的学术风格 */
+/* 注意：不要设置 color，让语法高亮主题控制文字颜色 */
+#wemd pre code.hljs {
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    /* color 由 .hljs 语法高亮主题控制 */
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    padding: 12px;
+    border-radius: 0;
+    /* 直角 */
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+
+/* 如果没有语法高亮，设置默认颜色 */
+#wemd pre code:not(.hljs) {
+    color: #333;
+}
+
+/* 表格 - 经典三线表 */
+#wemd table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+}
+
+#wemd table tr th {
+    border-bottom: 1px solid #000;
+    padding: 10px 5px;
+    font-weight: bold;
+    text-align: center;
+    background: #fff;
+}
+
+#wemd table tr td {
+    padding: 10px 5px;
+    border: none;
+    text-align: center;
+    color: #333;
+}
+
+/* 隔行微底色 */
+#wemd table tr:nth-child(even) td {
+    background-color: #fafafa;
+}
+
+/* 脚注 */
+#wemd .footnote-word,
+#wemd .footnote-ref {
+    color: #000080;
+}
+
+#wemd .footnotes-sep {
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    margin-top: 40px;
+    width: 20%;
+    /* 短线 */
+}
+
+#wemd .footnote-num {
+    font-weight: bold;
+    color: #000;
+    margin-right: 4px;
+    vertical-align: super;
+    font-size: 10px;
+}
+
+#wemd .footnote-item p {
+    color: #666;
+    font-size: 12px;
+    margin: 4px 0;
+}
+
+/* 公式 */
+#wemd .block-equation svg {
+    max-width: 100% !important;
+}
+
+#wemd .inline-equation svg {
+    max-width: 100%;
+    vertical-align: middle;
+}

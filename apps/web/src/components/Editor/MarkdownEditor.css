@@ -1,0 +1,62 @@
+.markdown-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-light);
+}
+
+.editor-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+}
+
+.editor-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.editor-container {
+    flex: 1;
+    overflow: auto;
+}
+
+/* CodeMirror 自定义样式 */
+.editor-container .cm-editor {
+    height: 100%;
+}
+
+.editor-container .cm-scroller {
+    overflow: auto;
+}
+
+.editor-container .cm-line {
+    padding: 0 4px;
+}
+
+/* Markdown 语法高亮增强 */
+.editor-container .cm-header {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.editor-container .cm-strong {
+    font-weight: 600;
+}
+
+.editor-container .cm-em {
+    font-style: italic;
+}
+
+.editor-container .cm-link {
+    color: var(--accent-primary);
+    text-decoration: underline;
+}
+
+.editor-container .cm-url {
+    color: var(--text-tertiary);
+}

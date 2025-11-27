@@ -1,0 +1,604 @@
+/*
+ * ============================================
+ * WeMD 主题模板
+ * ============================================
+ * 
+ * 使用说明：
+ * 1. 复制此文件并重命名为你的主题名称（如：MyTheme.css）
+ * 2. 修改下面的样式定义，创建你的自定义主题
+ * 3. 特别注意代码块的处理方式（见下方注释）
+ * 
+ * 重要提示：
+ * - 所有选择器必须以 #wemd 开头，因为 HTML 会被包装在 <section id="wemd"> 中
+ * - 代码块必须使用 #wemd pre code.hljs，不要设置全局 color
+ * - 行内代码使用 #wemd p code 和 #wemd li code
+ * - 标题包含 .content、.prefix、.suffix 结构
+ */
+
+/* ============================================
+ * 1. 全局容器样式
+ * ============================================
+ * 这是最外层的容器，控制整体布局和基础样式
+ */
+#wemd {
+    padding: 30px 20px;
+    /* 内边距：上下 30px，左右 20px */
+    max-width: 677px;
+    /* 最大宽度：适合微信公众号阅读 */
+    margin: 0 auto;
+    /* 居中显示 */
+    font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
+    /* 字体栈：系统字体 + 微软雅黑 */
+    color: #333;
+    /* 默认文字颜色 */
+    background-color: #fff;
+    /* 背景颜色 */
+    word-break: break-word;
+    /* 长单词自动换行 */
+}
+
+/* ============================================
+ * 2. 段落样式
+ * ============================================
+ */
+#wemd p {
+    margin: 16px 0;
+    /* 段落间距：上下各 16px */
+    line-height: 1.7;
+    /* 行高：1.7 倍，舒适阅读 */
+    text-align: justify;
+    /* 文本对齐：两端对齐 */
+    color: #333;
+    /* 文字颜色 */
+    font-size: 16px;
+    /* 字体大小 */
+}
+
+/* ============================================
+ * 3. 标题样式
+ * ============================================
+ * 注意：标题内部结构为：
+ * <h1>
+ *   <span class="prefix"></span>
+ *   <span class="content">标题文字</span>
+ *   <span class="suffix"></span>
+ * </h1>
+ * 
+ * 可以通过 .prefix 和 .suffix 添加装饰元素
+ */
+
+/* 一级标题 */
+#wemd h1 {
+    margin: 40px 0 30px;
+    /* 外边距：上 40px，下 30px */
+    text-align: center;
+    /* 居中对齐 */
+}
+
+#wemd h1 .content {
+    font-size: 24px;
+    /* 字体大小 */
+    font-weight: bold;
+    /* 字体粗细：加粗 */
+    color: #000;
+    /* 文字颜色 */
+}
+
+/* 隐藏前缀和后缀（如果不需要装饰） */
+#wemd h1 .prefix,
+#wemd h1 .suffix {
+    display: none;
+}
+
+/* 二级标题 */
+#wemd h2 {
+    margin: 30px 0 20px;
+}
+
+#wemd h2 .content {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+#wemd h2 .prefix,
+#wemd h2 .suffix {
+    display: none;
+}
+
+/* 三级标题 */
+#wemd h3 {
+    margin: 25px 0 15px;
+}
+
+#wemd h3 .content {
+    font-size: 18px;
+    font-weight: bold;
+    color: #666;
+}
+
+#wemd h3 .prefix,
+#wemd h3 .suffix {
+    display: none;
+}
+
+/* 四级标题 */
+#wemd h4 {
+    margin: 20px 0 10px;
+}
+
+#wemd h4 .content {
+    font-size: 16px;
+    font-weight: bold;
+    color: #666;
+}
+
+#wemd h4 .prefix,
+#wemd h4 .suffix {
+    display: none;
+}
+
+/* ============================================
+ * 4. 引用样式
+ * ============================================
+ * 支持多级引用：.multiquote-1, .multiquote-2, .multiquote-3
+ */
+#wemd .multiquote-1 {
+    margin: 20px 0;
+    /* 外边距 */
+    padding: 16px 20px;
+    /* 内边距 */
+    background: #f5f5f5;
+    /* 背景色 */
+    border-left: 4px solid #ddd;
+    /* 左边框 */
+    border-radius: 4px;
+    /* 圆角 */
+}
+
+#wemd .multiquote-1 p {
+    margin: 0;
+    /* 段落无外边距 */
+    color: #666;
+    /* 文字颜色 */
+    font-size: 15px;
+}
+
+/* 二级引用 */
+#wemd .multiquote-2 {
+    margin: 18px 0;
+    padding: 14px 18px;
+    background: #fafafa;
+    border-left: 3px solid #ccc;
+}
+
+#wemd .multiquote-2 p {
+    margin: 0;
+    color: #777;
+    font-size: 14px;
+}
+
+/* 三级引用 */
+#wemd .multiquote-3 {
+    margin: 16px 0;
+    padding: 12px 16px;
+    background: #fafafa;
+    border-left: 2px solid #bbb;
+}
+
+#wemd .multiquote-3 p {
+    margin: 0;
+    color: #888;
+    font-size: 14px;
+}
+
+/* ============================================
+ * 5. 列表样式
+ * ============================================
+ */
+#wemd ul,
+#wemd ol {
+    margin: 15px 0;
+    padding-left: 25px;
+    /* 左内边距，为列表符号留空间 */
+}
+
+#wemd ul {
+    list-style-type: disc;
+    /* 无序列表：实心圆点 */
+}
+
+#wemd ol {
+    list-style-type: decimal;
+    /* 有序列表：数字 */
+}
+
+/* 列表项内容
+ * 注意：列表项内部使用 <section> 包裹内容
+ */
+#wemd li section {
+    margin: 5px 0;
+    /* 列表项间距 */
+    color: #333;
+    /* 文字颜色 */
+    line-height: 1.6;
+}
+
+/* ============================================
+ * 6. 链接样式
+ * ============================================
+ */
+#wemd a {
+    color: #1e6bb8;
+    /* 链接颜色 */
+    text-decoration: none;
+    /* 去除下划线 */
+    border-bottom: 1px solid #1e6bb8;
+    /* 底部边框作为下划线 */
+    font-weight: bold;
+    /* 加粗 */
+}
+
+/* ============================================
+ * 7. 文本样式
+ * ============================================
+ */
+/* 加粗 */
+#wemd strong {
+    font-weight: bold;
+    color: #000;
+}
+
+/* 斜体 */
+#wemd em {
+    font-style: italic;
+    color: #333;
+}
+
+/* 删除线 */
+#wemd del {
+    text-decoration: line-through;
+    color: #999;
+}
+
+/* ============================================
+ * 8. 行内代码样式
+ * ============================================
+ * 注意：行内代码在段落和列表项中
+ */
+#wemd p code,
+#wemd li code {
+    color: #e83e8c;
+    /* 文字颜色 */
+    background: #f8f9fa;
+    /* 背景色 */
+    padding: 2px 6px;
+    /* 内边距 */
+    margin: 0 2px;
+    /* 外边距 */
+    border-radius: 3px;
+    /* 圆角 */
+    font-size: 14px;
+    font-family: "Courier New", Courier, monospace;
+    /* 等宽字体 */
+}
+
+/* ============================================
+ * 9. 代码块样式（重要！）
+ * ============================================
+ * 
+ * ⚠️ 重要提示：
+ * 1. 必须使用 #wemd pre code.hljs 选择器，不要使用 #wemd pre code
+ * 2. 不要设置全局 color 属性，让语法高亮主题控制文字颜色
+ * 3. 如果设置了 color，会覆盖语法高亮的颜色，导致代码看不清
+ * 4. 使用 #wemd pre code:not(.hljs) 作为后备样式（无语法高亮时）
+ * 
+ * 示例（正确）：
+ * #wemd pre code.hljs {
+ *     background: #f5f5f5;
+ *     // 不设置 color
+ * }
+ * 
+ * 示例（错误）：
+ * #wemd pre code {
+ *     color: #333;  // ❌ 这会覆盖语法高亮
+ * }
+ */
+#wemd pre code.hljs {
+    display: block;
+    padding: 16px;
+    /* 内边距 */
+    background: #f5f5f5;
+    /* 背景色 */
+    /* ⚠️ 注意：不要在这里设置 color，让语法高亮主题控制 */
+    font-size: 13px;
+    line-height: 1.6;
+    border-radius: 4px;
+    /* 圆角 */
+    font-family: "Courier New", "Consolas", "Monaco", monospace;
+    /* 等宽字体 */
+    overflow-x: auto;
+    /* 横向滚动 */
+    white-space: pre-wrap;
+    /* 保留空白和换行 */
+    border: 1px solid #ddd;
+    /* 边框 */
+}
+
+/* 如果没有语法高亮，设置默认样式 */
+#wemd pre code:not(.hljs) {
+    color: #333;
+    /* 默认文字颜色 */
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+}
+
+/* ============================================
+ * 10. 图片样式
+ * ============================================
+ */
+#wemd img {
+    display: block;
+    /* 块级元素 */
+    margin: 20px auto;
+    /* 居中：上下 20px，左右自动 */
+    max-width: 100%;
+    /* 最大宽度：不超出容器 */
+    border-radius: 4px;
+    /* 圆角 */
+}
+
+/* 图片容器（figure） */
+#wemd figure {
+    margin: 20px 0;
+    text-align: center;
+}
+
+/* 图片说明文字（figcaption） */
+#wemd figcaption {
+    margin-top: 8px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* ============================================
+ * 11. 表格样式
+ * ============================================
+ */
+#wemd table {
+    width: 100%;
+    /* 宽度：100% */
+    border-collapse: collapse;
+    /* 边框合并 */
+    margin: 20px 0;
+    /* 外边距 */
+    font-size: 14px;
+}
+
+/* 表头 */
+#wemd table tr th {
+    background: #f5f5f5;
+    /* 背景色 */
+    color: #333;
+    border: 1px solid #ddd;
+    /* 边框 */
+    padding: 10px;
+    /* 内边距 */
+    font-weight: bold;
+    /* 加粗 */
+    text-align: left;
+}
+
+/* 表格单元格 */
+#wemd table tr td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    color: #333;
+}
+
+/* 斑马纹（隔行变色） */
+#wemd table tr:nth-child(even) td {
+    background-color: #fafafa;
+}
+
+/* ============================================
+ * 12. 分割线样式
+ * ============================================
+ */
+#wemd hr {
+    margin: 30px 0;
+    /* 外边距 */
+    border: none;
+    /* 去除默认边框 */
+    border-top: 1px solid #ddd;
+    /* 顶部边框 */
+    height: 1px;
+}
+
+/* ============================================
+ * 13. 脚注样式
+ * ============================================
+ */
+#wemd .footnote-word,
+#wemd .footnote-ref {
+    color: #1e6bb8;
+    /* 脚注链接颜色 */
+    font-weight: bold;
+}
+
+#wemd .footnotes-sep {
+    border-top: 1px solid #ddd;
+    /* 分隔线 */
+    padding-top: 20px;
+    margin-top: 40px;
+}
+
+#wemd .footnote-num {
+    font-weight: bold;
+    color: #1e6bb8;
+    margin-right: 4px;
+}
+
+#wemd .footnote-item p {
+    color: #666;
+    font-size: 14px;
+    margin: 4px 0;
+}
+
+/* ============================================
+ * 14. 数学公式样式
+ * ============================================
+ */
+/* 行间公式 */
+#wemd .block-equation {
+    display: block;
+    text-align: center;
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+#wemd .block-equation svg {
+    max-width: 100% !important;
+    /* 最大宽度：不超出容器 */
+}
+
+/* 行内公式 */
+#wemd .inline-equation {
+    display: inline;
+}
+
+#wemd .inline-equation svg {
+    max-width: 100%;
+    vertical-align: middle;
+    /* 垂直居中 */
+}
+
+/* ============================================
+ * 15. 其他元素
+ * ============================================
+ */
+/* 定义列表 */
+#wemd dl {
+    margin: 15px 0;
+}
+
+#wemd dt {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+#wemd dd {
+    margin-left: 20px;
+    color: #666;
+}
+
+/* 目录（TOC） */
+#wemd .table-of-contents {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f5f5f5;
+    border-left: 3px solid #ddd;
+    border-radius: 4px;
+}
+
+#wemd .table-of-contents a {
+    color: #333;
+    text-decoration: none;
+}
+
+/* 图片流（横屏滑动） */
+#wemd .imageflow-layer1 {
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+#wemd .imageflow-layer2 {
+    white-space: nowrap;
+}
+
+#wemd .imageflow-layer3 {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#wemd .imageflow-img {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+/* ============================================
+ * 16. 深色主题特殊处理（可选）
+ * ============================================
+ * 
+ * 如果你的主题是深色背景，需要为代码块添加自定义语法高亮颜色
+ * 以确保在深色背景下文字清晰可见
+ * 
+ * 示例：
+ * #wemd pre code.hljs {
+ *     background: #1a1a1a;
+ *     color: #e0e0e0;
+ *     // 默认文字颜色（亮色）
+ * }
+ * 
+ * #wemd pre code.hljs .hljs-comment {
+ *     color: #888;
+ *     // 注释用较暗的颜色
+ * }
+ * 
+ * #wemd pre code.hljs .hljs-keyword {
+ *     color: #ff6b9d;
+ *     // 关键字用亮色
+ *     font-weight: bold;
+ * }
+ * 
+ * #wemd pre code.hljs .hljs-string {
+ *     color: #ffd93d;
+ *     // 字符串用亮色
+ * }
+ * 
+ * 更多语法元素：
+ * - .hljs-number, .hljs-literal: 数字
+ * - .hljs-title, .hljs-section: 函数名、标题
+ * - .hljs-built_in, .hljs-builtin-name: 内置函数
+ * - .hljs-type, .hljs-class: 类型、类名
+ * - .hljs-tag, .hljs-name: 标签、名称
+ * - .hljs-regexp, .hljs-link: 正则表达式、链接
+ * - .hljs-symbol, .hljs-bullet: 符号、项目符号
+ * - .hljs-meta: 元数据
+ */
+
+/* ============================================
+ * 17. 响应式设计（可选）
+ * ============================================
+ * 
+ * 如果需要针对不同屏幕尺寸调整样式，可以使用媒体查询
+ * 
+ * 示例：
+ * @media (max-width: 768px) {
+ *     #wemd {
+ *         padding: 20px 15px;
+ *         font-size: 15px;
+ *     }
+ *     
+ *     #wemd h1 .content {
+ *         font-size: 22px;
+ *     }
+ * }
+ */
+
+/* ============================================
+ * 完成！
+ * ============================================
+ * 
+ * 现在你可以：
+ * 1. 保存此文件为你的主题名称（如：MyTheme.css）
+ * 2. 在应用中加载并测试
+ * 3. 根据需要进行微调
+ * 
+ * 提示：
+ * - 使用浏览器开发者工具实时调试样式
+ * - 测试各种 Markdown 元素（标题、列表、代码、表格等）
+ * - 确保代码块语法高亮正常工作
+ * - 检查在不同设备上的显示效果
+ */
+

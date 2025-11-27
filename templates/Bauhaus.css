@@ -1,0 +1,223 @@
+#wemd {
+    padding: 30px 22px;
+    max-width: 677px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
+    color: #111;
+    background-color: #fff;
+    /* 顶部红蓝条装饰 */
+    border-top: 8px solid #D32F2F;
+    border-bottom: 8px solid #1976D2;
+    word-break: break-word;
+}
+
+#wemd p {
+    margin: 24px 0;
+    line-height: 1.8;
+    text-align: justify;
+    color: #333;
+    font-size: 16px;
+}
+
+/* 一级标题 - 红色几何块 */
+#wemd h1 {
+    margin: 60px 0 40px;
+    text-align: left;
+}
+
+#wemd h1 .content {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    background: #D32F2F;
+    padding: 15px 25px;
+    display: inline-block;
+    /* 简单的直角矩形+硬阴影，兼容性最好且有力 */
+    box-shadow: 6px 6px 0 #111;
+    border: 2px solid #111;
+}
+
+#wemd h1 .prefix,
+#wemd h1 .suffix {
+    display: none;
+}
+
+/* 二级标题 - 蓝色圆形引导 */
+#wemd h2 {
+    margin: 50px 0 25px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+
+#wemd h2 .content {
+    font-size: 20px;
+    font-weight: bold;
+    color: #111;
+    position: relative;
+    padding-left: 20px;
+    border-left: 10px solid #1976D2;
+    /* 蓝色竖条 */
+}
+
+#wemd h2 .prefix,
+#wemd h2 .suffix {
+    display: none;
+}
+
+/* 三级标题 - 黄色下划线 */
+#wemd h3 {
+    margin: 30px 0 15px;
+}
+
+#wemd h3 .content {
+    font-size: 18px;
+    font-weight: bold;
+    color: #111;
+    border-bottom: 5px solid #FBC02D;
+    display: inline-block;
+    padding-bottom: 2px;
+}
+
+#wemd h3 .prefix,
+#wemd h3 .suffix {
+    display: none;
+}
+
+/* 四级标题 */
+#wemd h4 {
+    margin: 20px 0 10px;
+}
+
+#wemd h4 .content {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1976D2;
+    background: #eee;
+    padding: 4px 8px;
+}
+
+#wemd h4 .prefix,
+#wemd h4 .suffix {
+    display: none;
+}
+
+/* 引用 - 几何框 */
+#wemd .multiquote-1 {
+    margin: 30px 0;
+    padding: 24px;
+    background: #f9f9f9;
+    border: 2px solid #111;
+    box-shadow: 5px 5px 0 #FBC02D;
+    /* 黄色硬阴影 */
+}
+
+#wemd .multiquote-1 p {
+    margin: 0;
+    font-size: 15px;
+    color: #333;
+}
+
+/* 列表 */
+#wemd ul {
+    list-style: square;
+    padding-left: 20px;
+    margin: 20px 0;
+    color: #D32F2F;
+}
+
+#wemd ol {
+    list-style: decimal;
+    padding-left: 20px;
+    margin: 20px 0;
+    color: #1976D2;
+    font-weight: bold;
+}
+
+#wemd li section {
+    color: #333;
+    font-weight: normal;
+}
+
+/* 链接 - 蓝色背景高亮 */
+#wemd a {
+    color: #111;
+    text-decoration: none;
+    background-color: rgba(25, 118, 210, 0.2);
+    border-bottom: 1px solid #1976D2;
+    padding: 0 2px;
+    font-weight: bold;
+}
+
+/* 加粗 - 红色 */
+#wemd strong {
+    color: #D32F2F;
+    font-weight: 900;
+}
+
+/* 
+ * 行内代码 - 黄色高亮 (修复重点) 
+ * 亮黄背景 + 黑色文字 + 粗体
+ */
+#wemd p code,
+#wemd li code {
+    background: #FBC02D;
+    /* 包豪斯黄 */
+    color: #000;
+    /* 纯黑字 */
+    padding: 2px 6px;
+    margin: 0 4px;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: sans-serif;
+    /* 几何感 */
+}
+
+/* 图片 - 黑框硬阴影 */
+#wemd img {
+    display: block;
+    margin: 40px auto;
+    width: 100%;
+    border: 3px solid #111;
+    box-shadow: 6px 6px 0 #1976D2;
+    /* 蓝色硬阴影 */
+}
+
+/* 代码块 - 极简黑 */
+/* 注意：不要设置 color，让语法高亮主题控制文字颜色 */
+#wemd pre code.hljs {
+    background: #111;
+    /* color 由 .hljs 语法高亮主题控制 */
+    padding: 20px;
+    border-radius: 0;
+    font-family: monospace;
+    border: 2px solid #111;
+}
+
+/* 如果没有语法高亮，设置默认黄色 */
+#wemd pre code:not(.hljs) {
+    color: #FBC02D;
+    background: #111;
+    border: 2px solid #111;
+}
+
+/* 表格 - 粗线网格 */
+#wemd table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 30px 0;
+    border: 2px solid #111;
+}
+
+#wemd table tr th {
+    background: #1976D2;
+    color: #fff;
+    border: 1px solid #111;
+    padding: 10px;
+}
+
+#wemd table tr td {
+    border: 1px solid #111;
+    padding: 10px;
+    color: #333;
+}

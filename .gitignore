@@ -1,0 +1,7 @@
+legacy/
+node_modules/
+.DS_Store
+.turbo/
+.pnpm-store/
+dist/
+.env
