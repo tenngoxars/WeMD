@@ -1,8 +1,13 @@
 {
     "name": "wemd-electron",
     "version": "1.0.0",
-    "description": "WeMD Electron Desktop App",
+    "description": "WeMD - 更优雅的 Markdown 公众号排版工具",
     "main": "main.js",
+    "homepage": "https://wemd.app",
+    "author": {
+        "name": "tenngo",
+        "email": "tenngo@wemd.app"
+    },
     "scripts": {
         "dev": "electron .",
         "build:mac": "electron-builder --mac",
@@ -14,8 +19,15 @@
         "wechat",
         "editor"
     ],
-    "author": "tenngo",
     "license": "MIT",
+    "build": {
+        "appId": "app.wemd.desktop",
+        "productName": "WeMD",
+        "linux": {
+            "maintainer": "tenngo <tenngo@wemd.app>",
+            "category": "Office"
+        }
+    },
     "devDependencies": {
         "electron": "^28.0.0",
         "electron-builder": "^24.9.1"
