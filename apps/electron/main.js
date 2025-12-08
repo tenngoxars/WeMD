@@ -3,11 +3,9 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-// 判断是否为开发模式
-const isDev =
-    process.env.NODE_ENV !== 'production' ||
-    process.argv.includes('--dev') ||
-    process.env.ELECTRON_START_URL;
+// 判断是否为开发模式 - 使用 app.isPackaged 是最可靠的方式
+// 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
+let isDev = !app.isPackaged || process.argv.includes('--dev') || !!process.env.ELECTRON_START_URL;
 
 app.setName('WeMD');
 app.setAppUserModelId('com.wemd.app');
@@ -150,7 +148,11 @@ function createWindow() {
         ? process.env.ELECTRON_START_URL
         : isDev
             ? 'http://localhost:5173'
-            : `file://${path.join(__dirname, '../web/dist/index.html')}`;
+            : `file://${path.join(process.resourcesPath, 'web-dist', 'index.html')}`;
+
+    console.log('[WeMD] Loading URL:', startUrl);
+    console.log('[WeMD] isDev:', isDev);
+    console.log('[WeMD] resourcesPath:', process.resourcesPath);
 
     mainWindow.loadURL(startUrl);
     mainWindow.webContents.on('did-finish-load', () => {
@@ -396,10 +398,7 @@ function createMenu() {
 }
 
 app.whenReady().then(() => {
-    const dockIcon = getWindowIcon();
-    if (process.platform === 'darwin' && dockIcon) {
-        app.dock.setIcon(dockIcon);
-    }
+    // macOS 会自动使用 app bundle 中的 icon.icns 作为 dock 图标
     createWindow();
     createMenu();
     if (mainWindow) {

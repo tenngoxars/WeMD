@@ -4,15 +4,12 @@
     "description": "WeMD - 更优雅的 Markdown 公众号排版工具",
     "main": "main.js",
     "homepage": "https://wemd.app",
-    "author": {
-        "name": "tenngo",
-        "email": "tenngo@wemd.app"
-    },
+    "author": "WeMD Team",
     "scripts": {
         "dev": "electron .",
-        "build:mac": "electron-builder --mac",
-        "build:win": "electron-builder --win",
-        "build:linux": "electron-builder --linux"
+        "build:mac": "electron-builder --mac -c electron-builder.json",
+        "build:win": "electron-builder --win -c electron-builder.json",
+        "build:linux": "electron-builder --linux -c electron-builder.json"
     },
     "keywords": [
         "markdown",

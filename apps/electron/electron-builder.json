@@ -7,8 +7,16 @@
     "files": [
         "main.js",
         "preload.js",
-        "assets/icon.svg",
-        "../web/dist/**/*"
+        "assets/**/*"
+    ],
+    "extraResources": [
+        {
+            "from": "../web/dist",
+            "to": "web-dist",
+            "filter": [
+                "**/*"
+            ]
+        }
     ],
     "mac": {
         "category": "public.app-category.productivity",
@@ -32,7 +40,25 @@
     },
     "dmg": {
         "title": "WeMD ${version}",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "icon": "assets/icon.icns",
+        "contents": [
+            {
+                "x": 130,
+                "y": 150,
+                "type": "file"
+            },
+            {
+                "x": 410,
+                "y": 150,
+                "type": "link",
+                "path": "/Applications"
+            }
+        ],
+        "window": {
+            "width": 540,
+            "height": 380
+        }
     },
     "win": {
         "target": [
@@ -47,6 +73,7 @@
             "deb"
         ],
         "category": "Office",
-        "icon": "assets/icon.png"
+        "icon": "assets/icon.png",
+        "maintainer": "WeMD Team"
     }
 }
