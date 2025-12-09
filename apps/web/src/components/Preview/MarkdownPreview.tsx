@@ -25,7 +25,8 @@ export function MarkdownPreview() {
 
     // 使用 store 中的 getThemeCSS 方法，会自动处理自定义 CSS
     const css = getThemeCSS(theme);
-    const styledHtml = processHtml(rawHtml, css);
+    // 预览模式不使用内联样式，直接注入 style 标签，大幅降低内存占用
+    const styledHtml = processHtml(rawHtml, css, false);
 
     setHtml(styledHtml);
   }, [markdown, theme, customCSS, getThemeCSS, parser]);
@@ -113,6 +114,7 @@ export function MarkdownPreview() {
       </div>
       <div className="preview-container" ref={scrollContainerRef}>
         <div className="preview-content">
+          <style dangerouslySetInnerHTML={{ __html: getThemeCSS(theme) }} />
           <div
             ref={previewRef}
             dangerouslySetInnerHTML={{ __html: html }}

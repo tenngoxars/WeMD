@@ -15,9 +15,10 @@ const BLOCK_TAGS = [
  * 处理 HTML，添加 data-tool 属性并应用 CSS 样式
  * @param html - 原始 HTML 字符串
  * @param css - CSS 样式字符串
+ * @param inlineStyles - 是否内联样式 (使用 juice)，默认为 true。预览模式建议设为 false 以提高性能。
  * @returns 处理后的 HTML 字符串
  */
-export const processHtml = (html: string, css: string): string => {
+export const processHtml = (html: string, css: string, inlineStyles: boolean = true): string => {
     if (!html || !css) {
         return html || '';
     }
@@ -43,6 +44,10 @@ export const processHtml = (html: string, css: string): string => {
 
     // Wrap html in a section with id="wemd" so that juice can match selectors starting with #wemd
     const wrappedHtml = `<section id="${SECTION_ID}">${html}</section>`;
+
+    if (!inlineStyles) {
+        return wrappedHtml;
+    }
 
     try {
         const res = juice.inlineContent(wrappedHtml, css, {

@@ -366,8 +366,8 @@ themeName: ${themeName}
             if (saved) {
                 loadWorkspace(saved);
             }
-        } else if (storageReady) {
-            // Web: refresh files when storage is ready
+        } else if (storageReady && storageType === 'filesystem') {
+            // Web: refresh files when storage is ready (only for filesystem mode)
             setLoading(true);
             (async () => {
                 try {
