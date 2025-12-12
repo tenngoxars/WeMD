@@ -66,6 +66,10 @@ export class FileSystemAdapter implements StorageAdapter {
     return this.directoryHandle;
   }
 
+  /**
+   * 只获取文件元数据，不读取内容，减少内存占用
+   * themeName 将在打开文件时延迟加载
+   */
   async listFiles(): Promise<FileItem[]> {
     const handle = this.ensureHandle();
     const result: FileItem[] = [];
@@ -73,28 +77,12 @@ export class FileSystemAdapter implements StorageAdapter {
       if (entry.kind === 'file' && entry.name.endsWith('.md')) {
         const fileHandle = entry as FileSystemFileHandle;
         const file = await fileHandle.getFile();
-
-        // Parse frontmatter to get themeName
-        let themeName: string | undefined;
-        try {
-          const content = await file.text();
-          const match = content.match(/^---\n([\s\S]*?)\n---/);
-          if (match) {
-            const themeNameMatch = match[1].match(/themeName:\s*(.+)/);
-            if (themeNameMatch) {
-              themeName = themeNameMatch[1].trim().replace(/^['"]|['"]$/g, '');
-            }
-          }
-        } catch {
-          // Ignore parse errors
-        }
-
+        // 不再读取 content，只获取元数据
         result.push({
           path: entry.name,
           name: entry.name,
           size: file.size,
           updatedAt: file.lastModified ? new Date(file.lastModified).toISOString() : undefined,
-          meta: themeName ? { themeName } : undefined,
         });
       }
     }

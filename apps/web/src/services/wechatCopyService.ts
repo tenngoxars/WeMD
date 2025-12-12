@@ -1,5 +1,6 @@
 import toast from 'react-hot-toast';
 import { processHtml, createMarkdownParser } from '@wemd/core';
+import { hasMathFormula, loadMathJax } from '../utils/mathJaxLoader';
 
 // 处理 MathJax 元素以适配微信（参考 legacy 实现，结合 DOM 和字符串处理）
 function processMathJaxForWechat(element: HTMLElement): void {
@@ -88,14 +89,14 @@ export async function copyToWechat(markdown: string, css: string): Promise<void>
 
         container.innerHTML = styledHtml;
 
-        // 关键步骤：调用 MathJax 渲染公式
-        // 必须先渲染成 SVG，后续的 processMathJaxForWechat 才能处理
-        if (window.MathJax) {
+        // 按需加载 MathJax：仅在内容包含公式时才加载和渲染
+        if (hasMathFormula(markdown)) {
             try {
-                // 清除之前的渲染状态（如果有）
-                window.MathJax.typesetClear([container]);
-                // 执行渲染
-                await window.MathJax.typesetPromise([container]);
+                await loadMathJax();
+                if (window.MathJax) {
+                    window.MathJax.typesetClear([container]);
+                    await window.MathJax.typesetPromise([container]);
+                }
             } catch (e) {
                 console.error('MathJax rendering failed during copy:', e);
             }

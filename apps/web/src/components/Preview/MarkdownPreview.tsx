@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { createMarkdownParser, processHtml } from '@wemd/core';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
+import { hasMathFormula, renderMathInElement } from '../../utils/katexRenderer';
 import './MarkdownPreview.css';
 
 const SYNC_SCROLL_EVENT = 'wemd-sync-scroll';
@@ -33,24 +34,27 @@ export function MarkdownPreview() {
     setHtml(styledHtml);
   }, [markdown, theme, customCSS, getThemeCSS, parser]);
 
-  // 注入 MathJax 支持
+  // KaTeX 渲染：轻量级、快速，解决内存问题
+  // MathJax 仅在复制到微信时使用
   useEffect(() => {
-    if (!window.MathJax || !previewRef.current || !html) {
+    if (!previewRef.current || !html) {
       return;
+    }
+
+    // 检测是否包含数学公式
+    if (!hasMathFormula(markdown)) {
+      return; // 无公式，跳过渲染
     }
 
     // 延迟渲染，避免频繁触发
     const timer = setTimeout(() => {
-      if (previewRef.current && window.MathJax) {
-        window.MathJax.typesetClear([previewRef.current]);
-        window.MathJax.typesetPromise([previewRef.current]).catch((err: unknown) => {
-          console.error('MathJax typeset error:', err);
-        });
+      if (previewRef.current) {
+        renderMathInElement(previewRef.current);
       }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [html]);
+  }, [html, markdown]);
 
   // 处理预览栏滚动事件
   const handlePreviewScroll = useCallback(() => {
@@ -126,13 +130,4 @@ export function MarkdownPreview() {
     </div>
   );
 }
-
-// 声明 MathJax 类型
-declare global {
-  interface Window {
-    MathJax?: {
-      typesetClear: (elements: Element[]) => void;
-      typesetPromise: (elements: Element[]) => Promise<void>;
-    };
-  }
-}
+// MathJax 类型已在 mathJaxLoader.ts 中声明
