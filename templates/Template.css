@@ -1,40 +1,52 @@
-/*
- * ============================================
+/* ============================================
  * WeMD 主题模板
  * ============================================
  * 
  * 使用说明：
- * 1. 复制此文件并重命名为你的主题名称（如：MyTheme.css）
- * 2. 修改下面的样式定义，创建你的自定义主题
- * 3. 特别注意代码块的处理方式（见下方注释）
+ * 1. 修改下方的样式定义，创建你的自定义主题
+ * 2. 所有选择器必须以 #wemd 开头
+ * 3. 代码块使用 #wemd pre code.hljs，不要设置全局 color
  * 
- * 重要提示：
- * - 所有选择器必须以 #wemd 开头，因为 HTML 会被包装在 <section id="wemd"> 中
- * - 代码块必须使用 #wemd pre code.hljs，不要设置全局 color
- * - 行内代码使用 #wemd p code 和 #wemd li code
- * - 标题包含 .content、.prefix、.suffix 结构
+ * ============================================
+ * 🌙 深色模式说明（微信兼容）
+ * ============================================
+ * 
+ * ✅ 支持自动转换的颜色格式：
+ *   - HEX: #333333, #fff
+ *   - RGB: rgb(51, 51, 51), rgba(0, 0, 0, 0.5)
+ *   - HSL: hsl(0, 0%, 20%), hsla(0, 0%, 0%, 0.5)
+ *   - 渐变: linear-gradient(), radial-gradient() 中的色值
+ * 
+ * 🔄 智能转换规则（色彩语义保全）：
+ *   - 灰度背景 → 映射到深色区间 (10%-20% 亮度)
+ *   - 高饱和色彩 (S>15%) → 保持鲜艳，亮度钳制在 35%-55%
+ *   - 深色阴影/边框 (L<20) → 锚定为暗色，不反转
+ *   - 文字颜色 → 动态对比度调整以保证可读性
+ * 
+ * ⚠️ 不会被转换：
+ *   - CSS 变量: var(--xxx)
+ *   - 图片: url()
+ *   - 颜色名称: white, black（请使用 HEX 格式）
+ * 
+ * 💡 设计建议：
+ *   - 背景色用透明或浅灰，利于自动适配
+ *   - 彩色装饰保持原值，算法自动保护
+ *   - 深色投影和粗边框使用纯黑 #000，可保持层级感
  */
 
 /* ============================================
  * 1. 全局容器样式
  * ============================================
- * 这是最外层的容器，控制整体布局和基础样式
  */
 #wemd {
     padding: 30px 20px;
-    /* 内边距：上下 30px，左右 20px */
     max-width: 677px;
-    /* 最大宽度：适合微信公众号阅读 */
     margin: 0 auto;
-    /* 居中显示 */
     font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
-    /* 字体栈：系统字体 + 微软雅黑 */
     color: #333;
-    /* 默认文字颜色 */
-    background-color: #fff;
-    /* 背景颜色 */
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
-    /* 长单词自动换行 */
 }
 
 /* ============================================
@@ -224,6 +236,15 @@
     line-height: 1.6;
 }
 
+#wemd ul ul {
+    list-style-type: circle;
+    margin-top: 6px;
+}
+
+#wemd ol ol {
+    list-style-type: lower-alpha;
+}
+
 /* ============================================
  * 6. 链接样式
  * ============================================
@@ -253,6 +274,21 @@
 #wemd em {
     font-style: italic;
     color: #333;
+}
+
+/* 加粗斜体 */
+#wemd em strong {
+    font-weight: bold;
+    font-style: italic;
+    color: #000;
+}
+
+/* 高亮 */
+#wemd mark {
+    background: #fff3cd;
+    color: #000;
+    padding: 2px 4px;
+    border-radius: 3px;
 }
 
 /* 删除线 */
@@ -320,6 +356,7 @@
     overflow-x: auto;
     /* 横向滚动 */
     white-space: pre;
+    min-width: max-content;
     /* 保留空白和换行 */
     border: 1px solid #ddd;
     /* 边框 */
@@ -474,6 +511,65 @@
 }
 
 /* ============================================
+ * 16. 提示块样式（Callout）
+ * ============================================
+ * 
+ * 提示块用于显示不同类型的提示信息
+ * 支持的类型：note、info、tip、success、warning、danger
+ */
+
+/* 提示块基础样式 */
+#wemd .callout {
+    margin: 20px 0;
+    padding: 16px 20px;
+    background: #f5f5f5;
+    border-left: 4px solid #ddd;
+    border-radius: 4px;
+}
+
+#wemd .callout-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 15px;
+}
+
+#wemd .callout-icon {
+    margin-right: 6px;
+}
+
+/* 不同类型的提示块 */
+#wemd .callout-note {
+    border-left-color: #6366f1;
+    background: #f5f5ff;
+}
+
+#wemd .callout-info {
+    border-left-color: #0ea5e9;
+    background: #f0f9ff;
+}
+
+#wemd .callout-tip {
+    border-left-color: #10b981;
+    background: #ecfdf5;
+}
+
+#wemd .callout-success {
+    border-left-color: #10b981;
+    background: #ecfdf5;
+}
+
+#wemd .callout-warning {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+}
+
+#wemd .callout-danger {
+    border-left-color: #ef4444;
+    background: #fff5f5;
+}
+
+/* ============================================
  * 15. 其他元素
  * ============================================
  */
@@ -525,80 +621,3 @@
     display: inline-block;
     margin-right: 10px;
 }
-
-/* ============================================
- * 16. 深色主题特殊处理（可选）
- * ============================================
- * 
- * 如果你的主题是深色背景，需要为代码块添加自定义语法高亮颜色
- * 以确保在深色背景下文字清晰可见
- * 
- * 示例：
- * #wemd pre code.hljs {
- *     background: #1a1a1a;
- *     color: #e0e0e0;
- *     // 默认文字颜色（亮色）
- * }
- * 
- * #wemd pre code.hljs .hljs-comment {
- *     color: #888;
- *     // 注释用较暗的颜色
- * }
- * 
- * #wemd pre code.hljs .hljs-keyword {
- *     color: #ff6b9d;
- *     // 关键字用亮色
- *     font-weight: bold;
- * }
- * 
- * #wemd pre code.hljs .hljs-string {
- *     color: #ffd93d;
- *     // 字符串用亮色
- * }
- * 
- * 更多语法元素：
- * - .hljs-number, .hljs-literal: 数字
- * - .hljs-title, .hljs-section: 函数名、标题
- * - .hljs-built_in, .hljs-builtin-name: 内置函数
- * - .hljs-type, .hljs-class: 类型、类名
- * - .hljs-tag, .hljs-name: 标签、名称
- * - .hljs-regexp, .hljs-link: 正则表达式、链接
- * - .hljs-symbol, .hljs-bullet: 符号、项目符号
- * - .hljs-meta: 元数据
- */
-
-/* ============================================
- * 17. 响应式设计（可选）
- * ============================================
- * 
- * 如果需要针对不同屏幕尺寸调整样式，可以使用媒体查询
- * 
- * 示例：
- * @media (max-width: 768px) {
- *     #wemd {
- *         padding: 20px 15px;
- *         font-size: 15px;
- *     }
- *     
- *     #wemd h1 .content {
- *         font-size: 22px;
- *     }
- * }
- */
-
-/* ============================================
- * 完成！
- * ============================================
- * 
- * 现在你可以：
- * 1. 保存此文件为你的主题名称（如：MyTheme.css）
- * 2. 在应用中加载并测试
- * 3. 根据需要进行微调
- * 
- * 提示：
- * - 使用浏览器开发者工具实时调试样式
- * - 测试各种 Markdown 元素（标题、列表、代码、表格等）
- * - 确保代码块语法高亮正常工作
- * - 检查在不同设备上的显示效果
- */
-

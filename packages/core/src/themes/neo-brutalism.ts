@@ -6,8 +6,8 @@ export const neoBrutalismTheme = `/* 新粗野主义风格 */
     font-family: -apple-system, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
     color: #000;
     /* 纯黑文字，极致对比 */
-    /* 背景加一点点噪点色，避免死白 */
-    background-color: #fcfcfc;
+    /* 透明背景，兼容微信深色模式 */
+    background-color: transparent;
     word-break: break-word;
 }
 

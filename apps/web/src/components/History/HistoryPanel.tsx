@@ -83,6 +83,10 @@ function IndexedHistoryPanel() {
   // 无限滚动状态
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<HistorySnapshot | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const handleRestore = async (entry?: HistorySnapshot) => {
     if (!entry) return;
@@ -265,18 +269,13 @@ function IndexedHistoryPanel() {
         <div className="history-header">
           <h3>历史记录</h3>
           <div className="history-actions">
-            <button className="btn-secondary btn-icon-only" onClick={handleCreateArticle} title="新增文章">
+            <button className="btn-secondary btn-icon-only" onClick={handleCreateArticle} data-tooltip="新增文章">
               <Plus size={16} />
             </button>
             <button
               className="btn-secondary btn-icon-only"
-              onClick={async () => {
-                if (confirm('确定要清空所有历史记录吗？')) {
-                  await clearHistory();
-                  resetDocument();
-                }
-              }}
-              title="清空历史"
+              onClick={() => setShowClearConfirm(true)}
+              data-tooltip="清空历史"
             >
               <Trash2 size={16} />
             </button>
@@ -363,10 +362,73 @@ function IndexedHistoryPanel() {
               <Edit2 size={14} />
               重命名
             </button>
-            <button className="danger" onClick={() => { handleDelete(menuEntry.id); closeActionMenu(); }}>
+            <button className="danger" onClick={() => { setDeleteTarget(menuEntry); closeActionMenu(); }}>
               <Trash2 size={14} />
               删除
             </button>
+          </div>,
+          document.body,
+        )}
+      {deleteTarget &&
+        createPortal(
+          <div className="history-confirm-backdrop" onClick={() => !deleting && setDeleteTarget(null)}>
+            <div className="history-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <h4>删除记录</h4>
+              <p>确定要删除“{deleteTarget.title || '未命名文章'}”吗？此操作不可撤销。</p>
+              <div className="history-confirm-actions">
+                <button className="btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                  取消
+                </button>
+                <button
+                  className="btn-danger"
+                  onClick={async () => {
+                    setDeleting(true);
+                    try {
+                      await handleDelete(deleteTarget.id);
+                      toast.success('已删除该记录');
+                    } finally {
+                      setDeleting(false);
+                      setDeleteTarget(null);
+                    }
+                  }}
+                  disabled={deleting}
+                >
+                  {deleting ? '删除中...' : '确认删除'}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+      {showClearConfirm &&
+        createPortal(
+          <div className="history-confirm-backdrop" onClick={() => !clearing && setShowClearConfirm(false)}>
+            <div className="history-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <h4>清空历史</h4>
+              <p>确定要清空所有历史记录吗？此操作不可撤销。</p>
+              <div className="history-confirm-actions">
+                <button className="btn-secondary" onClick={() => setShowClearConfirm(false)} disabled={clearing}>
+                  取消
+                </button>
+                <button
+                  className="btn-danger"
+                  onClick={async () => {
+                    setClearing(true);
+                    try {
+                      await clearHistory();
+                      resetDocument();
+                      toast.success('历史记录已清空');
+                    } finally {
+                      setClearing(false);
+                      setShowClearConfirm(false);
+                    }
+                  }}
+                  disabled={clearing}
+                >
+                  {clearing ? '清空中...' : '确认清空'}
+                </button>
+              </div>
+            </div>
           </div>,
           document.body,
         )}
@@ -388,6 +450,8 @@ function FileSystemHistory({ adapter }: { adapter: StorageAdapter }) {
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<StorageFileItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const refreshFiles = useCallback(async () => {
     setLoading(true);
@@ -463,19 +527,7 @@ themeName: ${themeState.themeName}
   };
 
   const handleDelete = async (file: StorageFileItem) => {
-    if (!confirm(`确定要删除 "${file.name}" 吗？`)) return;
-    try {
-      await adapter.deleteFile(file.path);
-      toast.success('已删除文件');
-      if (activePath === file.path) {
-        setActivePath(null);
-        setMarkdown('');
-      }
-      await refreshFiles();
-    } catch (error) {
-      console.error(error);
-      toast.error('删除失败');
-    }
+    setDeleteTarget(file);
   };
 
   const submitRename = async () => {
@@ -502,10 +554,10 @@ themeName: ${themeState.themeName}
       <div className="history-header">
         <h3>文件列表</h3>
         <div className="history-actions">
-          <button className="btn-secondary btn-icon-only" onClick={handleCreate} title="新建文章">
+          <button className="btn-secondary btn-icon-only" onClick={handleCreate} data-tooltip="新建文章">
             <Plus size={16} />
           </button>
-          <button className="btn-secondary btn-icon-only" onClick={handleSave} disabled={!activePath || saving} title="保存当前">
+          <button className="btn-secondary btn-icon-only" onClick={handleSave} disabled={!activePath || saving} data-tooltip="保存当前">
             <Save size={16} />
           </button>
         </div>
@@ -578,6 +630,46 @@ themeName: ${themeState.themeName}
           </div>
         )}
       </div>
+      {deleteTarget &&
+        createPortal(
+          <div className="history-confirm-backdrop" onClick={() => !deleting && setDeleteTarget(null)}>
+            <div className="history-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <h4>删除文件</h4>
+              <p>确定要删除“{deleteTarget.name}”吗？此操作不可撤销。</p>
+              <div className="history-confirm-actions">
+                <button className="btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                  取消
+                </button>
+                <button
+                  className="btn-danger"
+                  onClick={async () => {
+                    setDeleting(true);
+                    try {
+                      await adapter.deleteFile(deleteTarget.path);
+                      toast.success('已删除文件');
+                      if (activePath === deleteTarget.path) {
+                        setActivePath(null);
+                        setMarkdown('');
+                        setFilePath('');
+                      }
+                      await refreshFiles();
+                    } catch (error) {
+                      console.error(error);
+                      toast.error('删除失败');
+                    } finally {
+                      setDeleting(false);
+                      setDeleteTarget(null);
+                    }
+                  }}
+                  disabled={deleting}
+                >
+                  {deleting ? '删除中...' : '确认删除'}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </aside>
   );
 }

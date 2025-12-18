@@ -4,7 +4,8 @@
   margin: 0 auto;
   font-family: "Optima", "Georgia", "PingFang SC", "Microsoft YaHei", serif;
   color: #2F3E32;
-  background-color: #FDFCF8;
+  background-color: transparent;
+  /* 透明背景，兼容微信深色模式 */
   word-break: break-word;
 }
 
@@ -139,6 +140,17 @@
   font-weight: bold;
 }
 
+#wemd ul ul {
+  list-style-type: circle;
+  color: #4F6F52;
+  margin-top: 8px;
+}
+
+#wemd ol ol {
+  list-style-type: lower-alpha;
+  color: #739072;
+}
+
 #wemd ol li {
   margin-bottom: 12px;
   line-height: 1.8;
@@ -200,6 +212,19 @@
   color: #4F6F52;
 }
 
+/* 高亮 - 浅绿背景 */
+#wemd mark {
+  background: linear-gradient(to top, rgba(134, 167, 137, 0.3) 50%, transparent 50%);
+  color: #1A261D;
+  padding: 0 2px;
+}
+
+/* 删除线 */
+#wemd del {
+  text-decoration: line-through;
+  color: #889E8B;
+}
+
 /* 
  * 分隔线 
  * 修复了这里无效的颜色代码 #D2DSD4
@@ -258,6 +283,7 @@
   font-family: sans-serif;
   overflow-x: auto;
   white-space: pre;
+  min-width: max-content;
   border: 1px solid #DCE3DD;
 }
 
@@ -335,3 +361,31 @@
   max-width: 100%;
   vertical-align: middle;
 }
+
+/* 提示块 - 莫兰迪森林风格 */
+#wemd .callout {
+  margin: 30px 0;
+  padding: 20px;
+  background: #F6F8F6;
+  border: 1px dashed #739072;
+  border-radius: 8px;
+}
+
+#wemd .callout-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #4F6F52;
+  font-size: 15px;
+}
+
+#wemd .callout-icon {
+  margin-right: 6px;
+}
+
+#wemd .callout-note { border-left: 4px solid #739072; }
+#wemd .callout-info { border-left: 4px solid #4F6F52; }
+#wemd .callout-tip { border-left: 4px solid #86A789; }
+#wemd .callout-success { border-left: 4px solid #4F6F52; }
+#wemd .callout-warning { border-left: 4px solid #D98C45; }
+#wemd .callout-danger { border-left: 4px solid #B33D25; }
+

@@ -6,7 +6,8 @@ export const luxuryGoldTheme = `/* 黑金奢华风格 */
     /* 强制宋体/衬线体，移动端显示优雅字体的关键 */
     font-family: "Songti SC", "SimSun", "STSong", "Georgia", serif;
     color: #222;
-    background-color: #fff;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
 }
 

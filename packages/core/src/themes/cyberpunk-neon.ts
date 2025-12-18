@@ -4,10 +4,10 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
     max-width: 677px;
     margin: 0 auto;
     font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
-    color: #E0E6ED;
-    /* 亮灰白文字 */
-    background-color: #12161F;
-    /* 深蓝灰背景 */
+    color: #333;
+    /* 深色文字，兼容微信 */
+    background-color: transparent;
+    /* 透明背景，兼容微信亮色/深色模式 */
     word-break: break-word;
 }
 
@@ -16,7 +16,7 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
     margin: 22px 0;
     line-height: 1.75;
     text-align: justify;
-    color: #CFD7E6;
+    color: #444;
     font-size: 16px;
 }
 
@@ -29,12 +29,13 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
 #wemd h1 .content {
     font-size: 26px;
     font-weight: 900;
-    color: #FFF;
+    color: #12161F;
+    /* 深色文字 */
     display: inline-block;
     border: 2px solid #00F3FF;
     /* 青色实线框 */
     padding: 12px 24px;
-    background: rgba(0, 243, 255, 0.05);
+    background: rgba(0, 243, 255, 0.1);
     /* 硬阴影模拟故障错位 */
     box-shadow: 4px 4px 0px #FF00C1;
 }
@@ -115,13 +116,13 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
 #wemd .multiquote-1 {
     margin: 30px 0;
     padding: 20px;
-    background-color: #1A212D;
-    border: 1px solid #2F3B4F;
+    background-color: rgba(0, 243, 255, 0.05);
+    border: 1px solid rgba(0, 243, 255, 0.3);
     border-left: 4px solid #00F3FF;
 }
 
 #wemd .multiquote-1 p {
-    color: #8B9BB4;
+    color: #444;
     font-size: 14px;
     margin: 0;
     font-family: monospace;
@@ -130,13 +131,13 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
 #wemd .multiquote-2 {
     margin: 28px 0;
     padding: 18px;
-    background: #161B22;
-    border: 1px solid #2F3B4F;
+    background: rgba(255, 184, 77, 0.05);
+    border: 1px solid rgba(255, 184, 77, 0.3);
     border-left: 4px solid #FFB84D;
 }
 
 #wemd .multiquote-2 p {
-    color: #8B9BB4;
+    color: #444;
     font-size: 14px;
     margin: 0;
     font-family: monospace;
@@ -145,13 +146,13 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
 #wemd .multiquote-3 {
     margin: 26px 0;
     padding: 16px;
-    background: #0D1117;
-    border: 1px solid #2F3B4F;
+    background: rgba(255, 0, 193, 0.05);
+    border: 1px solid rgba(255, 0, 193, 0.3);
     border-left: 4px solid #FF00C1;
 }
 
 #wemd .multiquote-3 p {
-    color: #8B9BB4;
+    color: #444;
     font-size: 14px;
     margin: 0;
     font-family: monospace;
@@ -185,7 +186,7 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
 }
 
 #wemd li section {
-    color: #CFD7E6;
+    color: #444;
     font-weight: normal;
 }
 
@@ -231,7 +232,7 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
 #wemd del {
     text-decoration: line-through;
     text-decoration-color: #FF00C1;
-    color: #8B9BB4;
+    color: #666;
 }
 
 /* 分割线 - 霓虹线 */
@@ -429,23 +430,24 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
     border-spacing: 0;
     margin: 30px 0;
     font-size: 14px;
-    border: 1px solid #30363D;
-    background: #161b22;
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    background: transparent;
 }
 
 #wemd table tr th {
-    background: #1F2937;
+    background: rgba(0, 243, 255, 0.1);
     color: #00F3FF;
-    border-bottom: 1px solid #30363D;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
     padding: 10px;
     font-weight: bold;
     text-align: left;
 }
 
 #wemd table tr td {
-    border-bottom: 1px solid #30363D;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.2);
     padding: 10px;
-    color: #CFD7E6;
+    color: #444;
+    background: transparent;
 }
 
 #wemd figcaption {
@@ -480,31 +482,33 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
 }
 
 #wemd .footnote-item p {
-    color: #8B9BB4;
+    color: #666;
     font-size: 12px;
     margin: 4px 0;
 }
 
-/* 公式 */
-#wemd .block-equation svg {
+/* 公式 - 保持默认颜色，兼容微信亮色/深色模式 */
+#wemd .block-equation svg,
+#wemd .katex-block svg,
+#wemd mjx-container[display="true"] svg {
     max-width: 100% !important;
-    filter: invert(1);
-    /* 公式反色变白 */
 }
 
-#wemd .inline-equation svg {
+#wemd .inline-equation svg,
+#wemd .katex-inline svg,
+#wemd mjx-container:not([display="true"]) svg {
     max-width: 100%;
     vertical-align: middle;
-    filter: invert(1);
 }
 
 /* 提示块 - 赛博朋克风格 */
 #wemd .callout {
     margin: 30px 0;
     padding: 20px;
-    background: #1A212D;
-    border: 1px solid #30363D;
+    background: rgba(0, 243, 255, 0.05);
+    border: 1px solid rgba(0, 243, 255, 0.2);
     border-radius: 4px;
+    color: #444;
 }
 
 #wemd .callout-title {

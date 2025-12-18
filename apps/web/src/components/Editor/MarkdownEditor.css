@@ -315,3 +315,118 @@
     font-weight: 500;
     letter-spacing: 0.3px;
 }
+
+/* ========================================
+   深色模式 - 编辑器样式覆盖
+   ======================================== */
+[data-ui-theme="dark"] .editor-header {
+    background: rgba(37, 37, 38, 0.8);
+}
+
+[data-ui-theme="dark"] .editor-footer {
+    background: rgba(37, 37, 38, 0.8);
+}
+
+[data-ui-theme="dark"] .workspace-guard {
+    background: linear-gradient(180deg, rgba(30, 30, 30, 0.75), rgba(30, 30, 30, 0.9));
+}
+
+[data-ui-theme="dark"] .workspace-guard-card {
+    background: #2d2d30;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-ui-theme="dark"] .guard-title {
+    color: #d4d4d4;
+}
+
+[data-ui-theme="dark"] .guard-subtitle {
+    color: #9d9d9d;
+}
+
+/* 编辑器内容区域 - 深色背景 */
+[data-ui-theme="dark"] .editor-container .cm-editor {
+    background: #1e1e1e;
+}
+
+/* 编辑器内容文字 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-content {
+    color: #d4d4d4;
+}
+
+/* 标题 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-header {
+    color: #e2e8f0;
+}
+
+/* 粗体 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-strong {
+    color: #f1f5f9;
+}
+
+/* 斜体 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-em {
+    color: #94a3b8;
+}
+
+/* 列表 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-list {
+    color: #d4d4d4;
+}
+
+/* URL - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-url {
+    color: #4ec9b0;
+}
+
+/* 滚动条 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-scroller::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+[data-ui-theme="dark"] .editor-container .cm-scroller::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Markdown 标记符号 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-formatting-header,
+[data-ui-theme="dark"] .editor-container .cm-formatting-em,
+[data-ui-theme="dark"] .editor-container .cm-formatting-strong,
+[data-ui-theme="dark"] .editor-container .cm-formatting-link,
+[data-ui-theme="dark"] .editor-container .cm-formatting-link-string,
+[data-ui-theme="dark"] .editor-container .cm-formatting-code,
+[data-ui-theme="dark"] .editor-container .cm-formatting-quote {
+    color: #5a5a5a !important;
+}
+
+/* 行内代码 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-inline-code {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #ce9178;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 引用块边框 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-quote {
+    border-left-color: #4a4a4a;
+}
+
+/* 活动行 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-activeLine {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* 选中文本 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-selectionBackground {
+    background-color: rgba(7, 193, 96, 0.25) !important;
+}
+
+/* 代码块背景 - 深色模式 */
+[data-ui-theme="dark"] .editor-container .cm-line.cm-code-block {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 通用回退 - 确保所有文本可见 */
+[data-ui-theme="dark"] .editor-container .cm-line {
+    color: #d4d4d4;
+}

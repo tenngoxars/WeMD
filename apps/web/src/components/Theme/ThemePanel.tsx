@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Copy, Trash2, X, AlertTriangle } from 'lucide-react';
-import { createMarkdownParser, processHtml } from '@wemd/core';
+import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode } from '@wemd/core';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useHistoryStore } from '../../store/historyStore';
@@ -28,14 +28,23 @@ const hello = "world";
 // 实时预览组件 - 使用 iframe 隔离样式
 function ThemeLivePreview({ css }: { css: string }) {
   const parser = useMemo(() => createMarkdownParser(), []);
+  const uiTheme = useUITheme((state) => state.theme);
+  const isDarkMode = uiTheme === 'dark';
+
   const html = useMemo(() => {
     const rawHtml = parser.render(PREVIEW_MARKDOWN);
+    // 深色模式下使用微信颜色转换算法
+    const finalCss = isDarkMode ? convertCssToWeChatDarkMode(css) : css;
     // 使用内联样式模式，确保样式完全隔离
-    return processHtml(rawHtml, css, true);
-  }, [parser, css]);
+    return processHtml(rawHtml, finalCss, true);
+  }, [parser, css, isDarkMode]);
 
   // 构建完整的 iframe 内容
   const iframeContent = useMemo(() => {
+    const bgColor = isDarkMode ? '#252526' : '#fff';
+    const textColor = isDarkMode ? '#d4d4d4' : '#000';
+
+
     return `
       <!DOCTYPE html>
       <html>
@@ -48,14 +57,15 @@ function ThemeLivePreview({ css }: { css: string }) {
             padding: 16px;
             font-size: 14px;
             line-height: 1.6;
-            background: #fff;
+            background: ${bgColor};
+            color: ${textColor};
           }
         </style>
       </head>
       <body>${html}</body>
       </html>
     `;
-  }, [html]);
+  }, [html, isDarkMode]);
 
   return (
     <div className="theme-live-preview">
@@ -77,30 +87,7 @@ interface ThemePanelProps {
   onClose: () => void;
 }
 
-// UI 主题选择器组件
-function UIThemeSelector() {
-  const { theme, setTheme } = useUITheme();
 
-  return (
-    <div className="ui-theme-selector">
-      <div className="ui-theme-label">界面风格</div>
-      <div className="ui-theme-options">
-        <button
-          className={`ui-theme-option ${theme === 'default' ? 'active' : ''}`}
-          onClick={() => setTheme('default')}
-        >
-          微信绿
-        </button>
-        <button
-          className={`ui-theme-option ${theme === 'structuralism' ? 'active' : ''}`}
-          onClick={() => setTheme('structuralism')}
-        >
-          复古蓝
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export function ThemePanel({ open, onClose }: ThemePanelProps) {
   const theme = useThemeStore((state) => state.themeId);
@@ -248,10 +235,7 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
     <div className="theme-overlay" onClick={onClose}>
       <div className="theme-modal" onClick={(e) => e.stopPropagation()}>
         <div className="theme-header">
-          <div className="theme-header-left">
-            <h3>主题管理</h3>
-            <UIThemeSelector />
-          </div>
+          <h3>主题管理</h3>
           <button className="close-btn" onClick={onClose} aria-label="关闭">
             <X size={20} />
           </button>

@@ -6,8 +6,8 @@
     font-family: "Songti SC", "SimSun", "STSong", "Georgia", serif;
     color: #4A3B32;
     /* 深咖啡色文字，比黑色更柔和 */
-    background-color: #FFFBF0;
-    /* 暖黄纸张背景 */
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
 }
 
@@ -169,6 +169,17 @@
     font-size: 16px;
 }
 
+#wemd ul ul {
+    list-style-type: circle;
+    color: #8D5B4C;
+    margin-top: 8px;
+}
+
+#wemd ol ol {
+    list-style-type: lower-roman;
+    color: #B33D25;
+}
+
 /* 
  * 引用 - 泛黄的旧报纸
  * 深米色背景 + 棕色边框
@@ -194,7 +205,22 @@
     font-size: 15px;
     line-height: 1.8;
     font-style: italic;
-    /* 斜体增加叙事感 */
+}
+
+#wemd .multiquote-2 {
+    margin: 34px 0;
+    padding: 22px;
+    background: #FFF8E7;
+    border-left: 3px solid #D98C45;
+    border-radius: 2px;
+}
+
+#wemd .multiquote-3 {
+    margin: 32px 0;
+    padding: 20px;
+    background: #FFFBF0;
+    border-left: 2px solid #D98C45;
+    border-radius: 2px;
 }
 
 /* 链接 - 像是手写的下划线 */
@@ -225,6 +251,20 @@
 
 #wemd em strong {
     color: #B33D25;
+}
+
+/* 高亮 - 暖黄背景 */
+#wemd mark {
+    background: rgba(242, 201, 76, 0.3);
+    color: #B33D25;
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+
+/* 删除线 */
+#wemd del {
+    text-decoration: line-through;
+    color: #8D5B4C;
 }
 
 /* 分隔线 - 虚线剪裁线 */
@@ -290,6 +330,7 @@
     /* 打字机字体 */
     overflow-x: auto;
     white-space: pre;
+  min-width: max-content;
     border: 4px solid #F7EED6;
 }
 
@@ -404,3 +445,32 @@
     max-width: 100%;
     vertical-align: middle;
 }
+
+/* 提示块 - 落日胶片风格 */
+#wemd .callout {
+    margin: 36px 0;
+    padding: 24px;
+    background: #F7EED6;
+    border-left: 3px solid #8D5B4C;
+    border-radius: 2px;
+}
+
+#wemd .callout-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #B33D25;
+    font-family: serif;
+    font-size: 15px;
+}
+
+#wemd .callout-icon {
+    margin-right: 6px;
+}
+
+#wemd .callout-note { border-left-color: #8D5B4C; }
+#wemd .callout-info { border-left-color: #8D5B4C; }
+#wemd .callout-tip { border-left-color: #D98C45; }
+#wemd .callout-success { border-left-color: #8D5B4C; }
+#wemd .callout-warning { border-left-color: #D98C45; }
+#wemd .callout-danger { border-left-color: #B33D25; }
+

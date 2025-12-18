@@ -5,7 +5,8 @@ export const morandiForestTheme = `/* 莫兰迪森林风格 */
   margin: 0 auto;
   font-family: "Optima", "Georgia", "PingFang SC", "Microsoft YaHei", serif;
   color: #2F3E32;
-  background-color: #FDFCF8;
+  background-color: transparent;
+  /* 透明背景，兼容微信深色模式 */
   word-break: break-word;
 }
 

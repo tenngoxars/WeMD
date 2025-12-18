@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { createMarkdownParser, processHtml } from '@wemd/core';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
+import { useUITheme } from '../../hooks/useUITheme';
 import { hasMathFormula, renderMathInElement } from '../../utils/katexRenderer';
 import './MarkdownPreview.css';
 
@@ -15,6 +16,7 @@ interface SyncScrollDetail {
 export function MarkdownPreview() {
   const { markdown } = useEditorStore();
   const { themeId: theme, customCSS, getThemeCSS } = useThemeStore();
+  const uiTheme = useUITheme((state) => state.theme);
   const [html, setHtml] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -26,13 +28,14 @@ export function MarkdownPreview() {
   useEffect(() => {
     const rawHtml = parser.render(markdown);
 
-    // 使用 store 中的 getThemeCSS 方法，会自动处理自定义 CSS
-    const css = getThemeCSS(theme);
+    // 使用 store 中的 getThemeCSS 方法，根据 UI 主题决定是否追加深色模式覆盖
+    const isDarkMode = uiTheme === 'dark';
+    const css = getThemeCSS(theme, isDarkMode);
     // 预览模式不使用内联样式，直接注入 style 标签，大幅降低内存占用
     const styledHtml = processHtml(rawHtml, css, false);
 
     setHtml(styledHtml);
-  }, [markdown, theme, customCSS, getThemeCSS, parser]);
+  }, [markdown, theme, customCSS, getThemeCSS, parser, uiTheme]);
 
   // KaTeX 渲染：轻量级、快速，解决内存问题
   // MathJax 仅在复制到微信时使用
@@ -120,7 +123,7 @@ export function MarkdownPreview() {
       </div>
       <div className="preview-container" ref={scrollContainerRef}>
         <div className="preview-content">
-          <style dangerouslySetInnerHTML={{ __html: getThemeCSS(theme) }} />
+          <style dangerouslySetInnerHTML={{ __html: getThemeCSS(theme, uiTheme === 'dark') }} />
           <div
             ref={previewRef}
             dangerouslySetInnerHTML={{ __html: html }}

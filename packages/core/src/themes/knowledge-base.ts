@@ -7,7 +7,8 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "PingFang SC", sans-serif;
     color: #37352F;
     /* 经典的笔记深灰色 */
-    background-color: #FFFFFF;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
 }
 

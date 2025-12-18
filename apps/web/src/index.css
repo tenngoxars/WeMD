@@ -98,44 +98,54 @@ body,
 }
 
 /* ========================================
-   STRUCTURALISM UI THEME
+   DARK UI THEME (参考 VS Code 配色)
    ======================================== */
-[data-ui-theme="structuralism"] {
-  /* Colors */
-  --ui-bg-page: #f9fafb;
-  --ui-bg-primary: #ffffff;
-  --ui-bg-secondary: #f9fafb;
-  --ui-bg-tertiary: #f3f4f6;
-  --ui-bg-card-muted: #f3f4f6;
-  --ui-bg-hover: #e0e7ff;
+[data-ui-theme="dark"] {
+  color-scheme: dark;
 
-  --ui-text-primary: #000000;
-  --ui-text-secondary: #6b7280;
-  --ui-text-tertiary: #9ca3af;
+  /* Colors - VS Code 风格深色背景（不那么刺眼） */
+  --ui-bg-page: #1e1e1e;
+  --ui-bg-primary: #252526;
+  --ui-bg-secondary: #2d2d30;
+  --ui-bg-tertiary: #333333;
+  --ui-bg-card-muted: #2a2a2b;
+  --ui-bg-hover: #2a3a2e;
 
-  --ui-border-color: #000000;
-  --ui-border-light: #d1d5db;
+  /* Colors - 柔和的浅色文字 */
+  --ui-text-primary: #d4d4d4;
+  --ui-text-secondary: #9d9d9d;
+  --ui-text-tertiary: #6a6a6a;
 
-  --ui-accent-primary: #0025F5;
-  --ui-accent-gradient: linear-gradient(135deg, #0025F5 0%, #001bb3 100%);
+  /* 边框 - 柔和的深色调 */
+  --ui-border-color: #3c3c3c;
+  --ui-border-light: #404040;
 
-  /* Borders & Radius */
-  --ui-border-width: 2px;
-  --ui-radius-sm: 0px;
-  --ui-radius-md: 0px;
-  --ui-radius-lg: 0px;
-  --ui-radius-xl: 0px;
-  --ui-radius-pill: 0px;
+  /* 保持微信绿作为强调色 */
+  --ui-accent-primary: #07c160;
+  --ui-accent-gradient: linear-gradient(135deg, #07c160 0%, #05a850 100%);
 
-  /* Hard Shadows (Structuralism style) */
-  --ui-shadow-sm: 2px 2px 0px 0px #000000;
-  --ui-shadow-md: 4px 4px 0px 0px #000000;
-  --ui-shadow-lg: 6px 6px 0px 0px #000000;
-  --ui-shadow-xl: 8px 8px 0px 0px #000000;
+  /* Borders & Radius - 保持与默认主题一致 */
+  --ui-border-width: 1px;
+  --ui-radius-sm: 8px;
+  --ui-radius-md: 12px;
+  --ui-radius-lg: 16px;
+  --ui-radius-xl: 24px;
+  --ui-radius-pill: 999px;
 
-  /* Fonts */
-  --ui-font-sans: 'Space Grotesk', 'Inter', 'Helvetica Neue', sans-serif;
-  --ui-font-mono: 'JetBrains Mono', 'SF Mono', 'Monaco', monospace;
+  /* Shadows - 深色模式阴影 */
+  --ui-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --ui-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --ui-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --ui-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+
+  /* Fonts - 保持默认 */
+  --ui-font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --ui-font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
   --ui-spacing-unit: 8px;
-  --ui-glass-blur: blur(0px);
+  --ui-glass-blur: blur(20px);
+
+  /* 玻璃效果变量 - 深色模式 */
+  --glass-bg: rgba(37, 37, 38, 0.95);
+  --glass-border: rgba(60, 60, 60, 0.6);
+  --glass-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }

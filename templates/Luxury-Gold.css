@@ -5,7 +5,8 @@
     /* 强制宋体/衬线体，移动端显示优雅字体的关键 */
     font-family: "Songti SC", "SimSun", "STSong", "Georgia", serif;
     color: #222;
-    background-color: #fff;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
 }
 
@@ -123,6 +124,38 @@
     line-height: 1.8;
 }
 
+#wemd .multiquote-2 {
+    margin: 38px 0;
+    padding: 18px 28px;
+    background: #fff;
+    border: none;
+    text-align: center;
+    border-left: 2px solid #9E8045;
+}
+
+#wemd .multiquote-2 p {
+    color: #666;
+    font-style: italic;
+    font-family: serif;
+    font-size: 15px;
+}
+
+#wemd .multiquote-3 {
+    margin: 36px 0;
+    padding: 16px 26px;
+    background: #fafafa;
+    border: none;
+    text-align: center;
+    border-left: 1px solid #9E8045;
+}
+
+#wemd .multiquote-3 p {
+    color: #666;
+    font-style: italic;
+    font-family: serif;
+    font-size: 15px;
+}
+
 /* 列表 - 精致的金点 */
 #wemd ul {
     list-style: square;
@@ -145,6 +178,17 @@
     list-style: decimal;
     padding-left: 20px;
     margin: 20px 0;
+    color: #9E8045;
+}
+
+#wemd ul ul {
+    list-style-type: circle;
+    color: #9E8045;
+    margin-top: 8px;
+}
+
+#wemd ol ol {
+    list-style-type: lower-roman;
     color: #9E8045;
 }
 
@@ -175,6 +219,27 @@
 #wemd em {
     color: #9E8045;
     font-style: italic;
+}
+
+/* 加粗斜体 */
+#wemd em strong {
+    color: #9E8045;
+    font-weight: bold;
+}
+
+/* 高亮 - 淡金背景 */
+#wemd mark {
+    background: rgba(158, 128, 69, 0.15);
+    color: #9E8045;
+    padding: 2px 6px;
+    border-bottom: 1px solid rgba(158, 128, 69, 0.3);
+}
+
+/* 删除线 */
+#wemd del {
+    text-decoration: line-through;
+    color: #999;
+    text-decoration-color: #9E8045;
 }
 
 /* 分隔线 - 极简短线 */
@@ -239,6 +304,7 @@
     /* 特意使用衬线体显示代码，极具艺术感 */
     overflow-x: auto;
     white-space: pre;
+  min-width: max-content;
 }
 
 /* 如果没有语法高亮，设置默认深灰色 */
@@ -309,3 +375,33 @@
     max-width: 100%;
     vertical-align: middle;
 }
+
+/* 提示块 - 黑金奢华风格 */
+#wemd .callout {
+    margin: 40px 0;
+    padding: 20px 30px;
+    background: #fff;
+    border: 1px solid rgba(158, 128, 69, 0.3);
+    border-radius: 2px;
+}
+
+#wemd .callout-title {
+    font-weight: normal;
+    margin-bottom: 10px;
+    color: #9E8045;
+    font-family: serif;
+    letter-spacing: 1px;
+    font-size: 15px;
+}
+
+#wemd .callout-icon {
+    margin-right: 6px;
+}
+
+#wemd .callout-note { border-left: 3px solid #9E8045; }
+#wemd .callout-info { border-left: 3px solid #9E8045; }
+#wemd .callout-tip { border-left: 3px solid #9E8045; }
+#wemd .callout-success { border-left: 3px solid #9E8045; }
+#wemd .callout-warning { border-left: 3px solid #D98C45; }
+#wemd .callout-danger { border-left: 3px solid #B33D25; }
+

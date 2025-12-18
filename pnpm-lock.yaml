@@ -241,6 +241,9 @@ importers:
       juice:
         specifier: ^5.2.0
         version: 5.2.0
+      katex:
+        specifier: ^0.16.27
+        version: 0.16.27
       markdown-it:
         specifier: ^14.1.0
         version: 14.1.0

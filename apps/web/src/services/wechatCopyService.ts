@@ -1,78 +1,13 @@
 import toast from 'react-hot-toast';
 import { processHtml, createMarkdownParser } from '@wemd/core';
-import { hasMathFormula, loadMathJax } from '../utils/mathJaxLoader';
+import katexCss from 'katex/dist/katex.min.css?raw';
+import { loadMathJax } from '../utils/mathJaxLoader';
+import { hasMathFormula } from '../utils/katexRenderer';
 
-// 处理 MathJax 元素以适配微信（参考 legacy 实现，结合 DOM 和字符串处理）
-function processMathJaxForWechat(element: HTMLElement): void {
-    // 1. DOM 操作阶段：处理容器标签和 SVG 尺寸
-    const mjxs = Array.from(element.getElementsByTagName('mjx-container'));
-
-    for (const mjx of mjxs) {
-        const htmlMjx = mjx as HTMLElement;
-        if (!htmlMjx.hasAttribute('jax')) {
-            continue;
-        }
-
-        const isBlock = htmlMjx.getAttribute('display') === 'true';
-        const newTag = isBlock ? 'section' : 'span';
-        const newEl = document.createElement(newTag);
-
-        // 复制所有属性（除了被移除的）
-        for (const attr of Array.from(htmlMjx.attributes)) {
-            if (['jax', 'display', 'tabindex', 'ctxtmenu_counter'].includes(attr.name)) continue;
-            newEl.setAttribute(attr.name, attr.value);
-        }
-
-        // 强制设置显示模式和样式
-        newEl.style.cssText = htmlMjx.style.cssText;
-        if (isBlock) {
-            newEl.style.display = 'block';
-            newEl.style.textAlign = 'center';
-            newEl.style.margin = '1em 0';
-        } else {
-            newEl.style.display = 'inline-block';
-            newEl.style.verticalAlign = 'middle';
-            newEl.style.margin = '0 2px';
-        }
-
-        // 移动内容
-        while (htmlMjx.firstChild) {
-            newEl.appendChild(htmlMjx.firstChild);
-        }
-
-        // 处理 SVG 尺寸
-        const svg = newEl.querySelector('svg');
-        if (svg) {
-            const width = svg.getAttribute('width');
-            const height = svg.getAttribute('height');
-
-            svg.removeAttribute('width');
-            svg.removeAttribute('height');
-
-            svg.style.display = 'block';
-            svg.style.overflow = 'visible';
-            if (width) svg.style.width = width;
-            if (height) svg.style.height = height;
-        }
-
-        // 替换原元素
-        htmlMjx.parentNode?.replaceChild(newEl, htmlMjx);
-    }
-
-    // 2. 字符串操作阶段：处理 SVG 内部样式和清理（复刻 Legacy 正则逻辑）
-    let html = element.innerHTML;
-
-    // 处理 .mjx-solid 类 (Legacy 关键步骤)
-    html = html.replace(/class="mjx-solid"/g, 'fill="none" stroke-width="70"');
-
-    // 移除辅助元素
-    html = html.replace(/<mjx-assistive-mml.+?<\/mjx-assistive-mml>/g, "");
-
-    // 修复行内公式后的空格 (Legacy 逻辑)
-    html = html.replace(/svg><\/span>\s/g, "svg></span>&nbsp;");
-
-    element.innerHTML = html;
-}
+const buildCopyCss = (themeCss: string) => {
+    if (!themeCss) return katexCss;
+    return `${themeCss}\n${katexCss}`;
+};
 
 export async function copyToWechat(markdown: string, css: string): Promise<void> {
     const container = document.createElement('div');
@@ -82,30 +17,17 @@ export async function copyToWechat(markdown: string, css: string): Promise<void>
     document.body.appendChild(container);
 
     try {
-        // 同步创建解析器
+        const shouldLoadMath = hasMathFormula(markdown);
+        if (shouldLoadMath) {
+            await loadMathJax();
+        }
         const parser = createMarkdownParser();
         const rawHtml = parser.render(markdown);
-        const styledHtml = processHtml(rawHtml, css);
+        const themedCss = buildCopyCss(css);
+        const styledHtml = processHtml(rawHtml, themedCss);
 
         container.innerHTML = styledHtml;
 
-        // 按需加载 MathJax：仅在内容包含公式时才加载和渲染
-        if (hasMathFormula(markdown)) {
-            try {
-                await loadMathJax();
-                if (window.MathJax) {
-                    window.MathJax.typesetClear([container]);
-                    await window.MathJax.typesetPromise([container]);
-                }
-            } catch (e) {
-                console.error('复制时 MathJax 渲染失败:', e);
-            }
-        }
-
-        // 处理微信兼容性（MathJax 等）
-        processMathJaxForWechat(container);
-
-        // 复制逻辑
         const selection = window.getSelection();
         const range = document.createRange();
         range.selectNodeContents(container);
@@ -114,12 +36,8 @@ export async function copyToWechat(markdown: string, css: string): Promise<void>
 
         document.execCommand('copy');
 
-        // 现代 API 回退/增强
         if (navigator.clipboard && window.ClipboardItem) {
             try {
-                // 微信需要内联样式，processHtml 应该已经处理了（juice）
-                // processHtml 在 @wemd/core 中使用 juice 来内联样式
-
                 const blob = new Blob([container.innerHTML], { type: 'text/html' });
                 const textBlob = new Blob([markdown], { type: 'text/plain' });
                 await navigator.clipboard.write([

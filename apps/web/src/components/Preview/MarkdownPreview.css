@@ -76,3 +76,16 @@
 #wemd {
     font-synthesis: style weight;
 }
+
+/* ========================================
+   深色模式 - 预览容器背景（接近微信深色模式）
+   ======================================== */
+[data-ui-theme="dark"] .markdown-preview,
+[data-ui-theme="dark"] .preview-container,
+[data-ui-theme="dark"] .preview-content {
+    background: #0f1113;
+}
+
+[data-ui-theme="dark"] .preview-content {
+    box-shadow: none;
+}

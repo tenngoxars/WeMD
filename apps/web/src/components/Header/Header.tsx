@@ -4,7 +4,7 @@ import { ThemePanel } from '../Theme/ThemePanel';
 import { StorageModeSelector } from '../StorageModeSelector/StorageModeSelector';
 import { ImageHostSettings } from '../Settings/ImageHostSettings';
 import './Header.css';
-import { Layers, Palette, Send, ImageIcon } from 'lucide-react';
+import { Layers, Palette, Send, ImageIcon, Sun, Moon } from 'lucide-react';
 import { useUITheme } from '../../hooks/useUITheme';
 
 const DefaultLogoMark = () => (
@@ -15,10 +15,10 @@ const DefaultLogoMark = () => (
     </svg>
 );
 
-const structuralismLogoSrc = `${import.meta.env.BASE_URL}favicon.svg`;
+const structuralismLogoSrc = `${import.meta.env.BASE_URL}favicon-light.svg`;
 
 const StructuralismLogoMark = () => (
-    <img src={structuralismLogoSrc} alt="WeMD Homepage Favicon" width={40} height={40} style={{ display: 'block' }} />
+    <img src={structuralismLogoSrc} alt="WeMD Logo" width={40} height={40} style={{ display: 'block' }} />
 );
 
 export function Header() {
@@ -27,7 +27,8 @@ export function Header() {
     const [showStorageModal, setShowStorageModal] = useState(false);
     const [showImageHostModal, setShowImageHostModal] = useState(false);
     const uiTheme = useUITheme((state) => state.theme);
-    const isStructuralismUI = uiTheme === 'structuralism';
+    const setTheme = useUITheme((state) => state.setTheme);
+    const isStructuralismUI = uiTheme === 'dark';
 
     const isElectron = typeof window !== 'undefined' && !!(window as unknown as { electron?: unknown }).electron;
 
@@ -45,6 +46,14 @@ export function Header() {
                 </div>
 
                 <div className="header-right">
+                    <button
+                        className="btn-icon-only"
+                        onClick={() => setTheme(uiTheme === 'dark' ? 'default' : 'dark')}
+                        aria-label={uiTheme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'}
+                        title={uiTheme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'}
+                    >
+                        {uiTheme === 'dark' ? <Sun size={18} strokeWidth={2} /> : <Moon size={18} strokeWidth={2} />}
+                    </button>
                     {!isElectron && (
                         <button className="btn-secondary" onClick={() => setShowStorageModal(true)}>
                             <Layers size={18} strokeWidth={2} />

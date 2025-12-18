@@ -126,6 +126,33 @@
     transform: translateY(0);
 }
 
+/* 纯图标按钮 - 用于明暗模式切换 */
+.btn-icon-only {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: var(--border-width) solid var(--border-light);
+    border-radius: var(--radius-pill);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon-only:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+.btn-icon-only:active {
+    transform: translateY(0);
+}
+
 .header-right {
     display: flex;
     align-items: center;

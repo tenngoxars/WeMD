@@ -6,7 +6,8 @@ export const receiptTheme = `/* 购物小票风格 */
     /* 强制等宽/衬线字体，模拟打印机 */
     font-family: "Courier New", "SimSun", "Songti SC", monospace;
     color: #111;
-    background-color: #fff;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     /* 顶部撕纸效果 */
     border-top: 5px dashed #111;
     border-bottom: 5px dashed #111;

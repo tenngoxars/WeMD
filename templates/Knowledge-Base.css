@@ -6,7 +6,8 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "PingFang SC", sans-serif;
     color: #37352F;
     /* 经典的笔记深灰色 */
-    background-color: #FFFFFF;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
 }
 
@@ -150,6 +151,15 @@
     font-weight: 600;
 }
 
+#wemd ul ul {
+    list-style-type: circle;
+    margin-top: 6px;
+}
+
+#wemd ol ol {
+    list-style-type: lower-alpha;
+}
+
 #wemd ol li {
     margin-bottom: 8px;
     line-height: 1.7;
@@ -238,6 +248,20 @@
     opacity: 1;
 }
 
+/* 高亮 - 黄色标记 */
+#wemd mark {
+    background: #FDECC8;
+    color: #37352F;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* 删除线 */
+#wemd del {
+    text-decoration: line-through;
+    color: #999;
+}
+
 /* 分隔线 */
 #wemd hr {
     margin: 40px auto;
@@ -258,6 +282,13 @@
     /* 笔记风格通常不需要阴影 */
     border: 1px solid #E3E2E0;
     /* 只有一圈细线 */
+}
+
+#wemd figcaption {
+    margin-top: 8px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
 }
 
 /* 
@@ -290,6 +321,7 @@
     font-family: "SFMono-Regular", Consolas, Menlo, monospace;
     overflow-x: auto;
     white-space: pre;
+  min-width: max-content;
     border: none;
 }
 
@@ -361,3 +393,54 @@
     max-width: 100%;
     vertical-align: middle;
 }
+
+
+/* 提示块 - 知识库风格 */
+#wemd .callout {
+    margin: 24px 0;
+    padding: 16px 16px 16px 20px;
+    border-radius: 4px;
+    border-left: 4px solid #37352F;
+}
+
+#wemd .callout-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #37352F;
+    font-size: 15px;
+}
+
+#wemd .callout-icon {
+    margin-right: 6px;
+}
+
+#wemd .callout-note { 
+    background: #F1F1EF;
+    border-left-color: #37352F;
+}
+
+#wemd .callout-info { 
+    background: #E7F3F8;
+    border-left-color: #2D9CDB;
+}
+
+#wemd .callout-tip { 
+    background: #FDF5F2;
+    border-left-color: #F2994A;
+}
+
+#wemd .callout-success { 
+    background: #EDF7ED;
+    border-left-color: #4CAF50;
+}
+
+#wemd .callout-warning { 
+    background: #FFF4E5;
+    border-left-color: #FF9800;
+}
+
+#wemd .callout-danger { 
+    background: #FFEBEE;
+    border-left-color: #F44336;
+}
+

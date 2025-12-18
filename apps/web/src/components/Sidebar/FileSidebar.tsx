@@ -26,6 +26,8 @@ export function FileSidebar() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
     const [menuTarget, setMenuTarget] = useState<FileItem | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<FileItem | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const filteredFiles = useMemo(() => {
         if (!filter) return files;
@@ -208,13 +210,45 @@ export function FileSidebar() {
                         <button onClick={() => startRename(menuTarget)}>
                             <Edit2 size={14} /> 重命名
                         </button>
-                        <button className="danger" onClick={() => { deleteFile(menuTarget); closeMenu(); }}>
+                        <button className="danger" onClick={() => { setDeleteTarget(menuTarget); closeMenu(); }}>
                             <Trash2 size={14} /> 删除
                         </button>
                     </div>
                 </div>,
                 document.body
             )}
+            {deleteTarget &&
+                createPortal(
+                    <div className="history-confirm-backdrop" onClick={() => !deleting && setDeleteTarget(null)}>
+                        <div className="history-confirm-modal" onClick={(e) => e.stopPropagation()}>
+                            <h4>删除文件</h4>
+                            <p>确定要删除“{deleteTarget.name}”吗？此操作不可撤销。</p>
+                            <div className="history-confirm-actions">
+                                <button className="btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                                    取消
+                                </button>
+                                <button
+                                    className="btn-danger"
+                                    onClick={async () => {
+                                        setDeleting(true);
+                                        try {
+                                            await deleteFile(deleteTarget);
+                                            toast.success('已删除文件');
+                                        } finally {
+                                            setDeleting(false);
+                                            setDeleteTarget(null);
+                                            closeMenu();
+                                        }
+                                    }}
+                                    disabled={deleting}
+                                >
+                                    {deleting ? '删除中...' : '确认删除'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                )}
         </aside>
     );
 }

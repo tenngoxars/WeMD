@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type UITheme = 'default' | 'structuralism';
+export type UITheme = 'default' | 'dark';
 
 interface UIThemeStore {
     theme: UITheme;
@@ -12,7 +12,7 @@ const THEME_STORAGE_KEY = 'wemd-ui-theme';
 
 const FAVICON_MAP: Record<UITheme, string> = {
     default: 'favicon-dark.svg',
-    structuralism: 'favicon.svg',
+    dark: 'favicon-dark.svg',
 };
 
 const resolveAssetHref = (filename: string) => {
@@ -30,11 +30,16 @@ const applyThemeSideEffects = (theme: UITheme) => {
     }
 };
 
-const hydrateThemeFromStorage = () => {
+const hydrateThemeFromStorage = (): UITheme => {
     if (typeof window === 'undefined') return 'default';
     try {
         const stored = window.localStorage?.getItem(THEME_STORAGE_KEY);
-        if (stored === 'default' || stored === 'structuralism') {
+        // 兼容旧值 structuralism 迁移到 dark
+        if (stored === 'structuralism') {
+            applyThemeSideEffects('dark');
+            return 'dark';
+        }
+        if (stored === 'default' || stored === 'dark') {
             applyThemeSideEffects(stored);
             return stored;
         }

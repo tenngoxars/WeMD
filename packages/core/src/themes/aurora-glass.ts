@@ -5,8 +5,8 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   margin: 0 auto;
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: #333;
-  /* 极淡的背景色，衬托卡片的白 */
-  background-color: #f7f9fc;
+  /* 背景透明，兼容微信深色模式 */
+  background-color: transparent;
   word-break: break-word;
 }
 

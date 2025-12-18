@@ -3,7 +3,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 /* 全局属性 */
 #wemd {
   font-size: 16px;
-  color: black;
+  color: #000000;
   padding: 0 10px;
   line-height: 1.6;
   word-spacing: 0px;
@@ -21,7 +21,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   padding-bottom: 8px;
   margin: 0;
   line-height: 26px;
-  color: black;
+  color: #000000;
 }
 
 /* 标题 */
@@ -35,7 +35,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   margin-bottom: 15px;
   padding: 0px;
   font-weight: bold;
-  color: black;
+  color: #000000;
 }
 #wemd h1 {
   font-size: 24px;
@@ -80,7 +80,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   margin-top: 8px;
   margin-bottom: 8px;
   padding-left: 25px;
-  color: black;
+  color: #000000;
 }
 #wemd ul {
   list-style-type: disc;
@@ -98,7 +98,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   margin-bottom: 5px;
   line-height: 26px;
   text-align: left;
-  color: rgb(1,1,1); /* 只要是纯黑色微信编辑器就会把color这个属性吞掉。。。*/
+  color: #010101; /* 使用接近黑色的 HEX，避免微信吞掉纯黑色 */
   font-weight: 500;
 }
 
@@ -125,7 +125,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 
 #wemd .multiquote-1 p {
   margin: 0px;
-  color: black;
+  color: #000000;
   line-height: 26px;
 }
 
@@ -153,7 +153,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 
 #wemd .table-of-contents a {
   border: none;
-  color: black;
+  color: #000000;
   font-weight: normal;
 }
 
@@ -169,25 +169,25 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 /* 加粗 */
 #wemd strong {
   font-weight: bold;
-  color: black;
+  color: #000000;
 }
 
 /* 斜体 */
 #wemd em {
   font-style: italic;
-  color: black;
+  color: #000000;
 }
 
 /* 加粗斜体 */
 #wemd em strong {
   font-weight: bold;
-  color: black;
+  color: #000000;
 }
 
 /* 删除线 */
 #wemd del {
   font-style: italic;
-  color: black;
+  color: #000000;
 }
 
 /* 分隔线 */
@@ -283,7 +283,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 #wemd table tr {
   border: 0;
   border-top: 1px solid #ccc;
-  background-color: white;
+  background-color: #ffffff;
 }
 
 #wemd table tr:nth-child(2n) {
@@ -340,7 +340,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   padding: 0px;
   margin: 0;
   line-height: 26px;
-  color: black;
+  color: #000000;
   word-break:break-all;
   width: calc(100%-50)
 }
@@ -449,7 +449,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   width: 100%;
   margin-top: -35px;
   background: rgba(0,0,0,0.7);
-  color: white;
+  color: #ffffff;
   line-height: 35px;
   z-index: 20;
 }

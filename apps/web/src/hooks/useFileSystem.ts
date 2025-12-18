@@ -50,19 +50,20 @@ export function useFileSystem() {
 
     const {
         workspacePath, files, currentFile, isLoading, isSaving,
-        setWorkspacePath, setFiles, setCurrentFile, setLoading, setSaving
+        lastSavedContent, isDirty, isRestoring, // 从 Store 获取状态
+        setWorkspacePath, setFiles, setCurrentFile, setLoading, setSaving,
+        setLastSavedContent, setIsDirty, setIsRestoring // 获取 setter
     } = useFileStore();
 
     const { setMarkdown, markdown } = useEditorStore();
     const { themeId: theme, themeName } = useThemeStore();
 
-    // 记录上次保存的内容，避免重复保存
-    const lastSavedContent = useRef<string>('');
-    // 记录内容是否已修改
-    const isDirty = useRef<boolean>(false);
-    // 记录是否正在加载文件（防止切换文件时触发自动保存）
-    const isRestoring = useRef<boolean>(false);
-    // 记录是否正在创建文件（防止快速重复点击创建多个文件）
+    // 移除 useRef，直接使用 Store 中的全局状态
+    // const lastSavedContent = useRef<string>('');
+    // const isDirty = useRef<boolean>(false);
+    // const isRestoring = useRef<boolean>(false);
+
+    // 仅保留 isCreating 作为本地防抖，防止UI快速点击，无需全局同步
     const isCreating = useRef<boolean>(false);
 
     // 1. 加载工作区
@@ -143,17 +144,46 @@ export function useFileSystem() {
 
     // 4. 打开文件
     const openFile = useCallback(async (file: FileItem) => {
+        // 防止重复打开正在打开的文件
+        // if (isRestoring) return; (暂时注释，允许强制切换)
+
+        // 关键修复：在开始切换前立即设置全局 isRestoring，这会暂停所有组件(App/Sidebar)中的自动保存逻辑
+        setIsRestoring(true);
+
+        // 获取最新的 isDirty 状态 (注意：isDirty 是 prop 传入的当前值，在 async 函数中可能陈旧)
+        // 最好直接从 store 获取最新 snapshot，但这里依赖闭包
+        // 由于 isRestoring 已被设为 true，自动保存已被阻断，我们可以安全地执行手动保存
+
         // 切换文件前保存当前文件的更改（包括主题）
-        if (currentFile && isDirty.current && !isRestoring.current) {
+        // 注意：isDirty 可能在其他组件中更新，这里使用传入的 isDirty
+        // 但由于 openFile 可能在 isDirty 更新前触发，我们假设如果 store 说 dirty 就是 dirty
+        const currentIsDirty = useFileStore.getState().isDirty;
+        const currentCurrentFile = useFileStore.getState().currentFile;
+
+        if (currentCurrentFile && currentIsDirty) {
             const { markdown: currentMarkdown } = useEditorStore.getState();
             const { themeId: currentTheme, themeName: currentThemeName } = useThemeStore.getState();
             const frontmatter = `---\ntheme: ${currentTheme}\nthemeName: ${currentThemeName}\n---\n`;
             const fullContent = frontmatter + '\n' + currentMarkdown;
 
-            if (adapter && storageReady) {
+            if (electron) {
                 try {
-                    await adapter.writeFile(currentFile.path, fullContent);
-                    isDirty.current = false;
+                    const res = await electron.fs.saveFile({ filePath: currentCurrentFile.path, content: fullContent });
+                    if (res.success) {
+                        setIsDirty(false);
+                        setLastSavedContent(fullContent);
+                        await refreshFiles();
+                    } else {
+                        console.error('切换前保存失败:', res.error);
+                    }
+                } catch (e) {
+                    console.error('切换前保存失败:', e);
+                }
+            } else if (adapter && storageReady) {
+                try {
+                    await adapter.writeFile(currentCurrentFile.path, fullContent);
+                    setIsDirty(false); // 保存成功后重置脏状态
+                    setLastSavedContent(fullContent);
                     // 刷新文件列表以更新 themeName 显示
                     await refreshFiles();
                 } catch (e) {
@@ -161,8 +191,6 @@ export function useFileSystem() {
                 }
             }
         }
-
-        isRestoring.current = true; // 标记为恢复中，防止自动保存
 
         let content = '';
         let success = false;
@@ -194,19 +222,20 @@ export function useFileSystem() {
 
                 // 简单的 YAML 解析器
                 const themeMatch = frontmatterRaw.match(/theme:\s*(.+)/);
-
                 const theme = themeMatch ? themeMatch[1].trim() : 'default';
 
                 setMarkdown(body);
                 useThemeStore.getState().selectTheme(theme);
-                lastSavedContent.current = content; // 保存完整内容（含 frontmatter）
-                isDirty.current = false; // 重置修改标记
+
+                // 更新全局 lastSavedContent，确保所有组件同步
+                setLastSavedContent(content);
+                setIsDirty(false); // 重置修改标记
             } else {
                 setMarkdown(content);
                 // 没有 frontmatter 时重置为默认值
                 useThemeStore.getState().selectTheme('default');
-                lastSavedContent.current = content; // 保存完整内容
-                isDirty.current = false; // 重置修改标记
+                setLastSavedContent(content); // 保存完整内容
+                setIsDirty(false); // 重置修改标记
             }
         } else {
             toast.error('无法读取文件');
@@ -214,12 +243,12 @@ export function useFileSystem() {
 
         // 延迟重置 isRestoring，等待状态稳定
         setTimeout(() => {
-            isRestoring.current = false;
+            setIsRestoring(false);
         }, 100);
 
         // 保存最后打开的文件路径到 localStorage
         localStorage.setItem(LAST_FILE_KEY, file.path);
-    }, [setMarkdown, electron, adapter, storageReady, currentFile, refreshFiles]);
+    }, [setMarkdown, electron, adapter, storageReady, refreshFiles]);
 
     // 5. 创建文件
     const createFile = useCallback(async () => {
@@ -284,8 +313,8 @@ themeName: ${themeName}
 `;
         const fullContent = frontmatter + '\n' + markdown;
 
-        // 检查内容是否有变化
-        if (fullContent === lastSavedContent.current) {
+        // 检查内容是否有变化 (使用全局状态)
+        if (fullContent === useFileStore.getState().lastSavedContent) {
             setSaving(false);
             if (showToast) toast.success('内容无变化');
             return; // 无变化则跳过保存
@@ -310,14 +339,15 @@ themeName: ${themeName}
         setSaving(false);
 
         if (success) {
-            lastSavedContent.current = fullContent;
+            setLastSavedContent(fullContent); // 更新全局已保存内容
+            setIsDirty(false); // 重置全局脏状态
             if (showToast) toast.success('已保存');
         } else {
             toast.error('保存失败: ' + errorMsg);
         }
     }, [currentFile, electron, adapter, storageReady]);
 
-    // 7. 重命名文件
+    // 7. 重命名文件保持不变...
     const renameFile = useCallback(async (file: FileItem, newName: string) => {
         const safeName = newName.endsWith('.md') ? newName : `${newName}.md`;
 
@@ -348,8 +378,6 @@ themeName: ${themeName}
 
     // 8. 删除文件
     const deleteFile = useCallback(async (file: FileItem) => {
-        if (!confirm(`确定要删除 "${file.name}" 吗？`)) return;
-
         let success = false;
 
         if (electron) {
@@ -370,6 +398,8 @@ themeName: ${themeName}
             if (currentFile && currentFile.path === file.path) {
                 setCurrentFile(null);
                 setMarkdown(''); // 清空编辑器
+                setIsDirty(false);
+                setLastSavedContent('');
             }
         } else {
             toast.error('删除失败');
@@ -391,8 +421,8 @@ themeName: ${themeName}
             setCurrentFile(null);
             setMarkdown('');
             useThemeStore.getState().selectTheme('default');
-            isDirty.current = false;
-            lastSavedContent.current = '';
+            setIsDirty(false);
+            setLastSavedContent('');
 
             if (storageReady && storageType === 'filesystem') {
                 // Web：存储就绪后刷新文件（仅限 filesystem 模式）
@@ -446,9 +476,12 @@ themeName: ${themeName}
     }, [createFile, saveFile, selectWorkspace, electron]);
 
     // 自动保存
+    // 注意：所有使用 useFileSystem 的组件都会挂载此 effect，但由于依赖全局状态，逻辑是一致的
+    // 不过最好只在 App 层级执行一次，防止多重 timer。
+    // 但鉴于 logic 依赖 currentFile (全局) 和 markdown (全局)，多重执行也无大碍，只要 isDirty/lastSavedContent 同步即可
     useEffect(() => {
         if (!currentFile || !markdown) return;
-        if (isRestoring.current) return;
+        if (isRestoring) return; // 正在恢复中，跳过
 
         const { themeId: theme, themeName } = useThemeStore.getState();
         const frontmatter = `---
@@ -458,21 +491,24 @@ themeName: ${themeName}
 `;
         const fullContent = frontmatter + '\n' + markdown;
 
-        if (fullContent !== lastSavedContent.current) {
-            isDirty.current = true;
+        if (fullContent !== lastSavedContent) {
+            setIsDirty(true);
         }
 
-        if (!isDirty.current) return;
+        if (!isDirty) return;
 
         const timer = setTimeout(() => {
-            if (isDirty.current && !isRestoring.current) {
+            // 再次检查全局状态
+            const currentIsRestoring = useFileStore.getState().isRestoring;
+            const currentIsDirty = useFileStore.getState().isDirty;
+
+            if (currentIsDirty && !currentIsRestoring) {
                 saveFile();
-                isDirty.current = false;
             }
         }, 3000);
 
         return () => clearTimeout(timer);
-    }, [markdown, theme, themeName, currentFile, saveFile]);
+    }, [markdown, theme, themeName, currentFile, saveFile, isRestoring, isDirty, lastSavedContent]);
 
 
     // 移除了此处重复的 Cmd+S 监听器

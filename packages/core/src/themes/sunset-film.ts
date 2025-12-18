@@ -7,8 +7,8 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     font-family: "Songti SC", "SimSun", "STSong", "Georgia", serif;
     color: #4A3B32;
     /* 深咖啡色文字，比黑色更柔和 */
-    background-color: #FFFBF0;
-    /* 暖黄纸张背景 */
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
 }
 

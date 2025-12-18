@@ -6,7 +6,8 @@ export const academicPaperTheme = `/* 学术论文风格 */
     /* 混合字体栈：西文Times + 中文宋体 */
     font-family: "Times New Roman", "Songti SC", "SimSun", serif;
     color: #000;
-    background-color: #fff;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
 }
 

@@ -4,7 +4,8 @@ import { keymap } from '@codemirror/view';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState, Prec } from '@codemirror/state';
 import { githubLight } from '@uiw/codemirror-theme-github';
-import { wechatMarkdownHighlighting } from './markdownTheme';
+import { wechatMarkdownHighlighting, wechatMarkdownHighlightingDark } from './markdownTheme';
+import { useUITheme } from '../../hooks/useUITheme';
 import { useEditorStore } from '../../store/editorStore';
 import { countWords, countLines } from '../../utils/wordCount';
 import { Toolbar } from './Toolbar';
@@ -44,6 +45,7 @@ export function MarkdownEditor() {
     const editorRef = useRef<HTMLDivElement>(null);
     const viewRef = useRef<EditorView | null>(null);
     const { markdown: content, setMarkdown } = useEditorStore();
+    const uiTheme = useUITheme((state) => state.theme);
     const initialContent = useRef(content);
     const isSyncingRef = useRef(false);
     const [showSearch, setShowSearch] = useState(false);
@@ -63,13 +65,18 @@ export function MarkdownEditor() {
     useEffect(() => {
         if (!editorRef.current) return;
 
+        // 主题切换时使用当前内容，首次加载时使用 store 中的内容
+        const currentContent = viewRef.current
+            ? viewRef.current.state.doc.toString()
+            : content;
+
         const startState = EditorState.create({
-            doc: initialContent.current,
+            doc: currentContent,
             extensions: [
                 minimalSetup,
                 markdownKeymap,
                 markdown({ base: markdownLanguage }),
-                wechatMarkdownHighlighting,
+                uiTheme === 'dark' ? wechatMarkdownHighlightingDark : wechatMarkdownHighlighting,
                 githubLight,
                 EditorView.lineWrapping,
                 EditorView.domEventHandlers({
@@ -215,7 +222,8 @@ export function MarkdownEditor() {
             window.removeEventListener(SYNC_SCROLL_EVENT, handleSync as EventListener);
             view.destroy();
         };
-    }, [setMarkdown]);
+        // 加入 uiTheme 依赖，主题切换时重建编辑器
+    }, [setMarkdown, uiTheme]);
 
     useEffect(() => {
         const view = viewRef.current;

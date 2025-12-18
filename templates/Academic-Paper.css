@@ -5,7 +5,8 @@
     /* 混合字体栈：西文Times + 中文宋体 */
     font-family: "Times New Roman", "Songti SC", "SimSun", serif;
     color: #000;
-    background-color: #fff;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     word-break: break-word;
 }
 
@@ -92,32 +93,74 @@
     display: none;
 }
 
-/* 引用 - Abstract 摘要风格 */
+/* 引用 - 简洁边框 */
 #wemd .multiquote-1 {
     margin: 20px 0;
     padding: 16px 20px;
-    background: #f8f8f8;
-    border: 1px solid #eee;
-    font-size: 14px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-left: 4px solid #666;
 }
 
 #wemd .multiquote-1 p {
-    margin: 0;
     color: #555;
-    font-family: sans-serif;
-    /* 摘要用无衬线体区分 */
+    font-size: 15px;
+    margin: 0;
+    line-height: 1.6;
     text-indent: 0;
 }
 
+#wemd .multiquote-2 {
+    margin: 18px 0 18px 20px;
+    padding: 14px 18px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+}
+
+#wemd .multiquote-2 p {
+    color: #555;
+    font-size: 15px;
+    margin: 0;
+}
+
+#wemd .multiquote-3 {
+    margin: 16px 0 16px 20px;
+    padding: 12px 16px;
+    background: #fcfcfc;
+    border: 1px solid #e0e0e0;
+}
+
+#wemd .multiquote-3 p {
+    color: #555;
+    font-size: 15px;
+    margin: 0;
+}
+
 /* 列表 */
-#wemd ul,
+#wemd ul {
+    list-style: disc;
+    padding-left: 20px;
+    margin: 16px 0;
+}
+
+#wemd ul ul {
+    list-style-type: square;
+    margin-top: 5px;
+}
+
 #wemd ol {
-    margin: 15px 0 15px 20px;
-    padding: 0;
+    list-style: decimal;
+    padding-left: 20px;
+    margin: 16px 0;
+}
+
+#wemd ol ol {
+    list-style-type: lower-alpha;
 }
 
 #wemd li section {
-    color: #1a1a1a;
+    color: #333;
+    line-height: 1.6;
 }
 
 /* 链接 - 经典深蓝 */
@@ -130,6 +173,49 @@
 #wemd strong {
     color: #000;
     font-weight: bold;
+}
+
+/* 斜体 */
+#wemd em {
+    font-style: italic;
+    color: #000;
+}
+
+/* 加粗斜体 */
+#wemd em strong {
+    font-weight: bold;
+    font-style: italic;
+    color: #000;
+}
+
+/* 高亮 - 学术标记风格 */
+#wemd mark {
+    background: #fff3cd;
+    color: #000;
+    padding: 0 2px;
+}
+
+/* 删除线 */
+#wemd del {
+    text-decoration: line-through;
+    color: #666;
+    opacity: 0.7;
+}
+
+/* 图片 - 简洁无装饰 */
+#wemd img {
+    display: block;
+    margin: 30px auto;
+    width: 100%;
+    border: 1px solid #ddd;
+}
+
+#wemd figcaption {
+    margin-top: 8px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    font-style: italic;
 }
 
 /* 
@@ -165,6 +251,7 @@
     /* 直角 */
     overflow-x: auto;
     white-space: pre;
+  min-width: max-content;
 }
 
 /* 如果没有语法高亮，设置默认颜色 */
@@ -239,3 +326,55 @@
     max-width: 100%;
     vertical-align: middle;
 }
+
+/* 提示块 - 学术风格 */
+#wemd .callout {
+    margin: 20px 0;
+    padding: 16px 20px;
+    border: 1px solid #ddd;
+    border-radius: 0;
+    background: #fafafa;
+}
+
+#wemd .callout-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: #000;
+}
+
+#wemd .callout-icon {
+    margin-right: 6px;
+}
+
+#wemd .callout-note { 
+    border-left: 4px solid #666; 
+    background: #f5f5f5;
+}
+
+#wemd .callout-info { 
+    border-left: 4px solid #888; 
+    background: #f5f5f5;
+}
+
+#wemd .callout-tip { 
+    border-left: 4px solid #555; 
+    background: #f5f5f5;
+}
+
+#wemd .callout-success { 
+    border-left: 4px solid #333; 
+    background: #f5f5f5;
+}
+
+#wemd .callout-warning { 
+    border-left: 4px solid #999; 
+    background: #f5f5f5;
+}
+
+#wemd .callout-danger { 
+    border-left: 4px solid #000; 
+    background: #f5f5f5;
+}
+

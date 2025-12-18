@@ -16,6 +16,7 @@
   justify-content: space-between;
   padding: 20px 24px 16px;
   border-bottom: var(--border-width) solid var(--border-light);
+  overflow: visible;
 }
 
 .history-header h3 {
@@ -30,6 +31,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow: visible;
 }
 
 .history-actions .btn-icon-only {
@@ -48,6 +50,36 @@
 .history-actions .btn-icon-only:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+
+/* 自定义 Tooltip（悬浮提示） */
+.history-actions .btn-icon-only {
+  position: relative;
+}
+
+.history-actions .btn-icon-only::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 4px 8px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.history-actions .btn-icon-only:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .history-search {
@@ -289,4 +321,78 @@
   padding: 16px;
   color: var(--text-tertiary);
   font-size: 13px;
+}
+
+/* 清空历史确认弹层 */
+.history-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1300;
+}
+
+.history-confirm-modal {
+  background: var(--bg-primary);
+  border: var(--border-width) solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 20px 24px;
+  width: min(360px, 90vw);
+  color: var(--text-primary);
+}
+
+.history-confirm-modal h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.history-confirm-modal p {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.history-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.history-confirm-actions button {
+  min-width: 92px;
+  height: 36px;
+  border-radius: 18px;
+  border: 1px solid var(--border-light);
+  background: color-mix(in srgb, var(--bg-primary) 92%, transparent);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-confirm-actions button:hover {
+  background: var(--bg-hover);
+  border-color: color-mix(in srgb, var(--border-light) 60%, var(--accent-primary) 40%);
+}
+
+.history-confirm-actions .btn-danger {
+  border-color: color-mix(in srgb, var(--error) 65%, transparent);
+  background: color-mix(in srgb, var(--error) 18%, var(--bg-primary) 82%);
+  color: var(--error);
+}
+
+.history-confirm-actions .btn-danger:hover {
+  background: color-mix(in srgb, var(--error) 26%, var(--bg-primary) 74%);
+  border-color: var(--error);
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--error) 24%, transparent);
 }

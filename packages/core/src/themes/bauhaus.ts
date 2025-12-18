@@ -5,7 +5,8 @@ export const bauhausTheme = `/* 包豪斯风格 */
     margin: 0 auto;
     font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
     color: #111;
-    background-color: #fff;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     /* 顶部红蓝条装饰 */
     border-top: 8px solid #D32F2F;
     border-bottom: 8px solid #1976D2;

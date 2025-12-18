@@ -5,7 +5,8 @@
     /* 强制等宽/衬线字体，模拟打印机 */
     font-family: "Courier New", "SimSun", "Songti SC", monospace;
     color: #111;
-    background-color: #fff;
+    background-color: transparent;
+    /* 透明背景，兼容微信深色模式 */
     /* 顶部撕纸效果 */
     border-top: 5px dashed #111;
     border-bottom: 5px dashed #111;
@@ -123,6 +124,30 @@
     color: #444;
 }
 
+#wemd .multiquote-2 {
+    margin: 22px 0;
+    padding: 13px;
+    border: 1px dashed #000;
+    background: #fafafa;
+}
+
+#wemd .multiquote-2 p {
+    font-family: monospace;
+    color: #444;
+}
+
+#wemd .multiquote-3 {
+    margin: 20px 0;
+    padding: 11px;
+    border: 1px dotted #666;
+    background: #fcfcfc;
+}
+
+#wemd .multiquote-3 p {
+    font-family: monospace;
+    color: #444;
+}
+
 /* 列表 */
 #wemd ul {
     list-style: none;
@@ -156,6 +181,20 @@
     color: #222;
 }
 
+#wemd ul ul {
+    list-style: none;
+    margin-top: 6px;
+}
+
+#wemd ul ul li::before {
+    content: "[-] ";
+    font-weight: bold;
+}
+
+#wemd ol ol {
+    list-style-type: lower-alpha;
+}
+
 /* 链接 */
 #wemd a {
     color: #000;
@@ -169,6 +208,38 @@
     background: #ddd;
     /* 模拟灰色高亮打印 */
     padding: 0 4px;
+}
+
+/* 斜体 */
+#wemd em {
+    font-style: italic;
+    color: #000;
+}
+
+/* 加粗斜体 */
+#wemd em strong {
+    font-weight: 900;
+    font-style: italic;
+}
+
+/* 高亮 - 灰色背景 */
+#wemd mark {
+    background: #ddd;
+    color: #000;
+    padding: 0 4px;
+}
+
+/* 删除线 */
+#wemd del {
+    text-decoration: line-through;
+    color: #666;
+}
+
+/* 分割线 - 虚线 */
+#wemd hr {
+    margin: 30px 0;
+    border: none;
+    border-top: 2px dashed #000;
 }
 
 /* 行内代码 - 反色打印块 */
@@ -191,6 +262,16 @@
     border: 2px dashed #000;
     padding: 8px;
     background: #fff;
+}
+
+#wemd figcaption {
+    margin-top: 8px;
+    text-align: center;
+    color: #000;
+    font-size: 13px;
+    font-family: monospace;
+    border-top: 1px dashed #000;
+    padding-top: 6px;
 }
 
 /* 
@@ -272,4 +353,48 @@
 
 #wemd .footnotes-sep {
     border-top: 2px dashed #000;
+    margin-top: 30px;
+    padding-top: 15px;
 }
+
+#wemd .footnote-num {
+    font-weight: bold;
+    color: #000;
+    margin-right: 4px;
+}
+
+#wemd .footnote-item p {
+    color: #444;
+    font-size: 13px;
+    font-family: monospace;
+}
+
+/* 提示块 - 购物小票风格 */
+#wemd .callout {
+    margin: 25px 0;
+    padding: 15px;
+    border: 1px dotted #000;
+    background: #f8f8f8;
+    border-radius: 0;
+}
+
+#wemd .callout-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #000;
+    font-family: monospace;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+#wemd .callout-icon {
+    margin-right: 6px;
+}
+
+#wemd .callout-note { border-left: 2px dashed #000; }
+#wemd .callout-info { border-left: 2px dashed #000; }
+#wemd .callout-tip { border-left: 2px dashed #000; }
+#wemd .callout-success { border-left: 2px dashed #000; }
+#wemd .callout-warning { border-left: 2px dashed #000; }
+#wemd .callout-danger { border-left: 2px dashed #000; }
+

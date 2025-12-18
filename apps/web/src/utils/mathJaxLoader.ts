@@ -36,7 +36,8 @@ export function loadMathJax(): Promise<void> {
                 tags: 'ams'
             },
             svg: {
-                fontCache: 'global' // 使用全局缓存减少内存
+                // 使用 none，确保复制时每个 SVG 自带字体定义，避免离开缓存后丢失公式
+                fontCache: 'none'
             },
             options: {
                 renderActions: {
@@ -45,7 +46,7 @@ export function loadMathJax(): Promise<void> {
             },
             startup: {
                 ready: () => {
-                    window.MathJax!.startup.defaultReady();
+                    window.MathJax?.startup?.defaultReady();
                     isLoaded = true;
                     resolve();
                 }
@@ -76,8 +77,10 @@ export async function typesetElement(element: Element): Promise<void> {
     }
 
     try {
-        window.MathJax.typesetClear([element]);
-        await window.MathJax.typesetPromise([element]);
+        window.MathJax.typesetClear?.([element]);
+        if (window.MathJax.typesetPromise) {
+            await window.MathJax.typesetPromise([element]);
+        }
     } catch (err) {
         console.error('MathJax typeset error:', err);
     }
@@ -87,12 +90,14 @@ export async function typesetElement(element: Element): Promise<void> {
 declare global {
     interface Window {
         MathJax?: {
-            startup: {
+            tex2svg?: (math: string, options: { display: boolean }) => HTMLElement;
+            texReset?: () => void;
+            startup?: {
                 defaultReady: () => void;
                 ready?: () => void;
             };
-            typesetClear: (elements: Element[]) => void;
-            typesetPromise: (elements: Element[]) => Promise<void>;
+            typesetClear?: (elements: Element[]) => void;
+            typesetPromise?: (elements: Element[]) => Promise<void>;
         };
     }
 }

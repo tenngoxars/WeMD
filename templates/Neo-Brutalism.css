@@ -5,8 +5,8 @@
     font-family: -apple-system, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
     color: #000;
     /* 纯黑文字，极致对比 */
-    /* 背景加一点点噪点色，避免死白 */
-    background-color: #fcfcfc;
+    /* 透明背景，兼容微信深色模式 */
+    background-color: transparent;
     word-break: break-word;
 }
 
@@ -183,6 +183,18 @@
     padding-left: 5px;
 }
 
+#wemd ul ul {
+    list-style-type: circle;
+    color: #CCFF00;
+    margin-top: 10px;
+}
+
+#wemd ol ol {
+    list-style-type: upper-alpha;
+    color: #6A00FF;
+    font-weight: 900;
+}
+
 /* 
  * 引用 - 视窗风格 (Window Style)
  * 这是一个带粗边框和硬阴影的盒子
@@ -209,6 +221,22 @@
     font-size: 15px;
     line-height: 1.8;
     font-weight: 500;
+}
+
+#wemd .multiquote-2 {
+    margin: 38px 0;
+    padding: 22px;
+    background: #fff;
+    border: 2px solid #000;
+    box-shadow: 5px 5px 0px #CCFF00;
+}
+
+#wemd .multiquote-3 {
+    margin: 36px 0;
+    padding: 20px;
+    background: #fafafa;
+    border: 2px solid #000;
+    box-shadow: 4px 4px 0px #FF6B9D;
 }
 
 /* 链接 - 荧光笔涂抹效果 */
@@ -249,6 +277,23 @@
     color: #fff;
 }
 
+/* 高亮 - 荧光黄块 */
+#wemd mark {
+    background: #CCFF00;
+    color: #000;
+    padding: 2px 6px;
+    border: 2px solid #000;
+    font-weight: bold;
+}
+
+/* 删除线 - 粗线 */
+#wemd del {
+    text-decoration: line-through;
+    text-decoration-thickness: 3px;
+    text-decoration-color: #FF6B9D;
+    color: #666;
+}
+
 /* 分隔线 - 粗黑条 */
 #wemd hr {
     margin: 60px auto;
@@ -275,16 +320,15 @@
 
 /* 针对图片下方的注释文字 */
 #wemd figcaption {
-    display: block;
+    margin-top: 12px;
     text-align: center;
+    color: #000;
     font-size: 14px;
     font-weight: bold;
-    color: #000;
     background: #CCFF00;
-    display: inline-block;
     padding: 4px 10px;
     border: 2px solid #000;
-    margin-top: 15px;
+    display: inline-block;
     box-shadow: 3px 3px 0 #000;
 }
 
@@ -318,6 +362,7 @@
     font-family: "Menlo", "Courier New", monospace;
     overflow-x: auto;
     white-space: pre;
+  min-width: max-content;
     border: 2px solid #000;
     box-shadow: 6px 6px 0px #ddd;
 }
@@ -438,3 +483,33 @@
     max-width: 100%;
     vertical-align: middle;
 }
+
+/* 提示块 - 新粗野主义风格 */
+#wemd .callout {
+    margin: 40px 0;
+    padding: 20px;
+    background: #f4f4f4;
+    border: 2px solid #000;
+    box-shadow: 6px 6px 0px #6A00FF;
+    border-radius: 0;
+}
+
+#wemd .callout-title {
+    font-weight: 900;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    color: #000;
+    font-size: 16px;
+}
+
+#wemd .callout-icon {
+    margin-right: 6px;
+}
+
+#wemd .callout-note { border-left: 8px solid #6A00FF; }
+#wemd .callout-info { border-left: 8px solid #6A00FF; }
+#wemd .callout-tip { border-left: 8px solid #CCFF00; }
+#wemd .callout-success { border-left: 8px solid #6A00FF; }
+#wemd .callout-warning { border-left: 8px solid #CCFF00; }
+#wemd .callout-danger { border-left: 8px solid #FF6B9D; }
+

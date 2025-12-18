@@ -4,6 +4,22 @@
  */
 import { create } from 'zustand';
 import { builtInThemes, type CustomTheme } from './themes/builtInThemes';
+import { convertCssToWeChatDarkMode } from '@wemd/core';
+
+// 深色转换缓存，避免重复转换同一段 CSS
+const darkCssCache = new Map<string, string>();
+const DARK_MARK = '/* wemd-wechat-dark-converted */';
+const hashCss = (css: string): string => {
+    let hash = 0;
+    for (let i = 0; i < css.length; i++) {
+        hash = (hash << 5) - hash + css.charCodeAt(i);
+        hash |= 0;
+    }
+    return hash.toString(16);
+};
+const buildDarkCacheKey = (themeId: string, css: string) => `${themeId}:${hashCss(css)}`;
+const clearDarkCssCache = () => darkCssCache.clear();
+
 
 // localStorage 键名
 const CUSTOM_THEMES_KEY = 'wemd-custom-themes';
@@ -83,7 +99,8 @@ interface ThemeStore {
     // 主题操作
     selectTheme: (themeId: string) => void;
     setCustomCSS: (css: string) => void;
-    getThemeCSS: (themeId: string) => string;
+    getThemeCSS: (themeId: string, darkMode?: boolean) => string;
+
     getAllThemes: () => CustomTheme[];
 
     // 主题 CRUD
@@ -99,10 +116,12 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     customCSS: '',
     customThemes: loadCustomThemes(),
 
+
     selectTheme: (themeId: string) => {
         const allThemes = get().getAllThemes();
         const theme = allThemes.find((t) => t.id === themeId);
         if (theme) {
+            clearDarkCssCache();
             set({
                 themeId: theme.id,
                 themeName: theme.name,
@@ -112,21 +131,36 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         }
     },
 
-    setCustomCSS: (css: string) => set({ customCSS: css }),
+    setCustomCSS: (css: string) => {
+        clearDarkCssCache();
+        set({ customCSS: css });
+    },
 
-    getThemeCSS: (themeId: string) => {
+    getThemeCSS: (themeId: string, darkMode?: boolean) => {
         const state = get();
 
         // 先查找内置主题
         const builtIn = builtInThemes.find((t) => t.id === themeId);
-        if (builtIn) return builtIn.css;
+        let css = builtIn ? builtIn.css : '';
 
         // 再查找自定义主题
-        const custom = state.customThemes.find((t) => t.id === themeId);
-        if (custom) return custom.css;
+        if (!css) {
+            const custom = state.customThemes.find((t) => t.id === themeId);
+            css = custom ? custom.css : builtInThemes[0].css;
+        }
 
-        // 回退到默认主题
-        return builtInThemes[0].css;
+        // 深色模式下：使用微信颜色转换算法
+        if (darkMode) {
+            const cacheKey = buildDarkCacheKey(themeId, css);
+            if (darkCssCache.has(cacheKey)) {
+                return darkCssCache.get(cacheKey) as string;
+            }
+            const converted = css.includes(DARK_MARK) ? css : convertCssToWeChatDarkMode(css);
+            darkCssCache.set(cacheKey, converted);
+            return converted;
+        }
+
+        return css;
     },
 
     getAllThemes: () => {
@@ -150,6 +184,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
         const nextCustomThemes = [...state.customThemes, newTheme];
         saveCustomThemes(nextCustomThemes);
+        clearDarkCssCache();
         set({ customThemes: nextCustomThemes });
 
         return newTheme;
@@ -177,6 +212,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
         ];
 
         saveCustomThemes(nextCustomThemes);
+        clearDarkCssCache();
         set({ customThemes: nextCustomThemes });
 
         // 如果是当前主题，更新名称
@@ -196,6 +232,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
 
         const nextCustomThemes = state.customThemes.filter((t) => t.id !== id);
         saveCustomThemes(nextCustomThemes);
+        clearDarkCssCache();
         set({ customThemes: nextCustomThemes });
 
         // 如果删除的是当前主题，切换到默认

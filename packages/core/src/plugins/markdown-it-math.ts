@@ -1,3 +1,39 @@
+import katex from "katex";
+
+const escapeHtml = (str: string) =>
+  str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const escapeAttribute = (str: string) =>
+  escapeHtml(str).replace(/'/g, "&#39;");
+
+const renderMathJax = (latex: string, display: boolean): string | null => {
+  if (typeof window === "undefined") return null;
+  const mathJax = window.MathJax;
+  if (!mathJax || typeof mathJax.tex2svg !== "function") return null;
+
+  try {
+    if (typeof mathJax.texReset === "function") {
+      mathJax.texReset();
+    }
+    const container = mathJax.tex2svg(latex, { display });
+    const svg = container.querySelector("svg");
+    if (!svg) return null;
+    const width = svg.getAttribute("width") || svg.style.minWidth;
+    svg.removeAttribute("width");
+    svg.style.display = "initial";
+    svg.style.setProperty("max-width", "300vw", "important");
+    svg.style.flexShrink = "0";
+    if (width) {
+      svg.style.width = width;
+    }
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    return svg.outerHTML;
+  } catch (error) {
+    console.error("MathJax render error:", error);
+    return null;
+  }
+};
+
 /* Process inline math */
 /*
 Like markdown-it-simplemath, this is a stripped down, simplified version of:
@@ -6,7 +42,6 @@ It differs in that it takes (a subset of) LaTeX as input and relies on KaTeX
 for rendering output.
 */
 /* eslint-disable */
-// var katex = require("katex");
 
 // Test if potential opening or closing delimieter
 // Assumes that there is a "$" at state.src[pos]
@@ -191,14 +226,21 @@ export default (md, options) => {
   // set KaTeX as the renderer for markdown-it-simplemath
   var katexInline = function(latex) {
     options.displayMode = false;
+    const mathJaxContent = renderMathJax(latex, false);
+    if (mathJaxContent) {
+      return `<span class="inline-equation">${mathJaxContent}</span>`;
+    }
     try {
-      return "$" + latex + "$";
-      // return katex.renderToString(latex, options);
+      const rendered = katex.renderToString(latex, {
+        displayMode: false,
+        throwOnError: false,
+      });
+      return `<span class="inline-equation" data-latex="${escapeAttribute(latex)}">${rendered}</span>`;
     } catch (error) {
       if (options.throwOnError) {
         throw error;
       }
-      return latex;
+      return `<span class="inline-equation" data-latex="${escapeAttribute(latex)}">${escapeHtml(latex)}</span>`;
     }
   };
 
@@ -208,14 +250,21 @@ export default (md, options) => {
 
   var katexBlock = function(latex) {
     options.displayMode = true;
+    const mathJaxContent = renderMathJax(latex, true);
+    if (mathJaxContent) {
+      return `<section class="block-equation">${mathJaxContent}</section>`;
+    }
     try {
-      return "$$" + latex + "$$";
-      // return "<p>" + katex.renderToString(latex, options) + "</p>";
+      const rendered = katex.renderToString(latex, {
+        displayMode: true,
+        throwOnError: false,
+      });
+      return `<section class="block-equation" data-latex="${escapeAttribute(latex)}">${rendered}</section>`;
     } catch (error) {
       if (options.throwOnError) {
         throw error;
       }
-      return latex;
+      return `<section class="block-equation" data-latex="${escapeAttribute(latex)}">${escapeHtml(latex)}</section>`;
     }
   };
 
@@ -230,3 +279,18 @@ export default (md, options) => {
   md.renderer.rules.math_inline = inlineRenderer;
   md.renderer.rules.math_block = blockRenderer;
 };
+
+declare global {
+  interface Window {
+    MathJax?: {
+      tex2svg?: (math: string, options: { display: boolean }) => HTMLElement;
+      texReset?: () => void;
+      startup?: {
+        defaultReady: () => void;
+        ready?: () => void;
+      };
+      typesetClear?: (elements: Element[]) => void;
+      typesetPromise?: (elements: Element[]) => Promise<void>;
+    };
+  }
+}

@@ -4,8 +4,8 @@
   margin: 0 auto;
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: #333;
-  /* 极淡的背景色，衬托卡片的白 */
-  background-color: #f7f9fc;
+  /* 背景透明，兼容微信深色模式 */
+  background-color: transparent;
   word-break: break-word;
 }
 
@@ -169,6 +169,17 @@
   font-weight: bold;
 }
 
+#wemd ul ul {
+  list-style-type: circle;
+  color: #4158D0;
+  margin-top: 8px;
+}
+
+#wemd ol ol {
+  list-style-type: lower-roman;
+  color: #C850C0;
+}
+
 #wemd ol li {
   margin-bottom: 10px;
   line-height: 1.8;
@@ -244,6 +255,21 @@
   color: #C850C0;
 }
 
+/* 高亮 - 渐变背景 */
+#wemd mark {
+    background: linear-gradient(135deg, rgba(65, 88, 208, 0.15), rgba(200, 80, 192, 0.15));
+    color: #4158D0;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* 删除线 - 渐变色 */
+#wemd del {
+    text-decoration: line-through;
+    color: #999;
+    text-decoration-color: #C850C0;
+}
+
 /* 分隔线 - 渐变光束 */
 #wemd hr {
   margin: 60px auto;
@@ -291,6 +317,7 @@
   font-family: sans-serif;
   overflow-x: auto;
   white-space: pre;
+  min-width: max-content;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
@@ -405,3 +432,54 @@
   max-width: 100%;
   vertical-align: middle;
 }
+
+/* 提示块 - 极光玻璃风格 */
+#wemd .callout {
+  margin: 30px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(65, 88, 208, 0.1);
+}
+
+#wemd .callout-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #4158D0, #C850C0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 16px;
+}
+
+#wemd .callout-icon {
+  margin-right: 6px;
+}
+
+#wemd .callout-note {
+  border-left: 4px solid #6366f1;
+}
+
+#wemd .callout-info {
+  border-left: 4px solid #4158D0;
+}
+
+#wemd .callout-tip {
+  border-left: 4px solid #C850C0;
+}
+
+#wemd .callout-success {
+  border-left: 4px solid #10b981;
+}
+
+#wemd .callout-warning {
+  border-left: 4px solid #FFCC70;
+}
+
+#wemd .callout-danger {
+  border-left: 4px solid #ef4444;
+}
+
