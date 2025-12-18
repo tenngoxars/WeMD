@@ -233,7 +233,6 @@ export function FileSidebar() {
                                         setDeleting(true);
                                         try {
                                             await deleteFile(deleteTarget);
-                                            toast.success('已删除文件');
                                         } finally {
                                             setDeleting(false);
                                             setDeleteTarget(null);
