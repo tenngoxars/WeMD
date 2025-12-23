@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wemd-macos
-          path: apps/electron/dist/*.dmg
+          path: apps/electron/release/*.dmg
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -51,7 +51,7 @@ jobs:
         with:
           name: WeMD ${{ github.ref_name }}
           generate_release_notes: true
-          files: apps/electron/dist/*.dmg
+          files: apps/electron/release/*.dmg
 
   build-windows:
     runs-on: windows-latest
@@ -86,13 +86,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wemd-windows
-          path: apps/electron/dist/*.exe
+          path: apps/electron/release/*.exe
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: apps/electron/dist/*.exe
+          files: apps/electron/release/*.exe
 
   build-linux:
     runs-on: ubuntu-latest
@@ -127,10 +127,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wemd-linux
-          path: apps/electron/dist/*.AppImage
+          path: apps/electron/release/*.AppImage
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: apps/electron/dist/*.AppImage
+          files: apps/electron/release/*.AppImage
