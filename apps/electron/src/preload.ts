@@ -54,5 +54,36 @@ contextBridge.exposeInMainWorld('electron', {
         maximize: () => ipcRenderer.invoke('window:maximize'),
         close: () => ipcRenderer.invoke('window:close'),
         isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+    },
+
+    // 更新相关
+    update: {
+        onUpdateAvailable: (callback: (data: {
+            latestVersion: string;
+            currentVersion: string;
+            releaseUrl: string;
+            releaseNotes: string;
+            force: boolean;
+        }) => void) => {
+            const handler = (_event: IpcRendererEvent, data: any) => callback(data);
+            ipcRenderer.on('update:available', handler);
+            return handler;
+        },
+        onUpToDate: (callback: (data: { currentVersion: string }) => void) => {
+            const handler = (_event: IpcRendererEvent, data: any) => callback(data);
+            ipcRenderer.on('update:upToDate', handler);
+            return handler;
+        },
+        onUpdateError: (callback: () => void) => {
+            const handler = (_event: IpcRendererEvent) => callback();
+            ipcRenderer.on('update:error', handler);
+            return handler;
+        },
+        removeUpdateListener: (handler: any) => {
+            ipcRenderer.removeListener('update:available', handler);
+            ipcRenderer.removeListener('update:upToDate', handler);
+            ipcRenderer.removeListener('update:error', handler);
+        },
+        openReleases: () => ipcRenderer.invoke('update:openReleases'),
     }
 });

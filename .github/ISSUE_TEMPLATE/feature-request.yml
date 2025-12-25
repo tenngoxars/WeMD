@@ -1,0 +1,14 @@
+name: 新功能建议
+description: 提出版本没有的新功能点
+title: "[新功能]: "
+labels: ["新功能"]
+assignees:
+  - tenngoxars
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 内容
+      description: 请描述你的建议
+    validations:
+      required: true

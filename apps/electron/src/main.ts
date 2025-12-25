@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu, dialog, ipcMain, nativeImage, IpcMainInvokeEvent, shell } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import { checkForUpdates, openReleasesPage } from './updater';
 
 // 判断是否为开发模式 - 使用 app.isPackaged 是最可靠的方式
 // 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
@@ -332,6 +333,11 @@ ipcMain.handle('file:reveal', async (_event: IpcMainInvokeEvent, filePath: strin
     }
 });
 
+// 更新相关
+ipcMain.handle('update:openReleases', () => {
+    openReleasesPage();
+});
+
 
 // 创建应用菜单
 function createMenu() {
@@ -406,6 +412,24 @@ function createMenu() {
                 { role: 'front', label: '前置全部窗口' },
             ],
         },
+        {
+            label: '帮助',
+            submenu: [
+                {
+                    label: '检查更新...',
+                    click: () => checkForUpdates(mainWindow, true),
+                },
+                { type: 'separator' },
+                {
+                    label: '访问官网',
+                    click: () => shell.openExternal('https://wemd.app'),
+                },
+                {
+                    label: 'GitHub 仓库',
+                    click: () => shell.openExternal('https://github.com/tenngoxars/WeMD'),
+                },
+            ],
+        },
     ];
 
     const menu = Menu.buildFromTemplate(template);
@@ -419,6 +443,11 @@ app.whenReady().then(() => {
     if (mainWindow) {
         mainWindow.maximize();
     }
+
+    // 延迟 3 秒检查更新，避免阻塞启动
+    setTimeout(() => {
+        checkForUpdates(mainWindow);
+    }, 3000);
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

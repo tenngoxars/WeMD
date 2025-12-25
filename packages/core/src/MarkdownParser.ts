@@ -28,6 +28,7 @@ import markdownItMultiquote from "./plugins/markdown-it-multiquote";
 import markdownItLiReplacer from "./plugins/markdown-it-li";
 
 import markdownItGitHubAlert from "./plugins/markdown-it-github-alert";
+import markdownItTaskLists from "markdown-it-task-lists";
 
 import highlightjs from "./utils/langHighlight";
 
@@ -60,26 +61,31 @@ export const createMarkdownParser = () => {
   });
 
   markdownParser
-    .use(markdownItSpan) // 在标题标签中添加span
-    .use(markdownItTableContainer) // 在表格外部添加容器
-    .use(markdownItMath) // 数学公式
-    .use(markdownItLinkfoot) // 修改脚注
+    .use(markdownItSpan)
+    .use(markdownItTableContainer)
+    .use(markdownItMath)
+    .use(markdownItLinkfoot)
     .use(markdownItTableOfContents, {
       transformLink: () => "",
       includeLevel: [2, 3],
       markerPattern: /^\[toc\]/im,
-    }) // TOC仅支持二级和三级标题
-    .use(markdownItRuby) // 注音符号
-    .use(markdownItImplicitFigures, { figcaption: true }) // 图示
-    .use(markdownItDeflist) // 定义列表
-    .use(markdownItLiReplacer) // li 标签中加入 p 标签
-    .use(markdownItImageFlow) // 横屏移动插件
-    .use(markdownItMultiquote) // 给多级引用加 class
-    .use(markdownItMark) // 高亮文本 ==text==
-    .use(markdownItSub) // 下标 H~2~O
-    .use(markdownItSup) // 上标 x^2^
-    .use(markdownItEmoji) // Emoji :smile:
-    .use(markdownItGitHubAlert); // GitHub 风格 Alert 语法
+    })
+    .use(markdownItRuby)
+    .use(markdownItImplicitFigures, { figcaption: true })
+    .use(markdownItDeflist)
+    .use(markdownItLiReplacer)
+    .use(markdownItImageFlow)
+    .use(markdownItMultiquote)
+    .use(markdownItMark)
+    .use(markdownItSub)
+    .use(markdownItSup)
+    .use(markdownItEmoji)
+    .use(markdownItGitHubAlert)
+    .use(markdownItTaskLists, {
+      enabled: true,
+      label: true,
+      labelAfter: true,
+    });
 
   return markdownParser;
 };

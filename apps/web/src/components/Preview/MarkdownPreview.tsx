@@ -1,15 +1,20 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { createMarkdownParser, processHtml } from '@wemd/core';
-import { useEditorStore } from '../../store/editorStore';
-import { useThemeStore } from '../../store/themeStore';
-import { useUITheme } from '../../hooks/useUITheme';
-import { hasMathFormula, renderMathInElement } from '../../utils/katexRenderer';
-import './MarkdownPreview.css';
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { createMarkdownParser, processHtml } from "@wemd/core";
+import { useEditorStore } from "../../store/editorStore";
+import { useThemeStore } from "../../store/themeStore";
+import { useUITheme } from "../../hooks/useUITheme";
+import { hasMathFormula, renderMathInElement } from "../../utils/katexRenderer";
+import { convertLinksToFootnotes } from "../../utils/linkFootnote";
+import {
+  getLinkToFootnoteEnabled,
+  LINK_TO_FOOTNOTE_EVENT,
+} from "../Editor/ToolbarState";
+import "./MarkdownPreview.css";
 
-const SYNC_SCROLL_EVENT = 'wemd-sync-scroll';
+const SYNC_SCROLL_EVENT = "wemd-sync-scroll";
 
 interface SyncScrollDetail {
-  source: 'editor' | 'preview';
+  source: "editor" | "preview";
   ratio: number;
 }
 
@@ -17,7 +22,10 @@ export function MarkdownPreview() {
   const { markdown } = useEditorStore();
   const { themeId: theme, customCSS, getThemeCSS } = useThemeStore();
   const uiTheme = useUITheme((state) => state.theme);
-  const [html, setHtml] = useState('');
+  const [html, setHtml] = useState("");
+  const [linkToFootnoteEnabled, setLinkToFootnoteEnabledState] = useState(() =>
+    getLinkToFootnoteEnabled(),
+  );
   const previewRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef(false);
@@ -27,15 +35,26 @@ export function MarkdownPreview() {
 
   useEffect(() => {
     const rawHtml = parser.render(markdown);
+    const previewHtml = linkToFootnoteEnabled
+      ? convertLinksToFootnotes(rawHtml)
+      : rawHtml;
 
     // 使用 store 中的 getThemeCSS 方法，根据 UI 主题决定是否追加深色模式覆盖
-    const isDarkMode = uiTheme === 'dark';
+    const isDarkMode = uiTheme === "dark";
     const css = getThemeCSS(theme, isDarkMode);
     // 预览模式不使用内联样式，直接注入 style 标签，大幅降低内存占用
-    const styledHtml = processHtml(rawHtml, css, false);
+    const styledHtml = processHtml(previewHtml, css, false);
 
     setHtml(styledHtml);
-  }, [markdown, theme, customCSS, getThemeCSS, parser, uiTheme]);
+  }, [
+    markdown,
+    theme,
+    customCSS,
+    getThemeCSS,
+    parser,
+    uiTheme,
+    linkToFootnoteEnabled,
+  ]);
 
   // KaTeX 渲染：轻量级、快速，解决内存问题
   // MathJax 仅在复制到微信时使用
@@ -73,7 +92,7 @@ export function MarkdownPreview() {
 
     // 发送同步事件给编辑器
     const event = new CustomEvent<SyncScrollDetail>(SYNC_SCROLL_EVENT, {
-      detail: { source: 'preview', ratio }
+      detail: { source: "preview", ratio },
     });
     window.dispatchEvent(event);
   }, []);
@@ -83,7 +102,7 @@ export function MarkdownPreview() {
     const customEvent = event as CustomEvent<SyncScrollDetail>;
     const { source, ratio } = customEvent.detail;
 
-    if (source === 'preview' || !scrollContainerRef.current) return;
+    if (source === "preview" || !scrollContainerRef.current) return;
 
     const container = scrollContainerRef.current;
     const scrollHeight = container.scrollHeight - container.clientHeight;
@@ -104,16 +123,37 @@ export function MarkdownPreview() {
     if (!container) return;
 
     // 监听预览栏滚动
-    container.addEventListener('scroll', handlePreviewScroll);
+    container.addEventListener("scroll", handlePreviewScroll);
 
     // 监听编辑器的同步事件
     window.addEventListener(SYNC_SCROLL_EVENT, handleSync as EventListener);
 
     return () => {
-      container.removeEventListener('scroll', handlePreviewScroll);
-      window.removeEventListener(SYNC_SCROLL_EVENT, handleSync as EventListener);
+      container.removeEventListener("scroll", handlePreviewScroll);
+      window.removeEventListener(
+        SYNC_SCROLL_EVENT,
+        handleSync as EventListener,
+      );
     };
   }, [handlePreviewScroll, handleSync]);
+
+  useEffect(() => {
+    const handleLinkToFootnoteChange = (event: Event) => {
+      const customEvent = event as CustomEvent<boolean>;
+      setLinkToFootnoteEnabledState(customEvent.detail);
+    };
+
+    window.addEventListener(
+      LINK_TO_FOOTNOTE_EVENT,
+      handleLinkToFootnoteChange as EventListener,
+    );
+    return () => {
+      window.removeEventListener(
+        LINK_TO_FOOTNOTE_EVENT,
+        handleLinkToFootnoteChange as EventListener,
+      );
+    };
+  }, []);
 
   return (
     <div className="markdown-preview">
@@ -123,11 +163,12 @@ export function MarkdownPreview() {
       </div>
       <div className="preview-container" ref={scrollContainerRef}>
         <div className="preview-content">
-          <style dangerouslySetInnerHTML={{ __html: getThemeCSS(theme, uiTheme === 'dark') }} />
-          <div
-            ref={previewRef}
-            dangerouslySetInnerHTML={{ __html: html }}
+          <style
+            dangerouslySetInnerHTML={{
+              __html: getThemeCSS(theme, uiTheme === "dark"),
+            }}
           />
+          <div ref={previewRef} dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       </div>
     </div>

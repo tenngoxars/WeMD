@@ -1,0 +1,14 @@
+name: 现有功能优化
+description: 对现有功能提出更好的解决方案
+title: "[优化]: "
+labels: ["现有功能优化"]
+assignees:
+  - tenngoxars
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 内容
+      description: 请描述优化建议
+    validations:
+      required: true

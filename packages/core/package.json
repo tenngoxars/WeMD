@@ -1,6 +1,6 @@
 {
   "name": "@wemd/core",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -10,6 +10,7 @@
   "dependencies": {
     "highlight.js": "^11.11.1",
     "juice": "^5.2.0",
+    "katex": "^0.16.27",
     "markdown-it": "^14.1.0",
     "markdown-it-container": "^4.0.0",
     "markdown-it-deflist": "^2.0.3",
@@ -22,8 +23,8 @@
     "markdown-it-sub": "^2.0.0",
     "markdown-it-sup": "^2.0.0",
     "markdown-it-table-of-contents": "^0.4.4",
-    "mathjax": "^3.0.1",
-    "katex": "^0.16.27"
+    "markdown-it-task-lists": "^2.1.1",
+    "mathjax": "^3.0.1"
   },
   "devDependencies": {
     "@types/markdown-it": "^12.2.3",

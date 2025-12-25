@@ -1,21 +1,22 @@
-import type { CSSProperties } from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { Toaster } from 'react-hot-toast';
-import { Header } from './components/Header/Header';
-import { FileSidebar } from './components/Sidebar/FileSidebar';
-import { HistoryPanel } from './components/History/HistoryPanel';
-import { Welcome } from './components/Welcome/Welcome';
-import { MarkdownEditor } from './components/Editor/MarkdownEditor';
-import { MarkdownPreview } from './components/Preview/MarkdownPreview';
-import { useFileSystem } from './hooks/useFileSystem';
-import './styles/global.css';
-import './App.css';
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Toaster } from "react-hot-toast";
+import { Header } from "./components/Header/Header";
+import { FileSidebar } from "./components/Sidebar/FileSidebar";
+import { HistoryPanel } from "./components/History/HistoryPanel";
+import { Welcome } from "./components/Welcome/Welcome";
+import { MarkdownEditor } from "./components/Editor/MarkdownEditor";
+import { MarkdownPreview } from "./components/Preview/MarkdownPreview";
+import { useFileSystem } from "./hooks/useFileSystem";
+import "./styles/global.css";
+import "./App.css";
 
-import { useStorageContext } from './storage/StorageContext';
-import { HistoryManager } from './components/History/HistoryManager';
-import { Loader2 } from 'lucide-react';
-import { useHistoryStore } from './store/historyStore';
-import { useFileStore } from './store/fileStore';
+import { useStorageContext } from "./storage/StorageContext";
+import { HistoryManager } from "./components/History/HistoryManager";
+import { Loader2 } from "lucide-react";
+import { useHistoryStore } from "./store/historyStore";
+import { useFileStore } from "./store/fileStore";
+import { UpdateModal } from "./components/UpdateModal/UpdateModal";
 
 function App() {
   const { workspacePath, saveFile } = useFileSystem();
@@ -26,35 +27,85 @@ function App() {
   // 全局保存快捷键（统一监听器）
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
         saveFile(true); // showToast = true
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [saveFile]);
 
   // 检查是否在 Electron 中运行
   const isElectron = useMemo(() => {
-    return typeof window !== 'undefined' && window.electron?.isElectron;
+    return typeof window !== "undefined" && window.electron?.isElectron;
   }, []);
   const platform = useMemo(() => {
-    if (typeof window === 'undefined') return 'web';
+    if (typeof window === "undefined") return "web";
     const electron = window.electron as { platform?: string } | undefined;
-    return electron?.platform ?? 'web';
+    return electron?.platform ?? "web";
   }, []);
 
+  // 更新提示状态
+  const [updateInfo, setUpdateInfo] = useState<{
+    latestVersion: string;
+    currentVersion: string;
+    releaseNotes: string;
+  } | null>(null);
+
+  // 监听 Electron 更新事件
+  useEffect(() => {
+    if (!isElectron) return;
+    const electron = window.electron as any;
+    if (!electron?.update?.onUpdateAvailable) return;
+
+    const availableHandler = electron.update.onUpdateAvailable((data: any) => {
+      // 检查是否跳过了此版本（除非是强制检查）
+      const skippedVersion = localStorage.getItem("wemd-skipped-version");
+      if (!data.force && skippedVersion === data.latestVersion) {
+        return; // 用户之前选择跳过此版本
+      }
+
+      setUpdateInfo({
+        latestVersion: data.latestVersion,
+        currentVersion: data.currentVersion,
+        releaseNotes: data.releaseNotes || "",
+      });
+    });
+
+    const upToDateHandler = electron.update.onUpToDate?.((data: any) => {
+      // 使用 react-hot-toast 显示已是最新版本
+      import("react-hot-toast").then(({ default: toast }) => {
+        toast.success(`当前已是最新版本 (${data.currentVersion})`);
+      });
+    });
+
+    const errorHandler = electron.update.onUpdateError?.(() => {
+      import("react-hot-toast").then(({ default: toast }) => {
+        toast.error("检查更新失败，请稍后重试");
+      });
+    });
+
+    return () => {
+      electron.update?.removeUpdateListener?.(availableHandler);
+      if (upToDateHandler)
+        electron.update?.removeUpdateListener?.(upToDateHandler);
+      if (errorHandler) electron.update?.removeUpdateListener?.(errorHandler);
+    };
+  }, [isElectron]);
+
   const [showHistory, setShowHistory] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const saved = localStorage.getItem('wemd-show-history');
-    return saved !== 'false';
+    if (typeof window === "undefined") return true;
+    const saved = localStorage.getItem("wemd-show-history");
+    return saved !== "false";
   });
-  const [historyWidth, setHistoryWidth] = useState<string>(showHistory ? '280px' : '0px');
+  const [historyWidth, setHistoryWidth] = useState<string>(
+    showHistory ? "280px" : "0px",
+  );
 
   useEffect(() => {
     try {
-      localStorage.setItem('wemd-show-history', String(showHistory));
+      localStorage.setItem("wemd-show-history", String(showHistory));
     } catch {
       /* 忽略持久化错误 */
     }
@@ -62,18 +113,18 @@ function App() {
 
   useEffect(() => {
     if (showHistory) {
-      setHistoryWidth('280px');
+      setHistoryWidth("280px");
       return;
     }
-    const timer = window.setTimeout(() => setHistoryWidth('0px'), 350);
+    const timer = window.setTimeout(() => setHistoryWidth("0px"), 350);
     return () => window.clearTimeout(timer);
   }, [showHistory]);
 
-  const mainClass = 'app-main';
+  const mainClass = "app-main";
   const mainStyle = useMemo(
     () =>
       ({
-        '--history-width': historyWidth,
+        "--history-width": historyWidth,
       }) as CSSProperties,
     [historyWidth],
   );
@@ -90,38 +141,60 @@ function App() {
 
   return (
     <div className="app" data-platform={platform}>
+      {/* 更新提示 Modal */}
+      {updateInfo && (
+        <UpdateModal
+          latestVersion={updateInfo.latestVersion}
+          currentVersion={updateInfo.currentVersion}
+          releaseNotes={updateInfo.releaseNotes}
+          onClose={() => setUpdateInfo(null)}
+          onDownload={() => {
+            (window.electron as any)?.update?.openReleases?.();
+            setUpdateInfo(null);
+          }}
+          onSkipVersion={() => {
+            localStorage.setItem(
+              "wemd-skipped-version",
+              updateInfo.latestVersion,
+            );
+            setUpdateInfo(null);
+          }}
+        />
+      )}
       {/* 只在存储上下文完全就绪且确认为 IndexedDB 模式时才渲染 HistoryManager */}
-      {!isElectron && ready && storageType === 'indexeddb' && <HistoryManager />}
+      {!isElectron && ready && storageType === "indexeddb" && (
+        <HistoryManager />
+      )}
 
       <>
         <Toaster
           position="top-center"
           toastOptions={{
-            className: 'premium-toast',
+            className: "premium-toast",
             style: {
-              background: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              color: '#1a1a1a',
-              boxShadow: '0 12px 30px -10px rgba(0, 0, 0, 0.12)',
-              borderRadius: '50px',
-              padding: '10px 20px',
-              fontSize: '14px',
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              color: "#1a1a1a",
+              boxShadow: "0 12px 30px -10px rgba(0, 0, 0, 0.12)",
+              borderRadius: "50px",
+              padding: "10px 20px",
+              fontSize: "14px",
               fontWeight: 500,
-              border: '1px solid rgba(0, 0, 0, 0.05)',
-              maxWidth: '400px',
+              border: "1px solid rgba(0, 0, 0, 0.05)",
+              maxWidth: "400px",
             },
             success: {
               iconTheme: {
-                primary: '#07c160',
-                secondary: '#fff',
+                primary: "#07c160",
+                secondary: "#fff",
               },
               duration: 2000,
             },
             error: {
               iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
+                primary: "#ef4444",
+                secondary: "#fff",
               },
               duration: 3000,
             },
@@ -129,27 +202,39 @@ function App() {
         />
         <Header />
         <button
-          className={`history-toggle ${showHistory ? '' : 'is-collapsed'}`}
+          className={`history-toggle ${showHistory ? "" : "is-collapsed"}`}
           onClick={() => setShowHistory((prev) => !prev)}
-          aria-label={showHistory ? '隐藏列表' : '显示列表'}
+          aria-label={showHistory ? "隐藏列表" : "显示列表"}
         >
-          <span className="sr-only">{showHistory ? '隐藏列表' : '显示列表'}</span>
+          <span className="sr-only">
+            {showHistory ? "隐藏列表" : "显示列表"}
+          </span>
         </button>
-        <main className={mainClass} style={mainStyle} data-show-history={showHistory}>
-          <div className={`history-pane ${showHistory ? 'is-visible' : 'is-hidden'}`} aria-hidden={!showHistory}>
+        <main
+          className={mainClass}
+          style={mainStyle}
+          data-show-history={showHistory}
+        >
+          <div
+            className={`history-pane ${showHistory ? "is-visible" : "is-hidden"}`}
+            aria-hidden={!showHistory}
+          >
             <div className="history-pane__content">
               {/* ready 后渲染，防止闪烁 */}
-              {ready && (isElectron || storageType === 'filesystem' ? (
-                <FileSidebar />
-              ) : (
-                <HistoryPanel />
-              ))}
+              {ready &&
+                (isElectron || storageType === "filesystem" ? (
+                  <FileSidebar />
+                ) : (
+                  <HistoryPanel />
+                ))}
             </div>
           </div>
           <div className="workspace">
             <div className="editor-pane">
               {/* 存储未就绪或文件/历史加载中显示 loading */}
-              {(!ready || fileLoading || (historyLoading && !isElectron && storageType === 'indexeddb')) ? (
+              {!ready ||
+              fileLoading ||
+              (historyLoading && !isElectron && storageType === "indexeddb") ? (
                 <div className="workspace-loading">
                   <Loader2 className="animate-spin" size={24} />
                   <p>正在加载文章</p>
@@ -159,7 +244,9 @@ function App() {
               )}
             </div>
             <div className="preview-pane">
-              {(!ready || fileLoading || (historyLoading && !isElectron && storageType === 'indexeddb')) ? (
+              {!ready ||
+              fileLoading ||
+              (historyLoading && !isElectron && storageType === "indexeddb") ? (
                 <div className="workspace-loading">
                   <Loader2 className="animate-spin" size={24} />
                   <p>正在加载文章</p>

@@ -1,0 +1,509 @@
+/* 可视化主题设计器样式 */
+
+.theme-designer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 分类 Tab - 紧凑居中布局 */
+.designer-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin: 0 auto 12px;
+}
+
+.designer-tab {
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.designer-tab:hover {
+  color: var(--text-primary);
+}
+
+.designer-tab.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* 内容区 */
+.designer-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.designer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.designer-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-light);
+  margin-top: 8px;
+}
+
+/* 字段 */
+.designer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.designer-field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* 选项按钮组 */
+/* 选项按钮组 - 使用更整齐的 3 列布局 */
+.designer-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.option-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 8px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.option-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.option-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 颜色选择器 */
+.designer-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+  /* 防止 hover 放大时被裁切 */
+}
+
+.color-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  /* 增加默认边框，防止浅色按钮看不清 */
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 自定义调色盘按钮 */
+.custom-color-picker {
+  background: #f5f5f5;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  color: var(--text-tertiary);
+}
+
+.custom-color-picker:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.custom-color-picker input[type="color"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  padding: 0;
+  border: none;
+}
+
+.plus-icon {
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.color-btn:hover {
+  transform: scale(1.1);
+}
+
+.color-btn.active {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--bg-primary);
+}
+
+/* 滑块 */
+.designer-slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border-light);
+  border-radius: 2px;
+  outline: none;
+}
+
+.designer-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.designer-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* 子 Tab (H1-H4) */
+.designer-subtabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.subtab {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.subtab:hover {
+  background: var(--bg-hover);
+}
+
+.subtab.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+/* 开关行 */
+.designer-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.designer-field-row span {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* 开关 */
+.designer-switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+}
+
+.designer-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-light);
+  border-radius: 11px;
+  transition: 0.2s;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.designer-switch input:checked + .switch-slider {
+  background-color: var(--accent-primary);
+}
+
+.designer-switch input:checked + .switch-slider:before {
+  transform: translateX(18px);
+}
+
+/* 自定义取色器弹窗 */
+.color-picker-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+}
+
+.custom-color-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-light);
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.popover-arrow {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-top: 1px solid var(--border-light);
+  border-left: 1px solid var(--border-light);
+}
+
+.color-preview {
+  width: 100%;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+}
+
+/* 滑块行 */
+.color-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-slider-row .label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  width: 24px;
+}
+
+.color-slider-row input[type="range"] {
+  flex: 1;
+  height: 12px;
+  border-radius: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0;
+}
+
+.saturation-slider,
+.lightness-slider {
+  /* 背景由内联样式动态控制 */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.color-slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+  transform: translateY(0);
+  /* 取消 transform */
+}
+
+.custom-color-popover input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.custom-color-popover input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 6px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.confirm-btn:hover {
+  opacity: 0.9;
+}
+
+.confirm-btn:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+/* 紧凑型开关（置于头部） */
+.designer-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.designer-field-header label {
+  margin-bottom: 0 !important;
+}
+
+.compact-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.compact-switch span {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.compact-switch .designer-switch {
+  transform: scale(0.85);
+  transform-origin: right center;
+}
+
+/* 迷你选项组 */
+.designer-options.mini {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.designer-options.mini .option-btn {
+  height: 32px;
+  font-size: 13px;
+  padding: 0;
+}
+
+/* 布局工具类 */
+.designer-row {
+  display: flex;
+  gap: 12px;
+}
+
+.designer-field.half {
+  flex: 1;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
+/* 列表多级设置样式 */
+.level-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.level-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 32px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.level-group .designer-options {
+  flex: 1;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.level-group .option-btn {
+  height: 32px;
+  font-size: 12px;
+  background: var(--bg-primary);
+}
+
+.level-group .option-btn.active {
+  background: var(--accent-primary);
+  color: white;
+}
+
+/* 移除之前的无效 mini 样式 */

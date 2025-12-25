@@ -1,0 +1,14 @@
+name: Bug 报告
+description: 报告一个影响使用的 Bug
+title: "[Bug]: "
+labels: ["Bug"]
+assignees:
+  - tenngoxars
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 内容
+      description: 请详细描述问题
+    validations:
+      required: true

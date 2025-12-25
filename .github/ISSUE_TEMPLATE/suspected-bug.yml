@@ -1,0 +1,14 @@
+name: 疑似 Bug
+description: 不知道算不算问题，问问看
+title: "[疑似 Bug]: "
+labels: ["疑似 Bug"]
+assignees:
+  - tenngoxars
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 内容
+      description: 请描述遇到的现象
+    validations:
+      required: true

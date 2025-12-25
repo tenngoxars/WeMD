@@ -6,3 +6,4 @@ declare module "markdown-it-implicit-figures";
 declare module "markdown-it-table-of-contents";
 declare module "markdown-it-ruby";
 declare module "markdown-it-mark";
+declare module "markdown-it-task-lists";

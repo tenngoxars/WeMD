@@ -1,0 +1,58 @@
+name: Auto Close External PRs
+
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  close-external-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if author is a collaborator
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const author = context.payload.pull_request.user.login;
+            
+            try {
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner,
+                repo,
+                username: author,
+              });
+              // 如果有 write 或 admin 权限，则是协作者
+              const isCollaborator = ['admin', 'write'].includes(data.permission);
+              core.setOutput('is_collaborator', isCollaborator);
+            } catch (error) {
+              // 如果请求失败，说明不是协作者
+              core.setOutput('is_collaborator', false);
+            }
+
+      - name: Close PR if not collaborator
+        if: steps.check.outputs.is_collaborator == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+            const author = context.payload.pull_request.user.login;
+            
+            // 添加评论
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body: `👋 你好 @${author}，感谢你的贡献意愿！\n\n目前本项目暂不接受外部 Pull Request。如果你有好的想法或发现了 Bug，欢迎通过 [Issue](https://github.com/${owner}/${repo}/issues) 反馈。\n\n感谢理解！`
+            });
+            
+            // 关闭 PR
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: prNumber,
+              state: 'closed'
+            });
+            
+            console.log(`Closed PR #${prNumber} from external contributor ${author}`);

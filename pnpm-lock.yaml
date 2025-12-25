@@ -331,6 +331,9 @@ importers:
       markdown-it-table-of-contents:
         specifier: ^0.4.4
         version: 0.4.4
+      markdown-it-task-lists:
+        specifier: ^2.1.1
+        version: 2.1.1
       mathjax:
         specifier: ^3.0.1
         version: 3.2.2
@@ -4379,6 +4382,9 @@ packages:
   markdown-it-table-of-contents@0.4.4:
     resolution: {integrity: sha512-TAIHTHPwa9+ltKvKPWulm/beozQU41Ab+FIefRaQV1NRnpzwcV9QOe6wXQS5WLivm5Q/nlo0rl6laGkMDZE7Gw==}
     engines: {node: '>6.4.0'}
+
+  markdown-it-task-lists@2.1.1:
+    resolution: {integrity: sha512-TxFAc76Jnhb2OUu+n3yz9RMu4CwGfaT788br6HhEDlvWfdeJcLUsxk1Hgw2yJio0OXsxv7pyIPmvECY7bMbluA==}
 
   markdown-it@14.1.0:
     resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
@@ -11091,6 +11097,8 @@ snapshots:
   markdown-it-sup@2.0.0: {}
 
   markdown-it-table-of-contents@0.4.4: {}
+
+  markdown-it-task-lists@2.1.1: {}
 
   markdown-it@14.1.0:
     dependencies:

@@ -3,9 +3,9 @@
  * 只管理编辑器核心功能：Markdown 内容、文件路径、复制到微信
  * 主题相关功能已迁移到 themeStore.ts
  */
-import { create } from 'zustand';
-import { useThemeStore } from './themeStore';
-import { copyToWechat as execCopyToWechat } from '../services/wechatCopyService';
+import { create } from "zustand";
+import { useThemeStore } from "./themeStore";
+import { copyToWechat as execCopyToWechat } from "../services/wechatCopyService";
 
 export interface ResetOptions {
   markdown?: string;
@@ -122,7 +122,12 @@ $$
 \\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
 $$
 
-## 7. 表格
+## 7. 脚注与链接建议
+这里演示脚注的使用：[WeChat Markdown](https://github.com/tenngoxars/WeMD "WeMD 是一款专为公众号设计的编辑器") 可以极大提升排版效率。
+
+在 WeMD 中，只需为链接添加“标题”（双引号里的文字），系统就会自动将其转换为文末脚注，这是最符合微信公众号习惯的排法。
+
+## 8. 表格
 | 姓名 | 年龄 | 职业 |
 | :--- | :---: | ---: |
 | 张三 | 18 | 工程师 |
@@ -133,7 +138,7 @@ $$
 ---
 
 ## 9. 图片
-![WeMD](https://img.wemd.app/favicon-dark.png)
+![WeMD：专为微信公众号设计的现代化 Markdown 编辑器](https://img.wemd.app/example.jpg)
 
 **开始编辑吧!** 🚀
 `;
@@ -152,12 +157,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const allThemes = themeStore.getAllThemes();
 
     // 验证主题是否存在
-    let targetTheme = options?.theme ?? 'default';
+    let targetTheme = options?.theme ?? "default";
 
     const themeExists = allThemes.some((t) => t.id === targetTheme);
     if (!themeExists) {
       console.warn(`Theme ${targetTheme} not found, falling back to default`);
-      targetTheme = 'default';
+      targetTheme = "default";
     }
 
     // 重置编辑器内容
@@ -178,7 +183,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     try {
       await execCopyToWechat(markdown, css);
     } catch (error) {
-      console.error('复制失败:', error);
+      console.error("复制失败:", error);
     }
   },
 }));

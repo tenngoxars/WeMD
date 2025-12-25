@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+**/dist/
+**/.turbo/
+
+# Development files
+.git/
+.github/
+.vscode/
+*.md
+*.log
+
+# Electron (not needed for web Docker)
+apps/electron/
+
+# Server (not needed for web-only Docker)
+apps/server/

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/tenngoxars/WeMD/discussions
+    about: 提问或讨论功能
+  - name: Security Policy
+    url: https://github.com/tenngoxars/WeMD/security/policy
+    about: 报告安全漏洞
