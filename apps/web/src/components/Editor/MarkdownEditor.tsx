@@ -248,7 +248,9 @@ export function MarkdownEditor() {
       );
       view.destroy();
     };
-    // 加入 uiTheme 依赖，主题切换时重建编辑器
+    // uiTheme 变化时重建编辑器以应用新主题
+    // content 故意不加入依赖，因为内容同步由下方 useEffect 处理
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setMarkdown, uiTheme]);
 
   useEffect(() => {

@@ -1,9 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useEditorStore } from "../../store/editorStore";
-import { ThemePanel } from "../Theme/ThemePanel";
-import { StorageModeSelector } from "../StorageModeSelector/StorageModeSelector";
-import { ImageHostSettings } from "../Settings/ImageHostSettings";
 import "./Header.css";
+
+const ThemePanel = lazy(() =>
+  import("../Theme/ThemePanel").then((m) => ({ default: m.ThemePanel })),
+);
+const StorageModeSelector = lazy(() =>
+  import("../StorageModeSelector/StorageModeSelector").then((m) => ({
+    default: m.StorageModeSelector,
+  })),
+);
+const ImageHostSettings = lazy(() =>
+  import("../Settings/ImageHostSettings").then((m) => ({
+    default: m.ImageHostSettings,
+  })),
+);
 import {
   Layers,
   Palette,
@@ -294,10 +305,12 @@ export function Header() {
         </div>
       </header>
 
-      <ThemePanel
-        open={showThemePanel}
-        onClose={() => setShowThemePanel(false)}
-      />
+      <Suspense fallback={null}>
+        <ThemePanel
+          open={showThemePanel}
+          onClose={() => setShowThemePanel(false)}
+        />
+      </Suspense>
 
       {showStorageModal && (
         <div
@@ -318,7 +331,15 @@ export function Header() {
                 ×
               </button>
             </div>
-            <StorageModeSelector />
+            <Suspense
+              fallback={
+                <div style={{ padding: "20px", textAlign: "center" }}>
+                  loading...
+                </div>
+              }
+            >
+              <StorageModeSelector />
+            </Suspense>
           </div>
         </div>
       )}
@@ -342,7 +363,15 @@ export function Header() {
                 ×
               </button>
             </div>
-            <ImageHostSettings />
+            <Suspense
+              fallback={
+                <div style={{ padding: "20px", textAlign: "center" }}>
+                  loading...
+                </div>
+              }
+            >
+              <ImageHostSettings />
+            </Suspense>
           </div>
         </div>
       )}

@@ -1,10 +1,8 @@
 import type { CSSProperties } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { Header } from "./components/Header/Header";
 import { FileSidebar } from "./components/Sidebar/FileSidebar";
-import { HistoryPanel } from "./components/History/HistoryPanel";
-import { Welcome } from "./components/Welcome/Welcome";
 import { MarkdownEditor } from "./components/Editor/MarkdownEditor";
 import { MarkdownPreview } from "./components/Preview/MarkdownPreview";
 import { useFileSystem } from "./hooks/useFileSystem";
@@ -12,11 +10,46 @@ import "./styles/global.css";
 import "./App.css";
 
 import { useStorageContext } from "./storage/StorageContext";
-import { HistoryManager } from "./components/History/HistoryManager";
 import { Loader2 } from "lucide-react";
 import { useHistoryStore } from "./store/historyStore";
 import { useFileStore } from "./store/fileStore";
-import { UpdateModal } from "./components/UpdateModal/UpdateModal";
+
+const HistoryPanel = lazy(() =>
+  import("./components/History/HistoryPanel").then((m) => ({
+    default: m.HistoryPanel,
+  })),
+);
+const HistoryManager = lazy(() =>
+  import("./components/History/HistoryManager").then((m) => ({
+    default: m.HistoryManager,
+  })),
+);
+const Welcome = lazy(() =>
+  import("./components/Welcome/Welcome").then((m) => ({ default: m.Welcome })),
+);
+const UpdateModal = lazy(() =>
+  import("./components/UpdateModal/UpdateModal").then((m) => ({
+    default: m.UpdateModal,
+  })),
+);
+
+// Electron 更新事件数据类型
+interface UpdateEventData {
+  latestVersion: string;
+  currentVersion: string;
+  releaseNotes?: string;
+  force?: boolean;
+}
+
+interface ElectronUpdateAPI {
+  onUpdateAvailable?: (callback: (data: UpdateEventData) => void) => () => void;
+  onUpToDate?: (
+    callback: (data: { currentVersion: string }) => void,
+  ) => () => void;
+  onUpdateError?: (callback: () => void) => () => void;
+  removeUpdateListener?: (handler: (() => void) | undefined) => void;
+  openReleases?: () => void;
+}
 
 function App() {
   const { workspacePath, saveFile } = useFileSystem();
@@ -56,29 +89,33 @@ function App() {
   // 监听 Electron 更新事件
   useEffect(() => {
     if (!isElectron) return;
-    const electron = window.electron as any;
+    const electron = window.electron as { update?: ElectronUpdateAPI };
     if (!electron?.update?.onUpdateAvailable) return;
 
-    const availableHandler = electron.update.onUpdateAvailable((data: any) => {
-      // 检查是否跳过了此版本（除非是强制检查）
-      const skippedVersion = localStorage.getItem("wemd-skipped-version");
-      if (!data.force && skippedVersion === data.latestVersion) {
-        return; // 用户之前选择跳过此版本
-      }
+    const availableHandler = electron.update.onUpdateAvailable(
+      (data: UpdateEventData) => {
+        // 检查是否跳过了此版本（除非是强制检查）
+        const skippedVersion = localStorage.getItem("wemd-skipped-version");
+        if (!data.force && skippedVersion === data.latestVersion) {
+          return; // 用户之前选择跳过此版本
+        }
 
-      setUpdateInfo({
-        latestVersion: data.latestVersion,
-        currentVersion: data.currentVersion,
-        releaseNotes: data.releaseNotes || "",
-      });
-    });
+        setUpdateInfo({
+          latestVersion: data.latestVersion,
+          currentVersion: data.currentVersion,
+          releaseNotes: data.releaseNotes || "",
+        });
+      },
+    );
 
-    const upToDateHandler = electron.update.onUpToDate?.((data: any) => {
-      // 使用 react-hot-toast 显示已是最新版本
-      import("react-hot-toast").then(({ default: toast }) => {
-        toast.success(`当前已是最新版本 (${data.currentVersion})`);
-      });
-    });
+    const upToDateHandler = electron.update.onUpToDate?.(
+      (data: { currentVersion: string }) => {
+        // 使用 react-hot-toast 显示已是最新版本
+        import("react-hot-toast").then(({ default: toast }) => {
+          toast.success(`当前已是最新版本 (${data.currentVersion})`);
+        });
+      },
+    );
 
     const errorHandler = electron.update.onUpdateError?.(() => {
       import("react-hot-toast").then(({ default: toast }) => {
@@ -134,7 +171,15 @@ function App() {
     return (
       <>
         <Toaster position="top-center" />
-        <Welcome />
+        <Suspense
+          fallback={
+            <div className="workspace-loading">
+              <Loader2 className="animate-spin" size={24} />
+            </div>
+          }
+        >
+          <Welcome />
+        </Suspense>
       </>
     );
   }
@@ -143,27 +188,33 @@ function App() {
     <div className="app" data-platform={platform}>
       {/* 更新提示 Modal */}
       {updateInfo && (
-        <UpdateModal
-          latestVersion={updateInfo.latestVersion}
-          currentVersion={updateInfo.currentVersion}
-          releaseNotes={updateInfo.releaseNotes}
-          onClose={() => setUpdateInfo(null)}
-          onDownload={() => {
-            (window.electron as any)?.update?.openReleases?.();
-            setUpdateInfo(null);
-          }}
-          onSkipVersion={() => {
-            localStorage.setItem(
-              "wemd-skipped-version",
-              updateInfo.latestVersion,
-            );
-            setUpdateInfo(null);
-          }}
-        />
+        <Suspense fallback={null}>
+          <UpdateModal
+            latestVersion={updateInfo.latestVersion}
+            currentVersion={updateInfo.currentVersion}
+            releaseNotes={updateInfo.releaseNotes}
+            onClose={() => setUpdateInfo(null)}
+            onDownload={() => {
+              (
+                window.electron as { update?: ElectronUpdateAPI }
+              )?.update?.openReleases?.();
+              setUpdateInfo(null);
+            }}
+            onSkipVersion={() => {
+              localStorage.setItem(
+                "wemd-skipped-version",
+                updateInfo.latestVersion,
+              );
+              setUpdateInfo(null);
+            }}
+          />
+        </Suspense>
       )}
       {/* 只在存储上下文完全就绪且确认为 IndexedDB 模式时才渲染 HistoryManager */}
       {!isElectron && ready && storageType === "indexeddb" && (
-        <HistoryManager />
+        <Suspense fallback={null}>
+          <HistoryManager />
+        </Suspense>
       )}
 
       <>
@@ -225,7 +276,15 @@ function App() {
                 (isElectron || storageType === "filesystem" ? (
                   <FileSidebar />
                 ) : (
-                  <HistoryPanel />
+                  <Suspense
+                    fallback={
+                      <div className="workspace-loading">
+                        <Loader2 className="animate-spin" size={24} />
+                      </div>
+                    }
+                  >
+                    <HistoryPanel />
+                  </Suspense>
                 ))}
             </div>
           </div>

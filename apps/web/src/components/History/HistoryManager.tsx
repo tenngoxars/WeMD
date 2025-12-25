@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { useEditorStore, defaultMarkdown } from '../../store/editorStore';
-import { useThemeStore } from '../../store/themeStore';
-import { useHistoryStore } from '../../store/historyStore';
+import { useCallback, useEffect, useRef } from "react";
+import { useEditorStore, defaultMarkdown } from "../../store/editorStore";
+import { useThemeStore } from "../../store/themeStore";
+import { useHistoryStore } from "../../store/historyStore";
 
 const AUTO_SAVE_INTERVAL = 10 * 1000; // 10 秒 - Web 存储的较好平衡点
-const UNTITLED_TITLE = '未命名文章';
+const UNTITLED_TITLE = "未命名文章";
 
 function deriveTitle(markdown: string) {
   const trimmed = markdown.trim();
@@ -30,7 +30,9 @@ export function HistoryManager() {
   const selectTheme = useThemeStore((state) => state.selectTheme);
   const setCustomCSS = useThemeStore((state) => state.setCustomCSS);
 
-  const persistActiveSnapshot = useHistoryStore((state) => state.persistActiveSnapshot);
+  const persistActiveSnapshot = useHistoryStore(
+    (state) => state.persistActiveSnapshot,
+  );
   const saveSnapshot = useHistoryStore((state) => state.saveSnapshot);
   const loadHistory = useHistoryStore((state) => state.loadHistory);
   const history = useHistoryStore((state) => state.history);
@@ -74,7 +76,10 @@ export function HistoryManager() {
     }
 
     // 检查当前变化是否与正在恢复的内容匹配
-    if (restoringContentRef.current !== null && markdown === restoringContentRef.current) {
+    if (
+      restoringContentRef.current !== null &&
+      markdown === restoringContentRef.current
+    ) {
       restoringContentRef.current = null; // Reset
       return; // Skip marking as edited
     }
@@ -84,13 +89,22 @@ export function HistoryManager() {
     // 2. 当前不是在恢复中（保留旧检查以确保安全）
     // 3. 当前不是在加载中
     // 4. 历史记录已至少加载完成一次
-    if (markdownChanged && !isRestoringRef.current && !loading && hasLoadedHistoryRef.current) {
+    if (
+      markdownChanged &&
+      !isRestoringRef.current &&
+      !loading &&
+      hasLoadedHistoryRef.current
+    ) {
       hasUserEditedRef.current = true;
     }
 
     if (creatingInitialSnapshotRef.current) return;
 
-    const { activeId: currentActiveId, history: currentHistory, loading: storeLoading } = useHistoryStore.getState();
+    const {
+      activeId: currentActiveId,
+      history: currentHistory,
+      loading: storeLoading,
+    } = useHistoryStore.getState();
     if (storeLoading) return;
 
     if (!currentActiveId && currentHistory.length === 0 && markdown.trim()) {
@@ -108,7 +122,7 @@ export function HistoryManager() {
         creatingInitialSnapshotRef.current = false;
       });
     }
-  }, [markdown, theme, customCSS, themeName, saveSnapshot]);
+  }, [markdown, theme, customCSS, themeName, saveSnapshot, loading]);
 
   const persistLatestSnapshot = useCallback(async () => {
     const snapshot = latestRef.current;
@@ -119,7 +133,11 @@ export function HistoryManager() {
       return;
     }
 
-    const { activeId: currentActiveId, history: currentHistory, loading: storeLoading } = useHistoryStore.getState();
+    const {
+      activeId: currentActiveId,
+      history: currentHistory,
+      loading: storeLoading,
+    } = useHistoryStore.getState();
     if (storeLoading) return;
 
     if (!currentActiveId) {
@@ -157,8 +175,8 @@ export function HistoryManager() {
     const handleBeforeUnload = () => {
       void persistLatestSnapshot();
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [persistLatestSnapshot]);
 
   useEffect(() => {
@@ -175,7 +193,8 @@ export function HistoryManager() {
       }
       return;
     }
-    const candidateEntry = history.find((entry) => entry.id === activeId) ?? history[0];
+    const candidateEntry =
+      history.find((entry) => entry.id === activeId) ?? history[0];
     if (!candidateEntry) return;
 
     const latest = latestRef.current;
@@ -206,7 +225,10 @@ export function HistoryManager() {
     setCustomCSS(candidateEntry.customCSS);
     setFilePath(candidateEntry.filePath);
     if (candidateEntry.filePath) {
-      const last = Math.max(candidateEntry.filePath.lastIndexOf('/'), candidateEntry.filePath.lastIndexOf('\\'));
+      const last = Math.max(
+        candidateEntry.filePath.lastIndexOf("/"),
+        candidateEntry.filePath.lastIndexOf("\\"),
+      );
       if (last >= 0) {
         const dir = candidateEntry.filePath.slice(0, last);
         if (dir) {
@@ -223,7 +245,16 @@ export function HistoryManager() {
     hasUserEditedRef.current = false;
     isRestoringRef.current = false;
     hasAppliedInitialHistoryRef.current = true;
-  }, [history, activeId, setActiveId, setMarkdown, selectTheme, setCustomCSS, setFilePath, setWorkspaceDir]);
+  }, [
+    history,
+    activeId,
+    setActiveId,
+    setMarkdown,
+    selectTheme,
+    setCustomCSS,
+    setFilePath,
+    setWorkspaceDir,
+  ]);
 
   return null;
 }

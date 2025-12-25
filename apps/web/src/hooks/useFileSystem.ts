@@ -122,6 +122,8 @@ export function useFileSystem() {
         await refreshFiles();
       }
     },
+    // refreshFiles, setLoading, setWorkspacePath 是稳定引用，无需加入依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [electron],
   );
 
@@ -162,6 +164,8 @@ export function useFileSystem() {
         }
       }
     },
+    // setFiles 是稳定引用，无需加入依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [workspacePath, electron, adapter, storageReady],
   );
 
@@ -293,6 +297,8 @@ export function useFileSystem() {
       // 保存最后打开的文件路径到 localStorage
       localStorage.setItem(LAST_FILE_KEY, file.path);
     },
+    // zustand setters 都是稳定引用无需加入依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [setMarkdown, electron, adapter, storageReady, refreshFiles],
   );
 
@@ -398,6 +404,8 @@ themeName: ${themeName}
         toast.error("保存失败: " + errorMsg);
       }
     },
+    // zustand setters 都是稳定引用无需加入依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentFile, electron, adapter, storageReady],
   );
 
@@ -437,6 +445,8 @@ themeName: ${themeName}
         }
       }
     },
+    // zustand setters 都是稳定引用无需加入依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [refreshFiles, currentFile, electron, adapter, storageReady],
   );
 
@@ -470,6 +480,8 @@ themeName: ${themeName}
         toast.error("删除失败");
       }
     },
+    // zustand setters 都是稳定引用无需加入依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [refreshFiles, currentFile, setMarkdown, electron, adapter, storageReady],
   );
 
@@ -521,6 +533,8 @@ themeName: ${themeName}
         setWorkspacePath("浏览器存储");
       }
     }
+    // 初始化 effect 仅在指定条件变化时触发， setters 都是稳定引用
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [electron, storageReady, storageType]);
 
   // 文件监听事件（Electron）
@@ -577,6 +591,8 @@ themeName: ${themeName}
     }, 3000);
 
     return () => clearTimeout(timer);
+    // setIsDirty 是稳定引用无需加入依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     markdown,
     theme,
