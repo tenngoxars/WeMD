@@ -49,7 +49,6 @@ export interface DesignerVariables {
   inlineCodeColor: string;
   inlineCodeBackground: string;
   inlineCodeStyle: string;
-  codeContainerStyle: "simple" | "card" | "flat" | "mac-pro";
   showMacBar: boolean;
   codeTheme: string;
 
@@ -79,6 +78,7 @@ export interface DesignerVariables {
   hrColor: string;
   hrHeight: number;
   hrMargin: number;
+  hrStyle: "solid" | "dashed" | "dotted" | "double" | "pill";
 
   // 列表
   ulStyle: string;

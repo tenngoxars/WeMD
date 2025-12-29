@@ -81,28 +81,6 @@ export function CodeSection({
         />
       </div>
 
-      <div className="designer-field">
-        <label>容器样式</label>
-        <div className="designer-options col-2">
-          {[
-            { id: "simple", label: "默认" },
-            { id: "card", label: "卡片" },
-            { id: "flat", label: "扁平" },
-            { id: "mac-pro", label: "投影" },
-          ].map((opt) => (
-            <button
-              key={opt.id}
-              className={`option-btn ${variables.codeContainerStyle === opt.id ? "active" : ""}`}
-              onClick={() =>
-                updateVariable("codeContainerStyle", opt.id as any)
-              }
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="designer-field-row">
         <span>Mac 风格控制栏</span>
         <label className="designer-switch">

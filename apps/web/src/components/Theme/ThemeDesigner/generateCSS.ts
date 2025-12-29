@@ -279,25 +279,7 @@ export function generateCSS(v: DesignerVariables): string {
   position: relative;
   white-space: pre;
   overflow-x: auto;
-  
-  /* Code Container Styles */
-  ${
-    v.codeContainerStyle === "card"
-      ? `
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);`
-      : v.codeContainerStyle === "mac-pro"
-        ? `
-    border-radius: 12px;
-    box-shadow: 0 12px 24px -8px rgba(0,0,0,0.12);
-    border: 1px solid rgba(0,0,0,0.04);`
-        : v.codeContainerStyle === "flat"
-          ? `
-    border-radius: 4px; /* Minimal radius */`
-          : `
-    border-radius: 8px; /* Simple (default) */`
-  }
+  border-radius: 8px;
 }
 
 #wemd pre.custom {
@@ -361,12 +343,30 @@ ${getCodeThemeCSS(v.codeTheme)}
 }
 
 #wemd hr {
-  height: ${v.hrHeight}px;
-  background: ${v.hrColor};
-  border: none;
   margin: ${v.hrMargin}px 0;
-}
+  border: 0;
+  ${(() => {
+    const style = v.hrStyle || "solid";
+    const color = v.hrColor;
+    const height = v.hrHeight;
+    const encodedColor = encodeURIComponent(color);
 
+    if (style === "pill") {
+      return `
+    height: ${height}px;
+    background: ${color};
+    width: 20%;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 8px;
+      `;
+    }
+
+    return `
+    border-top: ${height}px ${style} ${color};
+    `;
+  })()}
+}
 #wemd table {
   width: 100%;
   border-collapse: collapse;
@@ -407,7 +407,7 @@ ${
 #wemd .footnote-ref a {
   color: ${v.footnoteHeaderColor || v.primaryColor} !important;
   text-decoration: none;
-  border-bottom: none !important;
+  border-bottom: none!important;
 }
 
 #wemd .footnote-item {
@@ -426,10 +426,10 @@ ${
 }
 
 #wemd .footnote-num a,
-#wemd .footnote-item a.footnote-backref {
+  #wemd .footnote-item a.footnote-backref {
   color: ${v.footnoteHeaderColor || v.primaryColor} !important;
   text-decoration: none;
-  border-bottom: none !important;
+  border-bottom: none!important;
 }
 
 #wemd .footnote-item p {
@@ -529,13 +529,13 @@ ${
 
 /* 列表符号颜色 */
 #wemd ul li::marker,
-#wemd ol li::marker {
+  #wemd ol li::marker {
   color: ${v.listMarkerColor};
 }
 #wemd ul ul li::marker,
-#wemd ol ol li::marker,
-#wemd ul ol li::marker,
-#wemd ol ul li::marker {
+  #wemd ol ol li::marker,
+    #wemd ul ol li::marker,
+      #wemd ol ul li::marker {
   color: ${v.listMarkerColorL2};
 }
 ${headingExtras}

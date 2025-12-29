@@ -52,39 +52,6 @@ export function TableHrSection({ variables, updateVariable }: SectionProps) {
           <span className="switch-slider"></span>
         </label>
       </div>
-
-      <div className="designer-group-label mt-4">分割线</div>
-      <div className="designer-field">
-        <label>颜色</label>
-        <ColorSelector
-          value={variables.hrColor}
-          presets={["#eee", "#ddd", "#ccc", variables.primaryColor]}
-          onChange={(color) => updateVariable("hrColor", color)}
-        />
-      </div>
-      <div className="designer-field">
-        <label>高度: {variables.hrHeight}px</label>
-        <input
-          type="range"
-          className="designer-slider"
-          min={1}
-          max={4}
-          value={variables.hrHeight}
-          onChange={(e) => updateVariable("hrHeight", Number(e.target.value))}
-        />
-      </div>
-      <div className="designer-field">
-        <label>上下边距: {variables.hrMargin}px</label>
-        <input
-          type="range"
-          className="designer-slider"
-          min={10}
-          max={60}
-          step={5}
-          value={variables.hrMargin}
-          onChange={(e) => updateVariable("hrMargin", Number(e.target.value))}
-        />
-      </div>
     </div>
   );
 }

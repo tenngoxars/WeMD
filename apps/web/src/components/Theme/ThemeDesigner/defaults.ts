@@ -74,7 +74,6 @@ export const defaultVariables: DesignerVariables = {
   inlineCodeColor: "#c7254e",
   inlineCodeBackground: "#f9f2f4",
   inlineCodeStyle: "simple",
-  codeContainerStyle: "simple",
   showMacBar: true,
   codeTheme: "github",
 
@@ -102,8 +101,9 @@ export const defaultVariables: DesignerVariables = {
 
   // 分割线
   hrColor: "#eee",
-  hrHeight: 2,
-  hrMargin: 30,
+  hrHeight: 1,
+  hrMargin: 20,
+  hrStyle: "solid",
 
   // 列表
   ulStyle: "disc",
