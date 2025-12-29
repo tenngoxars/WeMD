@@ -80,6 +80,36 @@ export const processHtml = (
     },
   );
 
+  // 检测 Mac 风格控制栏：同时检测伪元素选择器和红绿灯颜色
+  const hasMacBarPseudo =
+    css.includes("pre.custom::before") || css.includes("pre::before");
+  const hasMacBar = hasMacBarPseudo && css.includes("#ff5f56");
+
+  // 复制到微信时，将 CSS 伪元素替换为真实 HTML（微信会清洗伪元素）
+  if (hasMacBar && inlinePseudoElements) {
+    let paddingTop = 36;
+    const paddingMatch = css.match(
+      /pre\s+code\.hljs\s*\{[^}]*padding:\s*(\d+)px/i,
+    );
+    if (paddingMatch) {
+      paddingTop = parseInt(paddingMatch[1], 10);
+    }
+    const marginTop = -(paddingTop - 12);
+
+    const macBarHtml = `<span style="display:block;margin:${marginTop}px 0 16px 0;line-height:1;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ff5f56;margin-right:8px;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ffbd2e;margin-right:8px;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#27c93f;"></span></span>`;
+
+    html = html.replace(
+      /<code([^>]*class="[^"]*\bhljs\b[^"]*"[^>]*)>/gi,
+      `<code$1>${macBarHtml}`,
+    );
+
+    // 移除 CSS 伪元素规则，避免重复
+    css = css.replace(
+      /#wemd[^{]*pre[^{]*::before\s*\{[^}]*#ff5f56[^}]*\}/gi,
+      "",
+    );
+  }
+
   // 将 HTML 包裹在 id="wemd" 的 section 中，以便 juice 能够匹配以 #wemd 开头的选择器
   const wrappedHtml = `<section id="${SECTION_ID}">${html}</section>`;
 
