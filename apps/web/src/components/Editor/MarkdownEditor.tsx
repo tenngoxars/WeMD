@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { EditorView, minimalSetup } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { EditorState, Prec } from "@codemirror/state";
-import { indentWithTab } from "@codemirror/commands";
+import { EditorState } from "@codemirror/state";
 import { githubLight } from "@uiw/codemirror-theme-github";
 import {
   wechatMarkdownHighlighting,
@@ -17,6 +16,7 @@ import { SearchPanel } from "./SearchPanel";
 import { SaveIndicator } from "./SaveIndicator";
 import toast from "react-hot-toast";
 import "./MarkdownEditor.css";
+import { customKeymap } from "./editorShortcuts";
 
 const SYNC_SCROLL_EVENT = "wemd-sync-scroll";
 
@@ -24,37 +24,6 @@ interface SyncScrollDetail {
   source: "editor" | "preview";
   ratio: number;
 }
-
-// 辅助函数：用 prefix/suffix 包裹选中文本
-function wrapSelection(
-  view: EditorView,
-  prefix: string,
-  suffix: string,
-): boolean {
-  const selection = view.state.selection.main;
-  const selectedText = view.state.doc.sliceString(selection.from, selection.to);
-  const wrapped = prefix + (selectedText || "文本") + suffix;
-
-  view.dispatch({
-    changes: { from: selection.from, to: selection.to, insert: wrapped },
-    selection: selectedText
-      ? { anchor: selection.from, head: selection.from + wrapped.length }
-      : {
-          anchor: selection.from + prefix.length,
-          head: selection.from + prefix.length + 2,
-        },
-  });
-  return true; // 阻止浏览器默认行为
-}
-
-// Markdown 格式化快捷键
-const markdownKeymap = Prec.highest(
-  keymap.of([
-    { key: "Mod-b", run: (view) => wrapSelection(view, "**", "**") },
-    { key: "Mod-i", run: (view) => wrapSelection(view, "*", "*") },
-    indentWithTab,
-  ]),
-);
 
 export function MarkdownEditor() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -64,7 +33,6 @@ export function MarkdownEditor() {
   const isSyncingRef = useRef(false);
   const [showSearch, setShowSearch] = useState(false);
 
-  // Cmd/Ctrl+F 打开搜索面板
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "f") {
@@ -79,7 +47,6 @@ export function MarkdownEditor() {
   useEffect(() => {
     if (!editorRef.current) return;
 
-    // 主题切换时使用当前内容，首次加载时使用 store 中的内容
     const currentContent = viewRef.current
       ? viewRef.current.state.doc.toString()
       : content;
@@ -88,7 +55,7 @@ export function MarkdownEditor() {
       doc: currentContent,
       extensions: [
         minimalSetup,
-        markdownKeymap,
+        customKeymap,
         markdown({ base: markdownLanguage }),
         uiTheme === "dark"
           ? wechatMarkdownHighlightingDark
@@ -250,8 +217,7 @@ export function MarkdownEditor() {
       );
       view.destroy();
     };
-    // uiTheme 变化时重建编辑器以应用新主题
-    // content 故意不加入依赖，因为内容同步由下方 useEffect 处理
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setMarkdown, uiTheme]);
 
@@ -268,7 +234,6 @@ export function MarkdownEditor() {
   const wordCount = countWords(content);
   const lineCount = countLines(content);
 
-  // 处理工具栏文本插入
   const handleInsert = (
     prefix: string,
     suffix: string,
