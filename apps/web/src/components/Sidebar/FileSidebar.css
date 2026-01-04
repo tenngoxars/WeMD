@@ -457,3 +457,99 @@
   border-color: var(--error);
   box-shadow: 0 8px 16px color-mix(in srgb, var(--error) 24%, transparent);
 }
+
+.file-sidebar-footer {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: var(--border-width) solid var(--border-light);
+  background: color-mix(in srgb, var(--bg-primary) 60%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.fs-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fs-footer-logo img {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.fs-footer-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.fs-footer-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.fs-footer-version {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.fs-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fs-footer-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.fs-footer-links a:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Footer Tooltips */
+.fs-footer-links a {
+  position: relative;
+}
+
+.fs-footer-links a::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 4px 8px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s,
+    transform 0.15s;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.fs-footer-links a:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-4px);
+}
