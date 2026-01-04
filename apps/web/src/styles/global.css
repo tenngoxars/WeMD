@@ -1,174 +1,183 @@
 /* 全局样式 - 现代亮色主题 */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "./local-fonts.css";
 
 :root {
-    --bg-page: var(--ui-bg-page);
-    --bg-primary: var(--ui-bg-primary);
-    --bg-secondary: var(--ui-bg-secondary);
-    --bg-tertiary: var(--ui-bg-tertiary);
-    --bg-hover: var(--ui-bg-hover);
-    --bg-card-muted: var(--ui-bg-card-muted);
+  --bg-page: var(--ui-bg-page);
+  --bg-primary: var(--ui-bg-primary);
+  --bg-secondary: var(--ui-bg-secondary);
+  --bg-tertiary: var(--ui-bg-tertiary);
+  --bg-hover: var(--ui-bg-hover);
+  --bg-card-muted: var(--ui-bg-card-muted);
 
-    --text-primary: var(--ui-text-primary);
-    --text-secondary: var(--ui-text-secondary);
-    --text-tertiary: var(--ui-text-tertiary);
+  --text-primary: var(--ui-text-primary);
+  --text-secondary: var(--ui-text-secondary);
+  --text-tertiary: var(--ui-text-tertiary);
 
-    --glass-bg: color-mix(in srgb, var(--ui-bg-primary) 92%, transparent);
-    --glass-border: color-mix(in srgb, var(--ui-border-color) 40%, transparent);
-    --glass-shadow: var(--ui-shadow-lg);
-    --glass-blur: var(--ui-glass-blur);
+  --glass-bg: color-mix(in srgb, var(--ui-bg-primary) 92%, transparent);
+  --glass-border: color-mix(in srgb, var(--ui-border-color) 40%, transparent);
+  --glass-shadow: var(--ui-shadow-lg);
+  --glass-blur: var(--ui-glass-blur);
 
-    --border-color: var(--ui-border-color);
-    --border-light: var(--ui-border-light);
+  --border-color: var(--ui-border-color);
+  --border-light: var(--ui-border-light);
 
-    --accent-primary: var(--ui-accent-primary);
-    --accent-hover: color-mix(in srgb, var(--ui-accent-primary) 85%, #ffffff);
-    --accent-active: color-mix(in srgb, var(--ui-accent-primary) 75%, #000000);
-    --accent-gradient: var(--ui-accent-gradient);
+  --accent-primary: var(--ui-accent-primary);
+  --accent-hover: color-mix(in srgb, var(--ui-accent-primary) 85%, #ffffff);
+  --accent-active: color-mix(in srgb, var(--ui-accent-primary) 75%, #000000);
+  --accent-gradient: var(--ui-accent-gradient);
 
-    --success: #10b981;
-    --success-bg: #ecfdf5;
-    --warning: #f59e0b;
-    --error: #ef4444;
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --warning: #f59e0b;
+  --error: #ef4444;
 
-    --shadow-sm: var(--ui-shadow-sm);
-    --shadow-md: var(--ui-shadow-md);
-    --shadow-lg: var(--ui-shadow-lg);
-    --shadow-premium:
-        0 0 0 var(--border-width) color-mix(in srgb, var(--ui-border-color) 25%, transparent),
-        var(--ui-shadow-md);
+  --shadow-sm: var(--ui-shadow-sm);
+  --shadow-md: var(--ui-shadow-md);
+  --shadow-lg: var(--ui-shadow-lg);
+  --shadow-premium:
+    0 0 0 var(--border-width)
+      color-mix(in srgb, var(--ui-border-color) 25%, transparent),
+    var(--ui-shadow-md);
 
-    --radius-sm: var(--ui-radius-sm);
-    --radius-md: var(--ui-radius-md);
-    --radius-lg: var(--ui-radius-lg);
-    --radius-xl: var(--ui-radius-xl);
+  --radius-sm: var(--ui-radius-sm);
+  --radius-md: var(--ui-radius-md);
+  --radius-lg: var(--ui-radius-lg);
+  --radius-xl: var(--ui-radius-xl);
 
-    --font-sans: var(--ui-font-sans, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif);
-    --font-mono: var(--ui-font-mono);
+  --font-sans: var(
+    --ui-font-sans,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "Segoe UI",
+    "Roboto",
+    "Helvetica Neue",
+    sans-serif
+  );
+  --font-mono: var(--ui-font-mono);
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: var(--font-sans);
-    background: var(--bg-page);
-    color: var(--text-primary);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  font-family: var(--font-sans);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* 滚动条样式 - 更加纤细现代 */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    transition: background 0.2s;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 /* 选中文本 */
 ::selection {
-    background: color-mix(in srgb, var(--accent-primary) 25%, transparent);
-    color: inherit;
+  background: color-mix(in srgb, var(--accent-primary) 25%, transparent);
+  color: inherit;
 }
 
 /* 按钮基础样式 */
 button {
-    font-family: var(--font-sans);
-    cursor: pointer;
-    border: var(--border-width) solid transparent;
-    border-radius: var(--radius-sm);
-    outline: none;
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    transition: all 0.2s ease;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-sm);
+  outline: none;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
 }
 
 button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 输入框基础样式 */
 input,
 textarea {
-    font-family: var(--font-sans);
-    outline: none;
+  font-family: var(--font-sans);
+  outline: none;
 }
 
 /* 链接 */
 a {
-    color: var(--accent-primary);
-    text-decoration: none;
-    transition: color 0.2s ease;
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 a:hover {
-    color: var(--accent-hover);
+  color: var(--accent-hover);
 }
 
 /* 动画 */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
 
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 @keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* 工具类 */
 .gradient-text {
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .fs-title,
 .history-title {
-    -webkit-text-fill-color: inherit;
+  -webkit-text-fill-color: inherit;
 }
