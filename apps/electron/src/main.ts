@@ -166,7 +166,7 @@ function createWindow() {
             symbolColor: '#2c2c2c',
             height: 48,
         },
-        trafficLightPosition: { x: 34, y: 45 },
+        trafficLightPosition: { x: 20, y: 28 },
     });
 
     const startUrl = process.env.ELECTRON_START_URL
@@ -440,9 +440,6 @@ app.whenReady().then(() => {
     // macOS 会自动使用 app bundle 中的 icon.icns 作为 dock 图标
     createWindow();
     createMenu();
-    if (mainWindow) {
-        mainWindow.maximize();
-    }
 
     // 延迟 3 秒检查更新，避免阻塞启动
     setTimeout(() => {

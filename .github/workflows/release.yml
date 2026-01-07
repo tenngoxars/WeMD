@@ -11,7 +11,9 @@ permissions:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-13
+    env:
+      DEBUG_DMG: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,8 +38,16 @@ jobs:
       - name: Install Electron deps
         run: cd apps/electron && pnpm install --frozen-lockfile
 
+      - name: Sync disk before build
+        run: sync
+
       - name: Build Electron (macOS)
-        run: cd apps/electron && pnpm run build:mac
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: cd apps/electron && pnpm run build:mac
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

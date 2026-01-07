@@ -147,7 +147,7 @@ export function Header() {
 
   // Mac 平台使用内联样式强制避让
   const headerStyle =
-    platform === "darwin" ? { paddingLeft: "100px" } : undefined;
+    platform === "darwin" ? { paddingLeft: "80px" } : undefined;
 
   return (
     <>
