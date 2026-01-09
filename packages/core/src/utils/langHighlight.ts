@@ -3,6 +3,7 @@ import hljs from "highlight.js/lib/core";
 
 // 语言定义导入
 import bash from "highlight.js/lib/languages/bash";
+import c from "highlight.js/lib/languages/c";
 import clojure from "highlight.js/lib/languages/clojure";
 import cpp from "highlight.js/lib/languages/cpp";
 import csharp from "highlight.js/lib/languages/csharp";
@@ -46,6 +47,7 @@ import protobuf from "highlight.js/lib/languages/protobuf";
 
 // 注册语言
 hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("c", c);
 hljs.registerLanguage("clojure", clojure);
 hljs.registerLanguage("cpp", cpp);
 hljs.registerLanguage("cs", csharp);
