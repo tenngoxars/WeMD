@@ -1,6 +1,6 @@
 {
   "name": "wemd-electron",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "WeMD - 更优雅的 Markdown 公众号排版工具",
   "main": "dist/main.js",
   "homepage": "https://wemd.app",
