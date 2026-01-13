@@ -89,7 +89,7 @@ export function ColorSelector({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [tempColor, setTempColor] = useState(value);
   const [hsl, setHsl] = useState(
-    hexToHsl(value.startsWith("#") ? value : "#000000"),
+    hexToHsl((value || "").startsWith("#") ? value : "#000000"),
   );
   const [popoverPos, setPopoverPos] = useState<{
     top: number;
@@ -132,7 +132,7 @@ export function ColorSelector({
 
   useEffect(() => {
     if (showColorPicker) {
-      const startColor = value.startsWith("#") ? value : "#000000";
+      const startColor = (value || "").startsWith("#") ? value : "#000000";
       setTempColor(startColor);
       setHsl(hexToHsl(startColor));
 

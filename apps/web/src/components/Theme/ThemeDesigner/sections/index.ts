@@ -7,3 +7,4 @@ export { CodeSection } from "./CodeSection";
 export { ImageSection } from "./ImageSection";
 export { TableHrSection } from "./TableHrSection";
 export { OtherSection } from "./OtherSection";
+export { MermaidSection } from "./MermaidSection";

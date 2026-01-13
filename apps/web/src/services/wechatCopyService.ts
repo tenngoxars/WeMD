@@ -6,6 +6,11 @@ import { loadMathJax } from "../utils/mathJaxLoader";
 import { hasMathFormula } from "../utils/katexRenderer";
 import { convertLinksToFootnotes } from "../utils/linkFootnote";
 import { getLinkToFootnoteEnabled } from "../components/Editor/ToolbarState";
+import { useThemeStore } from "../store/themeStore";
+import {
+  getMermaidConfig,
+  getThemedMermaidDiagram,
+} from "../utils/mermaidConfig";
 
 const buildCopyCss = (themeCss: string) => {
   if (!themeCss) return katexCss;
@@ -32,11 +37,21 @@ let mermaidInitialized = false;
 
 const ensureMermaidInitialized = () => {
   if (mermaidInitialized) return;
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: "default",
-  });
-  mermaidInitialized = true;
+  try {
+    mermaid.initialize({ startOnLoad: false });
+    mermaidInitialized = true;
+  } catch (e) {
+    console.error("Mermaid initialization failed in copy service:", e);
+  }
+};
+
+const getThemeInfo = () => {
+  const state = useThemeStore.getState();
+  const themeId = state.themeId;
+  const currentTheme =
+    state.customThemes.find((t) => t.id === themeId) ||
+    state.getAllThemes().find((t) => t.id === themeId);
+  return currentTheme?.designerVariables;
 };
 
 const getSvgDimensions = (svgElement: SVGElement) => {
@@ -78,7 +93,7 @@ const getSvgDimensions = (svgElement: SVGElement) => {
 const svgMarkupToPng = async (svgMarkup: string): Promise<string> => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgMarkup, "image/svg+xml");
-  const svgElement = doc.documentElement as SVGElement;
+  const svgElement = doc.documentElement as unknown as SVGElement;
   const { width, height } = getSvgDimensions(svgElement);
 
   svgElement.setAttribute("width", String(width));
@@ -124,14 +139,23 @@ const renderMermaidBlocks = async (container: HTMLElement): Promise<void> => {
   if (mermaidBlocks.length === 0) return;
 
   ensureMermaidInitialized();
+  const designerVariables = getThemeInfo();
+  const mermaidTheme = (designerVariables?.mermaidTheme as string) || "base";
   const renderIdBase = `wemd-mermaid-${Date.now()}`;
+
+  // 构建 Mermaid 配置
+  const initConfig = getMermaidConfig(designerVariables);
 
   for (const [index, block] of mermaidBlocks.entries()) {
     const diagram = block.textContent ?? "";
     if (!diagram.trim()) continue;
 
     try {
-      const { svg } = await mermaid.render(`${renderIdBase}-${index}`, diagram);
+      const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
+      const { svg } = await mermaid.render(
+        `${renderIdBase}-${index}`,
+        themedDiagram,
+      );
       const pngDataUrl = await svgMarkupToPng(svg);
       const figure = document.createElement("div");
       figure.style.margin = "1em 0";

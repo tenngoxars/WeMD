@@ -293,20 +293,30 @@ export function generateCSS(v: DesignerVariables): string {
   ${v.quoteTextCentered ? "text-align: center !important;" : ""}
 }
 
-#wemd pre code.hljs {
+#wemd pre {
+  margin: ${v.paragraphMargin}px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#wemd pre code {
   display: block;
   background: ${v.codeBackground};
   font-size: ${v.codeFontSize}px;
   padding: ${v.showMacBar ? "36px 16px 16px" : "16px"};
   position: relative;
   white-space: pre;
-  overflow-x: auto;
   border-radius: 8px;
+  word-wrap: normal;
+  word-break: keep-all;
+  text-align: left;
+  letter-spacing: 0;
+  word-spacing: 0;
+  min-width: max-content;
 }
 
 #wemd pre.custom {
   position: relative;
-  overflow: visible;
   margin: ${v.paragraphMargin}px 0;
 }
 
@@ -337,8 +347,18 @@ ${getCodeThemeCSS(v.codeTheme)}
   border-radius: ${v.inlineCodeStyle === "rounded" ? "12px" : v.inlineCodeStyle === "github" ? "4px" : "2px"};
   font-size: 0.9em;
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  white-space: normal;
   ${v.inlineCodeStyle === "github" ? "border: 1px solid rgba(0,0,0,0.06);" : ""}
   ${v.inlineCodeStyle === "color-text" ? `background: transparent; font-weight: bold; border-bottom: 2px solid ${v.primaryColor}50;` : ""}
+}
+
+/* 代码块样式需要更高优先级覆盖行内代码样式 */
+#wemd pre code,
+#wemd pre code.hljs {
+  white-space: pre;
+  text-align: left;
+  letter-spacing: 0;
+  word-spacing: 0;
 }
 
 #wemd a {
@@ -612,12 +632,13 @@ ${quotePreset.extra}
   margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   letter-spacing: 0.05em;
 }
 
 #wemd .callout-icon {
   font-size: 18px;
+  margin-right: 8px;
 }
 
 #wemd .callout p {

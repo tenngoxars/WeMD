@@ -479,7 +479,7 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.05em;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
   font-size: 20px;
 }
 

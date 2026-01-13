@@ -30,6 +30,26 @@ interface ThemePanelProps {
   onClose: () => void;
 }
 
+const normalizeDesignerVariables = (
+  variables?: DesignerVariables,
+): DesignerVariables => ({
+  ...defaultVariables,
+  ...variables,
+  h1: { ...defaultVariables.h1, ...variables?.h1 },
+  h2: { ...defaultVariables.h2, ...variables?.h2 },
+  h3: { ...defaultVariables.h3, ...variables?.h3 },
+  h4: { ...defaultVariables.h4, ...variables?.h4 },
+});
+
+const areDesignerVariablesEqual = (
+  a?: DesignerVariables,
+  b?: DesignerVariables,
+) => {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+};
+
 export function ThemePanel({ open, onClose }: ThemePanelProps) {
   const theme = useThemeStore((state) => state.themeId);
   const selectTheme = useThemeStore((state) => state.selectTheme);
@@ -70,6 +90,9 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
   const [editorMode, setEditorMode] = useState<"visual" | "css">("visual");
   const [originalName, setOriginalName] = useState("");
   const [originalCss, setOriginalCss] = useState("");
+  const [originalDesignerVariables, setOriginalDesignerVariables] = useState<
+    DesignerVariables | undefined
+  >(undefined);
 
   const selectedTheme = allThemes.find((t) => t.id === selectedThemeId);
   const isCustomTheme = selectedTheme && !selectedTheme.isBuiltIn;
@@ -84,8 +107,16 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
     }
   }, [open]);
 
+  const isVisualCustom =
+    isCustomTheme && selectedTheme?.editorMode === "visual";
+  const hasDesignerChanges =
+    isVisualCustom &&
+    !areDesignerVariablesEqual(designerVariables, originalDesignerVariables);
   const hasChanges =
-    isCustomTheme && (nameInput !== originalName || cssInput !== originalCss);
+    isCustomTheme &&
+    (nameInput !== originalName ||
+      cssInput !== originalCss ||
+      hasDesignerChanges);
 
   const prevOpenRef = useRef(false);
   useEffect(() => {
@@ -100,16 +131,19 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
         setCssInput(currentTheme.css);
         // 从主题读取编辑模式和变量
         setEditorMode(currentTheme.editorMode || "css");
-        setDesignerVariables({
-          ...defaultVariables,
-          ...currentTheme.designerVariables,
-        });
+        const nextDesignerVariables =
+          currentTheme.editorMode === "visual"
+            ? normalizeDesignerVariables(currentTheme.designerVariables)
+            : undefined;
+        setDesignerVariables(nextDesignerVariables);
+        setOriginalDesignerVariables(nextDesignerVariables);
         // 记录原始值用于比较
         setOriginalName(currentTheme.name);
         setOriginalCss(currentTheme.css);
       } else {
         setEditorMode("css");
         setDesignerVariables(undefined);
+        setOriginalDesignerVariables(undefined);
         setOriginalName("");
         setOriginalCss("");
       }
@@ -129,7 +163,12 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
     setCssInput(theme.css);
     setEditorMode(theme.editorMode || "css");
     setVisualCss("");
-    setDesignerVariables(theme.designerVariables);
+    const nextDesignerVariables =
+      theme.editorMode === "visual"
+        ? normalizeDesignerVariables(theme.designerVariables)
+        : undefined;
+    setDesignerVariables(nextDesignerVariables);
+    setOriginalDesignerVariables(nextDesignerVariables);
     // 记录原始值
     setOriginalName(theme.name);
     setOriginalCss(theme.css);
@@ -146,6 +185,7 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
     setCssInput("");
     setVisualCss("");
     setDesignerVariables(undefined);
+    setOriginalDesignerVariables(undefined);
     setShowDeleteConfirm(false);
   };
 
@@ -160,7 +200,7 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
   };
 
   const handleVariablesChange = (vars: DesignerVariables) => {
-    setDesignerVariables(vars);
+    setDesignerVariables(normalizeDesignerVariables(vars));
   };
 
   const handleCssInputChange = (value: string) => {
@@ -247,6 +287,9 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
       // 重置原始值，使 hasChanges 变为 false
       setOriginalName(nameInput);
       setOriginalCss(cssToSave);
+      setOriginalDesignerVariables(
+        editorMode === "visual" ? designerVariables : undefined,
+      );
       setIsCreating(false);
       toast.success("主题创建成功");
     } else if (isCustomTheme) {
@@ -285,6 +328,9 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
       // 保存后重置原始值
       setOriginalName(nameInput.trim() || "未命名主题");
       setOriginalCss(cssInput);
+      setOriginalDesignerVariables(
+        isVisualMode ? designerVariables : undefined,
+      );
       toast.success("主题已保存");
     }
   };
@@ -472,7 +518,12 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
                 <>
                   {/* 实时预览区 */}
                   <div className="theme-form-preview">
-                    <ThemeLivePreview css={previewCss} />
+                    <ThemeLivePreview
+                      css={previewCss}
+                      designerVariables={
+                        isVisualEditing ? designerVariables : undefined
+                      }
+                    />
                   </div>
 
                   <div className="theme-form-fields">

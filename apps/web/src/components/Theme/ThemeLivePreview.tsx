@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useRef, memo } from "react";
+import mermaid from "mermaid";
 import {
   createMarkdownParser,
   processHtml,
   convertCssToWeChatDarkMode,
 } from "@wemd/core";
 import { useUITheme } from "../../hooks/useUITheme";
+import type { DesignerVariables } from "./ThemeDesigner/types";
+import {
+  getMermaidConfig,
+  getThemedMermaidDiagram,
+} from "../../utils/mermaidConfig";
 
 // 主题预览用的示例 Markdown 内容
 const PREVIEW_MARKDOWN = `# 一级标题示例
@@ -53,22 +59,38 @@ function hello() {
 }
 \`\`\`
 
+\`\`\`mermaid
+flowchart TD
+  Start([Start]) --> Check{Is valid?}
+  Check -- Yes --> Process[Process]
+  Check -- No --> Reject[Reject]
+  Process --> End([End])
+  Reject --> End
+\`\`\`
+
 ![WeMD 示例图片：不仅支持常规排版，更可以深度定制每一个细节。](https://img.wemd.app/example.jpg)
 `;
 
 interface ThemeLivePreviewProps {
   /** 要预览的 CSS 样式代码 */
   css: string;
+  designerVariables?: DesignerVariables;
 }
 
 // 主题实时预览组件（使用 iframe 隔离样式）
 export const ThemeLivePreview = memo(function ThemeLivePreview({
   css,
+  designerVariables,
 }: ThemeLivePreviewProps) {
   const parser = useMemo(() => createMarkdownParser(), []);
   const uiTheme = useUITheme((state) => state.theme);
   const isDarkMode = uiTheme === "dark";
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const mermaidRenderIdRef = useRef(0);
+  const lastHtmlRef = useRef<string>("");
+
+  const mermaidTheme = designerVariables?.mermaidTheme || "base";
+  const mermaidConfigKey = useMemo(() => mermaidTheme, [mermaidTheme]);
 
   const shellDoc = useMemo(
     () => `
@@ -108,6 +130,45 @@ export const ThemeLivePreview = memo(function ThemeLivePreview({
     const iframe = iframeRef.current;
     if (!iframe) return;
 
+    const renderMermaid = async (doc: Document) => {
+      const blocks = Array.from(
+        doc.querySelectorAll<HTMLElement>("pre.mermaid"),
+      );
+      if (blocks.length === 0) return;
+
+      try {
+        mermaid.initialize({ startOnLoad: false });
+      } catch (e) {
+        console.error("Mermaid initialization failed in preview:", e);
+        return;
+      }
+
+      const initConfig = getMermaidConfig(designerVariables);
+
+      const renderToken = ++mermaidRenderIdRef.current;
+      for (const [index, block] of blocks.entries()) {
+        if (!block.dataset.mermaidRaw) {
+          block.dataset.mermaidRaw = block.textContent ?? "";
+        }
+        const diagram = block.dataset.mermaidRaw ?? "";
+        if (!diagram.trim()) continue;
+
+        const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
+        try {
+          const { svg } = await mermaid.render(
+            `theme-preview-${renderToken}-${index}`,
+            themedDiagram,
+          );
+          if (mermaidRenderIdRef.current !== renderToken) {
+            return;
+          }
+          block.innerHTML = svg;
+        } catch (e) {
+          console.error("Mermaid render error:", e);
+        }
+      }
+    };
+
     const updateContent = () => {
       const doc = iframe.contentDocument || iframe.contentWindow?.document;
       if (!doc) return;
@@ -122,9 +183,13 @@ export const ThemeLivePreview = memo(function ThemeLivePreview({
         doc.body.style.color = isDarkMode ? "#d4d4d4" : "#000";
 
         themeStyle.textContent = finalCss;
-        root.innerHTML = html;
+        if (lastHtmlRef.current !== html) {
+          root.innerHTML = html;
+          lastHtmlRef.current = html;
+        }
 
         iframe.contentWindow?.scrollTo(0, scrollY);
+        void renderMermaid(doc);
       }
     };
 
@@ -138,7 +203,7 @@ export const ThemeLivePreview = memo(function ThemeLivePreview({
     } else {
       iframe.onload = updateContent;
     }
-  }, [html, finalCss, isDarkMode]);
+  }, [html, finalCss, isDarkMode, mermaidConfigKey]);
 
   return (
     <div className="theme-live-preview">

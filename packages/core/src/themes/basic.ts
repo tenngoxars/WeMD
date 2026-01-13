@@ -466,11 +466,11 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   letter-spacing: 0.05em;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
   font-size: 18px;
 }
 
@@ -486,7 +486,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   margin-left: -1.2em;
   margin-bottom: 6px;
   display: flex;
-  gap: 8px;
+  gap: 0;
   align-items: flex-start;
 }
 

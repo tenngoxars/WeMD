@@ -395,7 +395,7 @@ export const luxuryGoldTheme = `/* 黑金奢华风格 */
     font-size: 15px;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 

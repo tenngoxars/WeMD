@@ -345,7 +345,7 @@ export const academicPaperTheme = `/* 学术论文风格 */
     color: #000;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 

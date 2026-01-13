@@ -464,7 +464,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     font-size: 15px;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 

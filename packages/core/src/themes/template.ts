@@ -535,7 +535,7 @@ export const templateTheme = `/*
     font-size: 15px;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 

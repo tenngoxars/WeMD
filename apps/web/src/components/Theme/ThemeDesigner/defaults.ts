@@ -134,4 +134,7 @@ export const defaultVariables: DesignerVariables = {
 
   // 提示块
   calloutStyle: "default",
+
+  // Mermaid
+  mermaidTheme: "base",
 };

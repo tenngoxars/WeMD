@@ -116,10 +116,54 @@ export const processHtml = (
   }
 
   try {
-    const res = juice.inlineContent(wrappedHtml, css, {
+    let res = juice.inlineContent(wrappedHtml, css, {
       inlinePseudoElements,
       preserveImportant: true,
     });
+
+    // 在 juice 处理之后，为代码块追加关键内联样式
+    // 这确保我们的样式不会被 juice 覆盖，且优先级最高
+    if (inlinePseudoElements) {
+      const appendStyleValue = (styleValue: string, extra: string) => {
+        const trimmed = styleValue.trim();
+        if (!trimmed) return extra;
+        const needsSemicolon = !trimmed.endsWith(";");
+        return `${trimmed}${needsSemicolon ? ";" : ""}${extra}`;
+      };
+
+      // 处理 pre 元素：确保 overflow 和 white-space 正确
+      res = res.replace(
+        /<pre([^>]*)(style="[^"]*")([^>]*)>/gi,
+        (match, before: string, styleAttr: string, after: string) => {
+          const styleMatch = styleAttr.match(/style="([^"]*)"/i);
+          const existing = styleMatch ? styleMatch[1] : "";
+          const nextStyle = appendStyleValue(
+            existing,
+            "overflow-x:auto;-webkit-overflow-scrolling:touch;",
+          );
+          return `<pre${before}style="${nextStyle}"${after}>`;
+        },
+      );
+
+      // 处理 code 元素：防止 text-align:justify 破坏代码格式
+      // 匹配所有带 style 属性的 code 元素（不限制 class）
+      res = res.replace(
+        /<code([^>]*)(style="[^"]*")([^>]*)>/gi,
+        (match, before: string, styleAttr: string, after: string) => {
+          const styleMatch = styleAttr.match(/style="([^"]*)"/i);
+          const existing = styleMatch ? styleMatch[1] : "";
+          const normalized = existing.replace(
+            /white-space:\s*pre-wrap/gi,
+            "white-space:pre",
+          );
+          const nextStyle = appendStyleValue(
+            normalized,
+            "text-align:left;letter-spacing:0;word-spacing:0;",
+          );
+          return `<code${before}style="${nextStyle}"${after}>`;
+        },
+      );
+    }
 
     return res;
   } catch (e) {

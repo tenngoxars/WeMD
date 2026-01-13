@@ -519,7 +519,7 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
     font-size: 16px;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 

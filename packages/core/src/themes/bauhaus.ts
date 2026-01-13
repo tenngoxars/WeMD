@@ -384,7 +384,7 @@ export const bauhausTheme = `/* 包豪斯风格 */
     font-size: 16px;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 

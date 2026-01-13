@@ -10,6 +10,10 @@ import {
   getLinkToFootnoteEnabled,
   LINK_TO_FOOTNOTE_EVENT,
 } from "../Editor/ToolbarState";
+import {
+  getMermaidConfig,
+  getThemedMermaidDiagram,
+} from "../../utils/mermaidConfig";
 import "./MarkdownPreview.css";
 
 const SYNC_SCROLL_EVENT = "wemd-sync-scroll";
@@ -30,6 +34,7 @@ export function MarkdownPreview() {
   const previewRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef(false);
+  const mermaidRenderIdRef = useRef(0);
 
   // 缓存 parser 实例，避免每次渲染都创建新实例
   const parser = useMemo(() => createMarkdownParser(), []);
@@ -79,32 +84,61 @@ export function MarkdownPreview() {
     return () => clearTimeout(timer);
   }, [html, markdown]);
 
+  // 获取当前主题对象（注意与 line 25 的 themeId 区分）
+  const currentTheme = useThemeStore(
+    (state) =>
+      state.customThemes.find((t) => t.id === state.themeId) ||
+      state.getAllThemes().find((t) => t.id === state.themeId),
+  );
+
+  const designerVars = currentTheme?.designerVariables;
+  const mermaidTheme = designerVars?.mermaidTheme || "base";
+  const mermaidConfigKey = useMemo(() => mermaidTheme, [mermaidTheme]);
+
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "default",
-    });
+    try {
+      mermaid.initialize({ startOnLoad: false });
+    } catch (e) {
+      console.error("Mermaid initialization failed:", e);
+    }
   }, []);
 
   useEffect(() => {
     if (!previewRef.current || !html) return;
 
-    const mermaidBlocks = previewRef.current.querySelectorAll(".mermaid");
+    const mermaidBlocks = Array.from(
+      previewRef.current.querySelectorAll<HTMLElement>(".mermaid"),
+    );
     if (mermaidBlocks.length === 0) return;
+    const renderToken = ++mermaidRenderIdRef.current;
 
     // 延迟渲染以确保 DOM 更新完成
     const timer = setTimeout(() => {
-      mermaid
-        .run({
-          nodes: mermaidBlocks as unknown as HTMLElement[],
-        })
-        .catch((e) => {
-          console.error("Mermaid render error:", e);
-        });
+      const initConfig = getMermaidConfig(designerVars);
+
+      mermaidBlocks.forEach((block, index) => {
+        if (!block.dataset.mermaidRaw) {
+          block.dataset.mermaidRaw = block.textContent ?? "";
+        }
+        const diagram = block.dataset.mermaidRaw ?? "";
+        if (!diagram.trim()) return;
+
+        const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
+
+        mermaid
+          .render(`preview-${renderToken}-${index}`, themedDiagram)
+          .then(({ svg }) => {
+            if (mermaidRenderIdRef.current !== renderToken) return;
+            block.innerHTML = svg;
+          })
+          .catch((e) => {
+            console.error("Mermaid render error:", e);
+          });
+      });
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [html]);
+  }, [html, mermaidConfigKey, designerVars]);
 
   // 处理预览栏滚动事件
   const handlePreviewScroll = useCallback(() => {

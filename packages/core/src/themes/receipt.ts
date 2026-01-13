@@ -388,7 +388,7 @@ export const receiptTheme = `/* 购物小票风格 */
     font-size: 14px;
 }
 
-#wemd .callout-icon {
+#wemd .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 

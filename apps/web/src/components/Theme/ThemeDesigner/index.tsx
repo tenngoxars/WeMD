@@ -12,6 +12,7 @@ import {
   ImageSection,
   TableHrSection,
   OtherSection,
+  MermaidSection,
 } from "./sections";
 import "../ThemeDesigner.css";
 
@@ -34,6 +35,7 @@ const sections = [
   { id: "code", label: "代码" },
   { id: "image", label: "图片" },
   { id: "table", label: "表格" },
+  { id: "mermaid", label: "Mermaid" },
   { id: "other", label: "其他" },
 ];
 
@@ -155,6 +157,13 @@ export function ThemeDesigner({
 
         {activeSection === "table" && (
           <TableHrSection
+            variables={variables}
+            updateVariable={updateVariable}
+          />
+        )}
+
+        {activeSection === "mermaid" && (
+          <MermaidSection
             variables={variables}
             updateVariable={updateVariable}
           />

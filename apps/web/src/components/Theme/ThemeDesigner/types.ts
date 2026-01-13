@@ -109,6 +109,9 @@ export interface DesignerVariables {
 
   // 提示块
   calloutStyle: "default" | "primary";
+
+  // Mermaid
+  mermaidTheme: "base" | "forest" | "dark" | "neutral" | "default";
 }
 
 /**
