@@ -76,6 +76,7 @@ export interface DesignerVariables {
   markBackground: string;
   markColor: string;
   strongStyle: string;
+  strongColor: string;
 
   // 表格
   tableHeaderBackground: string;

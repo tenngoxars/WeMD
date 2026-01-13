@@ -44,6 +44,14 @@ export function OtherSection({ variables, updateVariable }: SectionProps) {
           onChange={(color) => updateVariable("delColor", color)}
         />
       </div>
+      <div className="designer-field">
+        <label>加粗颜色</label>
+        <ColorSelector
+          value={variables.strongColor || "inherit"}
+          presets={["inherit", variables.primaryColor, "#333"]}
+          onChange={(color) => updateVariable("strongColor", color)}
+        />
+      </div>
       <div className="designer-row">
         <div className="designer-field half">
           <label>高亮背景</label>

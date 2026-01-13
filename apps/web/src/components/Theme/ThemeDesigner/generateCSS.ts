@@ -220,7 +220,13 @@ export function generateCSS(v: DesignerVariables): string {
 
 #wemd strong { 
   font-weight: bold;
-  ${v.strongStyle === "none" ? "color: inherit;" : `color: ${v.primaryColor};`}
+  ${
+    v.strongColor && v.strongColor !== "inherit"
+      ? `color: ${v.strongColor};`
+      : v.strongStyle === "none"
+        ? "color: inherit;"
+        : `color: ${v.primaryColor};`
+  }
   ${v.strongStyle === "highlighter" ? `background: ${v.primaryColor}20; padding: 0 2px; border-radius: 2px;` : ""}
   ${v.strongStyle === "highlighter-bottom" ? `background: linear-gradient(to bottom, transparent 60%, ${v.primaryColor}30 60%); padding: 0 2px;` : ""}
   ${v.strongStyle === "underline" ? `border-bottom: 2px solid ${v.primaryColor}; padding-bottom: 1px;` : ""}

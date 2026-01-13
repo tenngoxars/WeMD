@@ -101,6 +101,7 @@ export const defaultVariables: DesignerVariables = {
   markBackground: "#fff5b1",
   markColor: "inherit",
   strongStyle: "color",
+  strongColor: "inherit",
 
   // 表格
   tableHeaderBackground: "#f8f8f8",
