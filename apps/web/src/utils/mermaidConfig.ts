@@ -11,6 +11,13 @@ export interface MermaidConfig {
     tertiaryColor?: string;
     [key: string]: string | undefined;
   };
+  flowchart?: {
+    htmlLabels?: boolean;
+    padding?: number;
+    nodeSpacing?: number;
+    rankSpacing?: number;
+    [key: string]: any;
+  };
 }
 
 /**
@@ -22,9 +29,18 @@ export const getMermaidConfig = (
   designerVariables?: DesignerVariables,
 ): MermaidConfig => {
   const mermaidTheme = (designerVariables?.mermaidTheme as string) || "base";
+  const mermaidFontFamily =
+    designerVariables?.fontFamily ||
+    '-apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif';
 
   return {
     theme: mermaidTheme,
+    flowchart: {
+      htmlLabels: true,
+      padding: 20,
+      nodeSpacing: 50,
+      rankSpacing: 50,
+    },
     themeVariables: {
       primaryColor: designerVariables?.primaryColor,
       primaryTextColor: designerVariables?.paragraphColor,
@@ -33,7 +49,8 @@ export const getMermaidConfig = (
       secondaryColor: designerVariables?.primaryColor
         ? `${designerVariables.primaryColor}20`
         : undefined,
-      tertiaryColor: "#ffffff",
+      tertiaryColor: "#ffffff00",
+      fontFamily: mermaidFontFamily,
     },
   };
 };

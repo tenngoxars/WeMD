@@ -656,5 +656,25 @@ ${quotePreset.extra}
 #wemd .callout-important { border-left: 4px solid #8b5cf6; background: #f5f3ff; }
 #wemd .callout-warning { border-left: 4px solid #f59e0b; background: #fffbeb; }
 #wemd .callout-caution { border-left: 4px solid #ef4444; background: #fff5f5; }
+
+/* Mermaid 样式覆盖 */
+#wemd .mermaid .node foreignObject {
+  overflow: visible;
+}
+#wemd .mermaid .label {
+  color: ${v.paragraphColor};
+  font-family: ${v.fontFamily};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  line-height: 1.2;
+}
+#wemd .mermaid .label * {
+  margin: 0;
+  padding: 0;
+}
 `;
 }

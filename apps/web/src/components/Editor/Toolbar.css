@@ -1,106 +1,224 @@
 .md-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 12px;
-    background: var(--bg-secondary);
-    border-bottom: var(--border-width) solid var(--border-light);
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-bottom: var(--border-width) solid var(--border-light);
+  flex-wrap: wrap;
 }
 
 .md-toolbar-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .md-toolbar-btn:hover {
-    background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
-    color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  color: var(--accent-primary);
 }
 
 .md-toolbar-btn:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
 }
 
 .md-toolbar-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    color: var(--text-tertiary);
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: var(--text-tertiary);
 }
 
 .md-toolbar-btn:disabled:hover {
-    background: transparent;
-    color: var(--text-tertiary);
+  background: transparent;
+  color: var(--text-tertiary);
 }
 
 .spinning {
-    animation: spin 1s linear infinite;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
+  from {
+    transform: rotate(0deg);
+  }
 
-    to {
-        transform: rotate(360deg);
-    }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 自定义快速 Tooltip */
 .md-toolbar-btn {
-    position: relative;
+  position: relative;
 }
 
 .md-toolbar-btn::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-4px);
-    padding: 4px 8px;
-    background: var(--text-primary);
-    color: var(--bg-primary);
-    font-size: 11px;
-    font-weight: 500;
-    border-radius: var(--radius-sm);
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.15s, visibility 0.15s;
-    pointer-events: none;
-    z-index: 100;
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  padding: 4px 8px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+  z-index: 100;
 }
 
 .md-toolbar-btn:hover::after {
-    opacity: 1;
-    visibility: visible;
+  opacity: 1;
+  visibility: visible;
 }
 
 /* 分隔符 */
 .md-toolbar-divider {
-    width: 1px;
-    height: 20px;
-    background: var(--border-light);
-    margin: 0 8px;
+  width: 1px;
+  height: 20px;
+  background: var(--border-light);
+  margin: 0 8px;
 }
 
 /* Toggle 按钮激活状态 */
 .md-toolbar-toggle.active {
-    background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
-    color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  color: var(--accent-primary);
 }
 
-.md-toolbar-toggle.active:hover {
-    background: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+.md-toolbar-btn.active {
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  color: var(--accent-primary);
+}
+
+/* Dropdown Menu Styles */
+.md-toolbar-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.md-toolbar-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  min-width: 140px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.md-toolbar-dropdown-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.md-toolbar-dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+}
+
+.md-toolbar-dropdown-item.active {
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+}
+
+.md-toolbar-dropdown-item svg {
+  margin-right: 8px;
+  opacity: 0.7;
+}
+
+.md-toolbar-dropdown-item:hover svg {
+  opacity: 1;
+}
+
+.md-toolbar-dropdown-item.active svg {
+  opacity: 1;
+}
+
+.md-toolbar-dropdown-more {
+  position: relative;
+}
+
+.md-toolbar-dropdown-more-btn {
+  justify-content: space-between;
+}
+
+.md-toolbar-dropdown-item .md-toolbar-dropdown-chevron {
+  margin-left: auto;
+  margin-right: 0;
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+}
+
+.md-toolbar-dropdown-submenu {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 6px);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  z-index: 1001;
+  min-width: 140px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transform: translate3d(0, -50%, 0);
+  animation: dropdown-slide 0.15s ease;
+}
+
+.md-toolbar-dropdown-submenu.is-left {
+  left: auto;
+  right: calc(100% + 6px);
+}
+
+.md-toolbar-dropdown-more-btn.active .md-toolbar-dropdown-chevron {
+  opacity: 1;
+}
+
+@keyframes dropdown-slide {
+  from {
+    opacity: 0;
+    transform: translate3d(-4px, -50%, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, -50%, 0);
+  }
 }
