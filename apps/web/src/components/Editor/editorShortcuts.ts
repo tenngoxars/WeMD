@@ -155,7 +155,25 @@ export const customKeymap = Prec.highest(
       },
     },
 
-    { key: "Mod-k", run: (view) => wrapSelection(view, "[", "]()") },
+    {
+      key: "Mod-k",
+      run: (view) => {
+        const selection = view.state.selection.main;
+        const selectedText = view.state.doc.sliceString(
+          selection.from,
+          selection.to,
+        );
+        const linkText = selectedText || "文本";
+        const wrapped = `[${linkText}]()`;
+        // 计算括号内的光标位置
+        const cursorPos = selection.from + 1 + linkText.length + 2;
+        view.dispatch({
+          changes: { from: selection.from, to: selection.to, insert: wrapped },
+          selection: { anchor: cursorPos, head: cursorPos },
+        });
+        return true;
+      },
+    },
     {
       key: imageShortcut,
       run: (view) => {
