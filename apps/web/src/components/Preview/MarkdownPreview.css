@@ -37,7 +37,8 @@
 }
 
 .preview-content {
-  max-width: 800px;
+  width: 402px;
+  flex-shrink: 0;
   margin: 0 auto;
   background: var(--bg-primary);
   padding: 40px;
