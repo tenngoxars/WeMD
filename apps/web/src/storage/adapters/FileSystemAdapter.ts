@@ -519,7 +519,10 @@ export class FileSystemAdapter implements StorageAdapter {
         const nextTarget = await target.getDirectoryHandle(entry.name, {
           create: true,
         });
-        await this.copyDirectoryRecursive(entry, nextTarget);
+        await this.copyDirectoryRecursive(
+          entry as FileSystemDirectoryHandle,
+          nextTarget,
+        );
       } else {
         const file = await (entry as FileSystemFileHandle).getFile();
         const fileHandle = await target.getFileHandle(entry.name, {
@@ -537,7 +540,7 @@ export class FileSystemAdapter implements StorageAdapter {
   ): Promise<void> {
     for await (const entry of handle.values()) {
       if (entry.kind === "directory") {
-        await this.deleteDirectoryRecursive(entry);
+        await this.deleteDirectoryRecursive(entry as FileSystemDirectoryHandle);
         await handle.removeEntry(entry.name);
       } else {
         await handle.removeEntry(entry.name);
