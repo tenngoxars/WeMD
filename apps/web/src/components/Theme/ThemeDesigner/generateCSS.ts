@@ -215,6 +215,7 @@ export function generateCSS(v: DesignerVariables): string {
   font-family: ${safeFontFamily};
   padding: 0 ${v.pagePadding ?? 8}px;
   color: ${v.paragraphColor};
+  overflow-wrap: break-word;
 }
 #wemd figcaption {
   color: ${v.imageCaptionColor};
@@ -387,6 +388,7 @@ ${getCodeThemeCSS(v.codeTheme)}
   color: ${v.linkColor || v.primaryColor};
   text-decoration: none;
   border-bottom: ${v.linkUnderline ? `1px solid ${v.linkColor || v.primaryColor}` : "none"};
+  word-break: break-all;
 }
 
 #wemd em {
