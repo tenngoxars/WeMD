@@ -25,6 +25,7 @@ export interface DesignerVariables {
   primaryColor: string;
   lineHeight: string;
   pagePadding: number;
+  baseLetterSpacing: number;
 
   // 标题
   h1: HeadingStyle;

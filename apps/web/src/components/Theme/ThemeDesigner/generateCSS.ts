@@ -3,6 +3,7 @@ import type { DesignerVariables } from "./types";
 import {
   headingStylePresets,
   quoteStylePresets,
+  fontFamilyOptions,
 } from "../../../config/styleOptions";
 
 /**
@@ -204,9 +205,14 @@ export function generateCSS(v: DesignerVariables): string {
     .filter(Boolean)
     .join("\n");
 
+  const safeFontFamily = (v.fontFamily || fontFamilyOptions[0].value).replace(
+    /"/g,
+    "'",
+  );
+
   return `/* 可视化设计器生成 */
 #wemd {
-  font-family: ${v.fontFamily};
+  font-family: ${safeFontFamily};
   padding: 0 ${v.pagePadding ?? 8}px;
   color: ${v.paragraphColor};
 }
@@ -234,12 +240,21 @@ export function generateCSS(v: DesignerVariables): string {
 }
 
 #wemd p {
+  font-family: ${safeFontFamily};
   font-size: ${v.fontSize};
   line-height: ${v.lineHeight};
   margin: ${v.paragraphMargin}px 0;
   padding: ${v.paragraphPadding ?? 0}px 0;
+  letter-spacing: ${v.baseLetterSpacing || 0}px;
   ${v.textIndent ? "text-indent: 2em;" : ""}
   ${v.textJustify ? "text-align: justify;" : ""}
+}
+
+#wemd li {
+  font-family: ${safeFontFamily};
+  margin: ${v.listSpacing}px 0;
+  line-height: ${v.lineHeight};
+  letter-spacing: ${v.baseLetterSpacing || 0}px;
 }
 
 #wemd h1 .content {
@@ -354,6 +369,7 @@ ${getCodeThemeCSS(v.codeTheme)}
   font-size: 0.9em;
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   white-space: normal;
+  letter-spacing: 0;
   ${v.inlineCodeStyle === "github" ? "border: 1px solid rgba(0,0,0,0.06);" : ""}
   ${v.inlineCodeStyle === "color-text" ? `background: transparent; font-weight: bold; border-bottom: 2px solid ${v.primaryColor}50;` : ""}
 }
@@ -573,8 +589,6 @@ ${
 #wemd ul ul { list-style-type: ${v.ulStyleL2}; margin: 4px 0; }
 #wemd ol { list-style-type: ${v.olStyle}; padding-left: 20px; margin: ${v.paragraphMargin}px 0; font-size: ${!v.olFontSize || v.olFontSize === "inherit" ? v.fontSize : v.olFontSize}; }
 #wemd ol ol { list-style-type: ${v.olStyleL2}; margin: 4px 0; }
-#wemd li { margin: ${v.listSpacing}px 0; line-height: ${v.lineHeight}; }
-
 /* 列表符号颜色 */
 #wemd ul li::marker,
   #wemd ol li::marker {

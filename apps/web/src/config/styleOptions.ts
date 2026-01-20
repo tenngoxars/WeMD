@@ -15,18 +15,18 @@ export const fontFamilyOptions: StyleOption[] = [
   {
     label: "无衬线",
     value:
-      '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif',
+      "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif",
     desc: "现代简洁",
   },
   {
     label: "衬线",
     value:
-      'Georgia, "Songti SC", "Noto Serif SC", "SimSun", "Times New Roman", serif',
+      "Optima-Regular, Optima, '宋体', 'Songti SC', 'Noto Serif SC', SimSun, STSong, 'Times New Roman', serif",
     desc: "优雅传统",
   },
   {
     label: "等宽",
-    value: 'Menlo, Monaco, Consolas, "Courier New", monospace',
+    value: "Menlo, Monaco, Consolas, 'Courier New', monospace",
     desc: "技术文档",
   },
 ];

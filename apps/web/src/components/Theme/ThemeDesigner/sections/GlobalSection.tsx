@@ -62,6 +62,18 @@ export function GlobalSection({
       </div>
 
       <div className="designer-field">
+        <label>全局字间距</label>
+        <SliderInput
+          value={variables.baseLetterSpacing || 0}
+          onChange={(val) => updateVariable("baseLetterSpacing", val)}
+          min={0}
+          max={10}
+          step={0.1}
+          unit="px"
+        />
+      </div>
+
+      <div className="designer-field">
         <label>段落内部间距</label>
         <SliderInput
           value={variables.paragraphPadding ?? 0}
