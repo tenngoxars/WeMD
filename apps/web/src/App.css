@@ -126,34 +126,23 @@
   .app-main {
     grid-template-columns: 240px 1fr;
   }
-
-  .workspace {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 960px) {
   .app-main {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
     padding: 16px;
-    height: auto;
-  }
-
-  .history-pane {
-    height: auto;
   }
 }
 
 /* 移动端专用布局 (768px 以下) */
 @media (max-width: 768px) {
-  .app {
+  .app[data-platform="web"] {
     height: 100vh;
     height: 100dvh;
     /* 动态视口高度，适配移动端地址栏 */
   }
 
-  .app-main {
+  .app[data-platform="web"] .app-main {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
     /* 让 workspace 占满剩余空间 */
@@ -166,12 +155,12 @@
   }
 
   /* 移动端隐藏历史侧边栏和切换按钮 */
-  .history-pane,
-  .history-toggle {
+  .app[data-platform="web"] .history-pane,
+  .app[data-platform="web"] .history-toggle {
     display: none !important;
   }
 
-  .workspace {
+  .app[data-platform="web"] .workspace {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
     gap: 0;
@@ -179,32 +168,38 @@
     min-height: 0;
   }
 
-  .editor-pane,
-  .preview-pane {
+  .app[data-platform="web"] .editor-pane,
+  .app[data-platform="web"] .preview-pane {
     border-radius: var(--radius-lg);
     min-height: 0;
     height: 100%;
   }
 
   /* 编辑/预览切换模式 */
-  .workspace[data-mobile-view="editor"] .preview-pane {
+  .app[data-platform="web"]
+    .workspace[data-mobile-view="editor"]
+    .preview-pane {
     display: none;
   }
 
-  .workspace[data-mobile-view="preview"] .editor-pane {
+  .app[data-platform="web"]
+    .workspace[data-mobile-view="preview"]
+    .editor-pane {
     display: none;
   }
 
-  .workspace[data-mobile-view="editor"] .editor-pane,
-  .workspace[data-mobile-view="preview"] .preview-pane {
+  .app[data-platform="web"] .workspace[data-mobile-view="editor"] .editor-pane,
+  .app[data-platform="web"]
+    .workspace[data-mobile-view="preview"]
+    .preview-pane {
     display: flex;
     flex-direction: column;
     height: 100%;
   }
 
   /* 悬浮效果在移动端禁用 */
-  .editor-pane:hover,
-  .preview-pane:hover {
+  .app[data-platform="web"] .editor-pane:hover,
+  .app[data-platform="web"] .preview-pane:hover {
     transform: none;
     box-shadow: var(--glass-shadow);
   }

@@ -8,15 +8,24 @@ export type MobileViewType = "editor" | "preview";
  * 移动端视图管理 Hook
  * 在 768px 以下屏幕宽度时启用移动端模式
  */
-export function useMobileView() {
+type UseMobileViewOptions = {
+  enabled?: boolean;
+};
+
+export function useMobileView(options: UseMobileViewOptions = {}) {
+  const { enabled = true } = options;
   const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === "undefined") return false;
+    if (!enabled || typeof window === "undefined") return false;
     return window.innerWidth < MOBILE_BREAKPOINT;
   });
 
   const [activeView, setActiveView] = useState<MobileViewType>("editor");
 
   useEffect(() => {
+    if (!enabled) {
+      setIsMobile(false);
+      return;
+    }
     const handleResize = () => {
       const mobile = window.innerWidth < MOBILE_BREAKPOINT;
       setIsMobile(mobile);
@@ -28,7 +37,7 @@ export function useMobileView() {
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [enabled]);
 
   return {
     isMobile,

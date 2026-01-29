@@ -60,7 +60,9 @@ function App() {
   const { type: storageType, ready } = useStorageContext();
   const historyLoading = useHistoryStore((state) => state.loading);
   const fileLoading = useFileStore((state) => state.isLoading);
-  const { isMobile, activeView, setActiveView } = useMobileView();
+  const { isMobile, activeView, setActiveView } = useMobileView({
+    enabled: !platform.isElectron,
+  });
   const copyToWechat = useEditorStore((state) => state.copyToWechat);
   const [showThemePanel, setShowThemePanel] = useState(false);
 
