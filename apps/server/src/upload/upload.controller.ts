@@ -7,25 +7,28 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
-import { diskStorage, memoryStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { extname } from 'path';
 import { COSService } from '../services/cos.service';
 import { writeFileSync } from 'fs';
 
+type StorageMode = 'local' | 'cos';
+
 @Controller('upload')
 export class UploadController {
   private cosService: COSService | null = null;
-  private storageMode: string;
+  private storageMode: StorageMode;
 
   constructor(private configService: ConfigService) {
-    this.storageMode = this.configService.get('STORAGE_MODE', 'local');
+    const configuredMode = this.configService.get<string>('STORAGE_MODE');
+    this.storageMode = configuredMode === 'cos' ? 'cos' : 'local';
 
     if (this.storageMode === 'cos') {
-      const secretId = this.configService.get('COS_SECRET_ID');
-      const secretKey = this.configService.get('COS_SECRET_KEY');
-      const bucket = this.configService.get('COS_BUCKET');
-      const region = this.configService.get('COS_REGION');
-      const customDomain = this.configService.get('COS_CUSTOM_DOMAIN');
+      const secretId = this.configService.get<string>('COS_SECRET_ID');
+      const secretKey = this.configService.get<string>('COS_SECRET_KEY');
+      const bucket = this.configService.get<string>('COS_BUCKET');
+      const region = this.configService.get<string>('COS_REGION');
+      const customDomain = this.configService.get<string>('COS_CUSTOM_DOMAIN');
 
       if (secretId && secretKey && bucket && region) {
         this.cosService = new COSService({
@@ -77,7 +80,8 @@ export class UploadController {
           filename: originalName,
         };
       } catch (error) {
-        throw new BadRequestException('上传到云存储失败: ' + error.message);
+        const message = error instanceof Error ? error.message : String(error);
+        throw new BadRequestException(`上传到云存储失败: ${message}`);
       }
     }
 

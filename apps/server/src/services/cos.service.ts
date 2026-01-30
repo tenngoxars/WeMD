@@ -1,4 +1,24 @@
-const COS = require('cos-nodejs-sdk-v5');
+import COS from 'cos-nodejs-sdk-v5';
+
+type COSPutObjectParams = {
+  Bucket: string;
+  Region: string;
+  Key: string;
+  Body: Buffer;
+};
+
+type COSPutObjectCallback = (err: Error | null, data: unknown) => void;
+
+interface COSClient {
+  putObject(params: COSPutObjectParams, callback: COSPutObjectCallback): void;
+}
+
+type COSConstructor = new (options: {
+  SecretId: string;
+  SecretKey: string;
+}) => COSClient;
+
+const COSConstructor = COS as unknown as COSConstructor;
 
 export interface COSConfig {
   secretId: string;
@@ -9,13 +29,13 @@ export interface COSConfig {
 }
 
 export class COSService {
-  private cos: any;
+  private cos: COSClient;
   private bucket: string;
   private region: string;
   private customDomain?: string;
 
   constructor(config: COSConfig) {
-    this.cos = new COS({
+    this.cos = new COSConstructor({
       SecretId: config.secretId,
       SecretKey: config.secretKey,
     });
@@ -38,16 +58,17 @@ export class COSService {
           Key: key,
           Body: file,
         },
-        (err, data) => {
+        (err) => {
           if (err) {
-            reject(err);
-          } else {
-            // 如果配置了自定义域名，使用自定义域名
-            const url = this.customDomain
-              ? `${this.customDomain}/${key}`
-              : `https://${this.bucket}.cos.${this.region}.myqcloud.com/${key}`;
-            resolve({ url, key });
+            const error = err instanceof Error ? err : new Error(String(err));
+            reject(error);
+            return;
           }
+          // 如果配置了自定义域名，使用自定义域名
+          const url = this.customDomain
+            ? `${this.customDomain}/${key}`
+            : `https://${this.bucket}.cos.${this.region}.myqcloud.com/${key}`;
+          resolve({ url, key });
         },
       );
     });
