@@ -515,13 +515,19 @@ export function useSidebarState() {
     );
     const diff = startOfToday.getTime() - startOfDate.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (days <= 0)
+
+    if (days <= 0) {
       return date.toLocaleTimeString("zh-CN", {
         hour: "2-digit",
         minute: "2-digit",
       });
-    if (days === 1) return "昨天";
-    if (days < 5) return `${days}天前`;
+    }
+
+    if (days < 7) {
+      const rtf = new Intl.RelativeTimeFormat("zh", { numeric: "auto" });
+      return rtf.format(-days, "day");
+    }
+
     return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
   }, []);
 

@@ -166,6 +166,8 @@ export function getCodeThemeCSS(themeId: string): string {
  * 从变量生成完整 CSS
  */
 export function generateCSS(v: DesignerVariables): string {
+  const underlineStyle = v.underlineStyle || "solid";
+  const underlineColor = v.underlineColor || "currentColor";
   const h1Preset = getHeadingPresetCSS(
     v.h1.preset || "simple",
     v.primaryColor,
@@ -399,6 +401,14 @@ ${getCodeThemeCSS(v.codeTheme)}
 #wemd del {
   text-decoration: line-through;
   color: ${v.delColor};
+}
+
+#wemd u {
+  text-decoration-line: underline;
+  text-decoration-style: ${underlineStyle};
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: ${underlineColor};
 }
 
 #wemd mark {

@@ -7,6 +7,7 @@ import {
   wechatMarkdownHighlighting,
   wechatMarkdownHighlightingDark,
 } from "./markdownTheme";
+import { underlineExtension } from "./markdownUnderline";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useEditorStore } from "../../store/editorStore";
 import { countWords, countLines } from "../../utils/wordCount";
@@ -55,7 +56,7 @@ export function MarkdownEditor() {
       extensions: [
         minimalSetup,
         customKeymap,
-        markdown({ base: markdownLanguage }),
+        markdown({ base: markdownLanguage, extensions: [underlineExtension] }),
         uiTheme === "dark"
           ? wechatMarkdownHighlightingDark
           : wechatMarkdownHighlighting,

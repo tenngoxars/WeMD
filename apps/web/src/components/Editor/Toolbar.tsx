@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import {
   Bold,
   Italic,
+  Underline,
   Strikethrough,
   Heading1,
   Heading2,
@@ -239,6 +240,13 @@ export function Toolbar({ onInsert }: ToolbarProps) {
       prefix: "*",
       suffix: "*",
       placeholder: "斜体文字",
+    },
+    {
+      icon: Underline,
+      label: "下划线",
+      prefix: "++",
+      suffix: "++",
+      placeholder: "下划线文字",
     },
     {
       icon: Strikethrough,

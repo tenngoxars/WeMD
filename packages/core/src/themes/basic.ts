@@ -188,6 +188,13 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   color: #000000;
 }
 
+/* 下划线 */
+#wemd u {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
 /* 分隔线 */
 #wemd hr {
   height: 1px;

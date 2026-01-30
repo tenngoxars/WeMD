@@ -15,7 +15,7 @@ import {
 // 主题预览用的示例 Markdown 内容
 const PREVIEW_MARKDOWN = `# 一级标题示例
 
-这是一段**加粗文本**、*斜体文本*、~~删除线文本~~、==高亮文本==和 [链接示例](https://github.com/tenngoxars/WeMD)。
+这是一段**加粗文本**、*斜体文本*、++下划线文本++、~~删除线文本~~、==高亮文本==和 [链接示例](https://github.com/tenngoxars/WeMD)。
 正文段落通常需要设置行高和间距，以保证阅读体验。
 
 ---

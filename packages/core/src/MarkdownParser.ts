@@ -6,7 +6,7 @@ import markdownItImplicitFigures from "markdown-it-implicit-figures";
 import markdownItTableOfContents from "markdown-it-table-of-contents";
 import markdownItRuby from "markdown-it-ruby";
 import markdownItMark from "markdown-it-mark";
-
+import markdownItUnderline from "./plugins/markdown-it-underline";
 import markdownItSub from "markdown-it-sub";
 import markdownItSup from "markdown-it-sup";
 import { full as markdownItEmoji } from "markdown-it-emoji";
@@ -84,6 +84,7 @@ export const createMarkdownParser = () => {
     .use(markdownItImageFlow)
     .use(markdownItMultiquote)
     .use(markdownItMark)
+    .use(markdownItUnderline)
     .use(markdownItSub)
     .use(markdownItSup)
     .use(markdownItEmoji)

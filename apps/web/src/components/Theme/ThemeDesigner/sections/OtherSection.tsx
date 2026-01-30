@@ -45,6 +45,47 @@ export function OtherSection({ variables, updateVariable }: SectionProps) {
         />
       </div>
       <div className="designer-field">
+        <label>下划线样式</label>
+        <div className="designer-options col-4">
+          {[
+            { id: "solid", label: "实线" },
+            { id: "wavy", label: "波浪线" },
+            { id: "dotted", label: "点线" },
+            { id: "dashed", label: "虚线" },
+          ].map((style) => (
+            <button
+              key={style.id}
+              className={`option-btn ${variables.underlineStyle === style.id ? "active" : ""}`}
+              onClick={() =>
+                updateVariable(
+                  "underlineStyle",
+                  style.id as typeof variables.underlineStyle,
+                )
+              }
+            >
+              {style.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="designer-field">
+        <label>下划线颜色</label>
+        <ColorSelector
+          value={variables.underlineColor}
+          presets={[
+            {
+              label: "跟随文字",
+              value: "currentColor",
+              displayColor: variables.paragraphColor,
+            },
+            variables.primaryColor,
+            "#333",
+            "#666",
+          ]}
+          onChange={(color) => updateVariable("underlineColor", color)}
+        />
+      </div>
+      <div className="designer-field">
         <label>加粗颜色</label>
         <ColorSelector
           value={variables.strongColor || "inherit"}

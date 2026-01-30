@@ -101,6 +101,8 @@ export const defaultVariables: DesignerVariables = {
   delColor: "#999",
   markBackground: "#fff5b1",
   markColor: "inherit",
+  underlineStyle: "solid",
+  underlineColor: "currentColor",
   strongStyle: "color",
   strongColor: "inherit",
 

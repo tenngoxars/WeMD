@@ -60,9 +60,12 @@ function App() {
   const { type: storageType, ready } = useStorageContext();
   const historyLoading = useHistoryStore((state) => state.loading);
   const fileLoading = useFileStore((state) => state.isLoading);
-  const { isMobile, activeView, setActiveView } = useMobileView({
-    enabled: !platform.isElectron,
-  });
+  const {
+    isMobile: isMobileScreen,
+    activeView,
+    setActiveView,
+  } = useMobileView();
+  const isMobile = isMobileScreen && !platform.isElectron;
   const copyToWechat = useEditorStore((state) => state.copyToWechat);
   const [showThemePanel, setShowThemePanel] = useState(false);
 
@@ -78,9 +81,7 @@ function App() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [saveFile]);
 
-  // 使用统一的平台适配器
   const isElectron = platform.isElectron;
-  const platformName = platform.name ?? "web";
 
   // 更新提示状态
   const [updateInfo, setUpdateInfo] = useState<{
@@ -188,7 +189,7 @@ function App() {
   }
 
   return (
-    <div className="app" data-platform={platformName} data-mobile={isMobile}>
+    <div className="app" data-layout-mode={isMobile ? "mobile" : "desktop"}>
       {/* 更新提示 Modal */}
       {updateInfo && (
         <Suspense fallback={null}>

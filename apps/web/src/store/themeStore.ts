@@ -41,14 +41,19 @@ const loadCustomThemes = (): CustomTheme[] => {
 
     return themes.map((t) => {
       let newCss = t.css;
+      const variables = t.designerVariables;
 
-      if (t.designerVariables) {
-        newCss = generateCSS(t.designerVariables);
+      if (variables) {
+        if (!variables.underlineStyle) variables.underlineStyle = "solid";
+        if (!variables.underlineColor)
+          variables.underlineColor = "currentColor";
+        newCss = generateCSS(variables);
       }
 
       const theme = {
         ...t,
         css: newCss,
+        designerVariables: variables,
       };
 
       if (t.editorMode) {

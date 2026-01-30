@@ -76,6 +76,8 @@ export interface DesignerVariables {
   delColor: string;
   markBackground: string;
   markColor: string;
+  underlineStyle: "solid" | "wavy" | "dotted" | "dashed";
+  underlineColor: string;
   strongStyle: string;
   strongColor: string;
 

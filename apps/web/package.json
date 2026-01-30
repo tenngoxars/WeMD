@@ -20,6 +20,7 @@
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.8",
+    "@lezer/markdown": "^1.6.0",
     "@lezer/highlight": "^1.2.3",
     "@uiw/codemirror-theme-github": "^4.25.3",
     "@wemd/core": "workspace:*",

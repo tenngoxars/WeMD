@@ -42,15 +42,11 @@
   min-height: 0;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  /* 裁剪内容确保圆角生效 */
-
-  /* 玻璃态样式 */
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: var(--border-width) solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-
   transition:
     transform 0.35s ease,
     box-shadow 0.35s ease,
@@ -58,8 +54,6 @@
   transform: translateX(0);
   pointer-events: auto;
   will-change: transform;
-  height: 100%;
-  min-height: 0;
 }
 
 .history-pane.is-hidden .history-pane__content {
@@ -93,21 +87,17 @@
   height: 100%;
   min-height: 0;
   border-radius: var(--radius-xl);
-
-  /* 玻璃态样式 */
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: var(--border-width) solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-
   overflow: hidden;
   display: flex;
   flex-direction: column;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* 悬浮微动效 - 更柔和的上浮 */
 .editor-pane:hover,
 .preview-pane:hover {
   transform: translateY(-4px);
@@ -115,7 +105,6 @@
   border-color: color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 
-/* 响应式布局 */
 @media (max-width: 1440px) {
   .app-main {
     padding: 20px 24px 32px;
@@ -134,33 +123,28 @@
   }
 }
 
-/* 移动端专用布局 (768px 以下) */
 @media (max-width: 768px) {
-  .app[data-platform="web"] {
+  .app[data-layout-mode="mobile"] {
     height: 100vh;
     height: 100dvh;
-    /* 动态视口高度，适配移动端地址栏 */
   }
 
-  .app[data-platform="web"] .app-main {
+  .app[data-layout-mode="mobile"] .app-main {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
-    /* 让 workspace 占满剩余空间 */
     padding: 8px;
     padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
-    /* 底部工具栏空间 */
     gap: 8px;
     flex: 1;
     min-height: 0;
   }
 
-  /* 移动端隐藏历史侧边栏和切换按钮 */
-  .app[data-platform="web"] .history-pane,
-  .app[data-platform="web"] .history-toggle {
+  .app[data-layout-mode="mobile"] .history-pane,
+  .app[data-layout-mode="mobile"] .history-toggle {
     display: none !important;
   }
 
-  .app[data-platform="web"] .workspace {
+  .app[data-layout-mode="mobile"] .workspace {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
     gap: 0;
@@ -168,28 +152,29 @@
     min-height: 0;
   }
 
-  .app[data-platform="web"] .editor-pane,
-  .app[data-platform="web"] .preview-pane {
+  .app[data-layout-mode="mobile"] .editor-pane,
+  .app[data-layout-mode="mobile"] .preview-pane {
     border-radius: var(--radius-lg);
     min-height: 0;
     height: 100%;
   }
 
-  /* 编辑/预览切换模式 */
-  .app[data-platform="web"]
+  .app[data-layout-mode="mobile"]
     .workspace[data-mobile-view="editor"]
     .preview-pane {
     display: none;
   }
 
-  .app[data-platform="web"]
+  .app[data-layout-mode="mobile"]
     .workspace[data-mobile-view="preview"]
     .editor-pane {
     display: none;
   }
 
-  .app[data-platform="web"] .workspace[data-mobile-view="editor"] .editor-pane,
-  .app[data-platform="web"]
+  .app[data-layout-mode="mobile"]
+    .workspace[data-mobile-view="editor"]
+    .editor-pane,
+  .app[data-layout-mode="mobile"]
     .workspace[data-mobile-view="preview"]
     .preview-pane {
     display: flex;
@@ -197,9 +182,8 @@
     height: 100%;
   }
 
-  /* 悬浮效果在移动端禁用 */
-  .app[data-platform="web"] .editor-pane:hover,
-  .app[data-platform="web"] .preview-pane:hover {
+  .app[data-layout-mode="mobile"] .editor-pane:hover,
+  .app[data-layout-mode="mobile"] .preview-pane:hover {
     transform: none;
     box-shadow: var(--glass-shadow);
   }

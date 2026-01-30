@@ -126,7 +126,7 @@ export const customKeymap = Prec.highest(
   keymap.of([
     { key: "Mod-b", run: (view) => wrapSelection(view, "**", "**") },
     { key: "Mod-i", run: (view) => wrapSelection(view, "*", "*") },
-    { key: "Mod-u", run: (view) => wrapSelection(view, "<u>", "</u>") },
+    { key: "Mod-u", run: (view) => wrapSelection(view, "++", "++") },
     { key: "Mod-Shift-x", run: (view) => wrapSelection(view, "~~", "~~") },
     { key: "Mod-Shift-k", run: (view) => wrapSelection(view, "`", "`") },
     { key: "Mod-Shift-m", run: (view) => wrapSelection(view, "$", "$") },
