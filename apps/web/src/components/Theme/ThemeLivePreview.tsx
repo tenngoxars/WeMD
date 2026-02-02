@@ -6,6 +6,7 @@ import {
   convertCssToWeChatDarkMode,
 } from "@wemd/core";
 import { useUITheme } from "../../hooks/useUITheme";
+import { useEditorStore } from "../../store/editorStore";
 import type { DesignerVariables } from "./ThemeDesigner/types";
 import {
   getMermaidConfig,
@@ -75,13 +76,20 @@ interface ThemeLivePreviewProps {
   /** 要预览的 CSS 样式代码 */
   css: string;
   designerVariables?: DesignerVariables;
+  /** 是否使用当前文章内容，true=订阅 store 获取当前文章，false=使用内置示例 */
+  useCurrentArticle?: boolean;
 }
 
 // 主题实时预览组件（使用 iframe 隔离样式）
 export const ThemeLivePreview = memo(function ThemeLivePreview({
   css,
   designerVariables,
+  useCurrentArticle = false,
 }: ThemeLivePreviewProps) {
+  // 只有当 useCurrentArticle=true 时才订阅 store，避免不必要的重渲染
+  const currentMarkdown = useEditorStore((state) =>
+    useCurrentArticle ? state.markdown : "",
+  );
   const parser = useMemo(() => createMarkdownParser(), []);
   const uiTheme = useUITheme((state) => state.theme);
   const isDarkMode = uiTheme === "dark";
@@ -121,10 +129,14 @@ export const ThemeLivePreview = memo(function ThemeLivePreview({
     () => (isDarkMode ? convertCssToWeChatDarkMode(css) : css),
     [css, isDarkMode],
   );
+  const previewContent =
+    useCurrentArticle && currentMarkdown !== undefined
+      ? currentMarkdown
+      : PREVIEW_MARKDOWN;
   const html = useMemo(() => {
-    const rawHtml = parser.render(PREVIEW_MARKDOWN);
+    const rawHtml = parser.render(previewContent);
     return processHtml(rawHtml, finalCss, true);
-  }, [parser, finalCss]);
+  }, [parser, finalCss, previewContent]);
 
   useEffect(() => {
     const iframe = iframeRef.current;

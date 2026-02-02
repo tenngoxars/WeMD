@@ -11,6 +11,8 @@ import {
   Download,
   ChevronDown,
   Upload,
+  FileText,
+  Eye,
 } from "lucide-react";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
@@ -93,6 +95,8 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
   const [originalDesignerVariables, setOriginalDesignerVariables] = useState<
     DesignerVariables | undefined
   >(undefined);
+  // 预览来源切换：true=当前文章, false=示例内容
+  const [useCurrentArticle, setUseCurrentArticle] = useState(true);
 
   const selectedTheme = allThemes.find((t) => t.id === selectedThemeId);
   const isCustomTheme = selectedTheme && !selectedTheme.isBuiltIn;
@@ -518,11 +522,30 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
                 <>
                   {/* 实时预览区 */}
                   <div className="theme-form-preview">
+                    <div className="preview-source-toggle">
+                      <button
+                        className={`toggle-btn ${useCurrentArticle ? "active" : ""}`}
+                        onClick={() => setUseCurrentArticle(true)}
+                        title="预览当前正在编辑的文章"
+                      >
+                        <FileText size={14} />
+                        当前文章
+                      </button>
+                      <button
+                        className={`toggle-btn ${!useCurrentArticle ? "active" : ""}`}
+                        onClick={() => setUseCurrentArticle(false)}
+                        title="预览内置示例内容"
+                      >
+                        <Eye size={14} />
+                        示例内容
+                      </button>
+                    </div>
                     <ThemeLivePreview
                       css={previewCss}
                       designerVariables={
                         isVisualEditing ? designerVariables : undefined
                       }
+                      useCurrentArticle={useCurrentArticle}
                     />
                   </div>
 
