@@ -4,6 +4,7 @@ export interface FileItem {
   createdAt: Date;
   updatedAt: Date;
   size: number;
+  title?: string;
   themeName?: string;
   isDirectory?: false; // 标识为文件
 }

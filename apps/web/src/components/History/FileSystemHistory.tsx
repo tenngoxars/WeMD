@@ -3,39 +3,32 @@ import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { Plus, Trash2, Edit2, Save } from "lucide-react";
 import { useEditorStore } from "../../store/editorStore";
+import { useFileStore } from "../../store/fileStore";
 import { useThemeStore } from "../../store/themeStore";
 import { useUITheme } from "../../hooks/useUITheme";
 import { SidebarFooter } from "../Sidebar/SidebarFooter";
 import type { StorageAdapter } from "../../storage/StorageAdapter";
 import type { FileItem as StorageFileItem } from "../../storage/types";
+import {
+  applyMarkdownFileMeta,
+  parseMarkdownFileContent,
+  stripMarkdownExtension,
+} from "../../utils/markdownFileMeta";
 
 const defaultFsContent = `---
 theme: default
 themeName: 默认主题
+title: 新文章
 ---
 
 # 新文章
 
 `;
 
-function parseFsFrontmatter(content: string) {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!match) {
-    return {
-      body: content,
-      theme: "default",
-      themeName: "默认主题",
-    };
-  }
-  const raw = match[1];
-  const body = content.slice(match[0].length).trimStart();
-  const theme = raw.match(/theme:\s*(.+)/)?.[1]?.trim() ?? "default";
-  const themeName =
-    raw
-      .match(/themeName:\s*(.+)/)?.[1]
-      ?.trim()
-      ?.replace(/^['"]|['"]$/g, "") ?? "默认主题";
-  return { body, theme, themeName };
+function getFileTitle(file: StorageFileItem): string {
+  const fromMeta =
+    (file.meta as { title?: string } | undefined)?.title?.trim() || "";
+  return fromMeta || stripMarkdownExtension(file.name);
 }
 
 function formatDate(value?: string | number | Date) {
@@ -69,6 +62,12 @@ interface FileSystemHistoryProps {
 export function FileSystemHistory({ adapter }: FileSystemHistoryProps) {
   const setMarkdown = useEditorStore((state) => state.setMarkdown);
   const setFilePath = useEditorStore((state) => state.setFilePath);
+  const currentFile = useFileStore((state) => state.currentFile);
+  const setCurrentFile = useFileStore((state) => state.setCurrentFile);
+  const setLastSavedContent = useFileStore(
+    (state) => state.setLastSavedContent,
+  );
+  const setIsDirty = useFileStore((state) => state.setIsDirty);
 
   const selectTheme = useThemeStore((state) => state.selectTheme);
   const setCustomCSS = useThemeStore((state) => state.setCustomCSS);
@@ -83,6 +82,13 @@ export function FileSystemHistory({ adapter }: FileSystemHistoryProps) {
     null,
   );
   const [deleting, setDeleting] = useState(false);
+
+  const getDisplayTitle = (file: StorageFileItem) => {
+    if (currentFile?.path === file.path && currentFile.title?.trim()) {
+      return currentFile.title.trim();
+    }
+    return getFileTitle(file);
+  };
 
   const refreshFiles = useCallback(async () => {
     setLoading(true);
@@ -113,13 +119,26 @@ export function FileSystemHistory({ adapter }: FileSystemHistoryProps) {
   const handleOpen = async (file: StorageFileItem) => {
     try {
       const content = await adapter.readFile(file.path);
-      const parsed = parseFsFrontmatter(content);
+      const parsed = parseMarkdownFileContent(content);
+      const resolvedTitle = parsed.title || getFileTitle(file);
       setMarkdown(parsed.body);
       selectTheme(parsed.theme);
       setCustomCSS("");
       setFilePath(file.path);
       setActivePath(file.path);
-      toast.success(`已打开: ${file.name}`);
+      const updatedAt = file.updatedAt ? new Date(file.updatedAt) : new Date();
+      setCurrentFile({
+        name: file.name,
+        path: file.path,
+        createdAt: updatedAt,
+        updatedAt,
+        size: file.size ?? 0,
+        title: resolvedTitle,
+        themeName: parsed.themeName,
+      });
+      setLastSavedContent(content);
+      setIsDirty(false);
+      toast.success(`已打开: ${resolvedTitle}`);
     } catch (error) {
       console.error(error);
       toast.error("打开文件失败");
@@ -147,15 +166,29 @@ export function FileSystemHistory({ adapter }: FileSystemHistoryProps) {
       setSaving(true);
       const editorState = useEditorStore.getState();
       const themeState = useThemeStore.getState();
-      const frontmatter = `---
-theme: ${themeState.themeId}
-themeName: ${themeState.themeName}
----
-`;
-      await adapter.writeFile(
-        activePath,
-        `${frontmatter}\n${editorState.markdown}`,
-      );
+      const activeFile = files.find((item) => item.path === activePath);
+      const fallbackTitle = activeFile
+        ? stripMarkdownExtension(activeFile.name)
+        : "未命名文章";
+      const resolvedTitle =
+        currentFile?.path === activePath && currentFile.title?.trim()
+          ? currentFile.title.trim()
+          : fallbackTitle;
+      const baseContent =
+        currentFile?.path === activePath
+          ? useFileStore.getState().lastSavedContent
+          : await adapter.readFile(activePath);
+      const nextContent = applyMarkdownFileMeta(baseContent, {
+        body: editorState.markdown,
+        theme: themeState.themeId,
+        themeName: themeState.themeName,
+        title: resolvedTitle,
+      });
+      await adapter.writeFile(activePath, nextContent);
+      if (currentFile?.path === activePath) {
+        setLastSavedContent(nextContent);
+        setIsDirty(false);
+      }
       toast.success("已保存当前文件");
       await refreshFiles();
     } catch (error) {
@@ -172,22 +205,26 @@ themeName: ${themeState.themeName}
 
   const submitRename = async () => {
     if (!renamingPath || !renameValue.trim()) return;
-    const nextName = renameValue.trim().endsWith(".md")
-      ? renameValue.trim()
-      : `${renameValue.trim()}.md`;
+    const nextTitle = renameValue.trim();
     try {
-      await adapter.renameFile(renamingPath, nextName);
-      toast.success("重命名成功");
-      if (activePath === renamingPath) {
-        setActivePath(nextName);
-        setFilePath(nextName);
+      const current = await adapter.readFile(renamingPath);
+      const nextContent = applyMarkdownFileMeta(current, {
+        title: nextTitle,
+      });
+      await adapter.writeFile(renamingPath, nextContent);
+      toast.success("标题已更新");
+      if (currentFile?.path === renamingPath) {
+        setCurrentFile({ ...currentFile, title: nextTitle });
+        if (!useFileStore.getState().isDirty) {
+          setLastSavedContent(nextContent);
+        }
       }
       setRenamingPath(null);
       setRenameValue("");
       await refreshFiles();
     } catch (error) {
       console.error(error);
-      toast.error("重命名失败");
+      toast.error("更新标题失败");
     }
   };
 
@@ -255,7 +292,9 @@ themeName: ${themeState.themeName}
                         </button>
                       </div>
                     ) : (
-                      <span className="history-title">{file.name}</span>
+                      <span className="history-title">
+                        {getDisplayTitle(file)}
+                      </span>
                     )}
                     <span className="history-theme">本地文件</span>
                   </div>
@@ -267,7 +306,7 @@ themeName: ${themeState.themeName}
                           onClick={(e) => {
                             e.stopPropagation();
                             setRenamingPath(file.path);
-                            setRenameValue(file.name.replace(/\.md$/, ""));
+                            setRenameValue(getDisplayTitle(file));
                           }}
                           aria-label="重命名"
                         >
@@ -324,6 +363,9 @@ themeName: ${themeState.themeName}
                         setActivePath(null);
                         setMarkdown("");
                         setFilePath("");
+                        setCurrentFile(null);
+                        setLastSavedContent("");
+                        setIsDirty(false);
                       }
                       await refreshFiles();
                     } catch (error) {

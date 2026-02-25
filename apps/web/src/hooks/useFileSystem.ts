@@ -5,6 +5,12 @@ import { useThemeStore } from "../store/themeStore";
 import { useStorageContext } from "../storage/StorageContext";
 import type { FileItem, TreeItem } from "../store/fileTypes";
 import toast from "react-hot-toast";
+import {
+  applyMarkdownFileMeta,
+  buildMarkdownFileContent,
+  parseMarkdownFileContent,
+  stripMarkdownExtension,
+} from "../utils/markdownFileMeta";
 
 // 本地定义 Electron API 类型以确保类型安全
 interface ElectronFileItem {
@@ -13,6 +19,7 @@ interface ElectronFileItem {
   createdAt: string;
   updatedAt: string;
   size?: number;
+  title?: string;
   themeName?: string;
   isDirectory?: boolean;
   children?: ElectronFileItem[];
@@ -47,9 +54,7 @@ interface ElectronAPI {
     deleteFile: (path: string) => Promise<{ success: boolean; error?: string }>;
     revealInFinder: (path: string) => Promise<void>;
     // 文件夹管理
-    createFolder: (
-      folderName: string,
-    ) => Promise<{
+    createFolder: (folderName: string) => Promise<{
       success: boolean;
       path?: string;
       name?: string;
@@ -101,6 +106,7 @@ function convertToTreeItems(items: ElectronFileItem[]): TreeItem[] {
       createdAt: new Date(f.createdAt),
       updatedAt: new Date(f.updatedAt),
       size: f.size ?? 0,
+      title: f.title,
       themeName: f.themeName,
       isDirectory: false as const,
     };
@@ -137,6 +143,7 @@ function convertAdapterFilesToTreeItems(items: AdapterFileItem[]): TreeItem[] {
       createdAt: f.updatedAt ? new Date(f.updatedAt) : new Date(),
       updatedAt: f.updatedAt ? new Date(f.updatedAt) : new Date(),
       size: f.size ?? 0,
+      title: (f.meta?.title as string) || undefined,
       themeName: (f.meta?.themeName as string) || undefined,
       isDirectory: false as const,
     };
@@ -347,8 +354,15 @@ export function useFileSystem() {
         const { markdown: currentMarkdown } = useEditorStore.getState();
         const { themeId: currentTheme, themeName: currentThemeName } =
           useThemeStore.getState();
-        const frontmatter = `---\ntheme: ${currentTheme}\nthemeName: ${currentThemeName}\n---\n`;
-        const fullContent = frontmatter + "\n" + currentMarkdown;
+        const baseContent = useFileStore.getState().lastSavedContent;
+        const fullContent = applyMarkdownFileMeta(baseContent, {
+          body: currentMarkdown,
+          theme: currentTheme,
+          themeName: currentThemeName,
+          title:
+            currentCurrentFile.title ||
+            stripMarkdownExtension(currentCurrentFile.name),
+        });
 
         if (electron) {
           try {
@@ -400,32 +414,17 @@ export function useFileSystem() {
       }
 
       if (success) {
-        setCurrentFile(file);
+        const parsed = parseMarkdownFileContent(content);
+        const resolvedTitle =
+          parsed.title?.trim() ||
+          file.title?.trim() ||
+          stripMarkdownExtension(file.name);
 
-        // 解析 Frontmatter
-        const match = content.match(/^---\n([\s\S]*?)\n---/);
-
-        if (match) {
-          const frontmatterRaw = match[1];
-          const body = content.slice(match[0].length).trimStart();
-
-          // 简单的 YAML 解析器
-          const themeMatch = frontmatterRaw.match(/theme:\s*(.+)/);
-          const theme = themeMatch ? themeMatch[1].trim() : "default";
-
-          setMarkdown(body);
-          useThemeStore.getState().selectTheme(theme);
-
-          // 更新全局 lastSavedContent，确保所有组件同步
-          setLastSavedContent(content);
-          setIsDirty(false); // 重置修改标记
-        } else {
-          setMarkdown(content);
-          // 没有 frontmatter 时重置为默认值
-          useThemeStore.getState().selectTheme("default");
-          setLastSavedContent(content); // 保存完整内容
-          setIsDirty(false); // 重置修改标记
-        }
+        setCurrentFile({ ...file, title: resolvedTitle });
+        setMarkdown(parsed.body);
+        useThemeStore.getState().selectTheme(parsed.theme);
+        setLastSavedContent(content);
+        setIsDirty(false);
       } else {
         toast.error("无法读取文件");
       }
@@ -450,8 +449,13 @@ export function useFileSystem() {
       if (isCreating.current) return;
       isCreating.current = true;
 
-      const initialContent =
-        "---\ntheme: default\nthemeName: 默认主题\n---\n\n# 新文章\n\n";
+      const initialTitle = "新文章";
+      const initialContent = buildMarkdownFileContent({
+        body: "# 新文章\n\n",
+        theme: "default",
+        themeName: "默认主题",
+        title: initialTitle,
+      });
 
       try {
         if (electron) {
@@ -471,6 +475,7 @@ export function useFileSystem() {
               createdAt: new Date(),
               updatedAt: new Date(),
               size: 0,
+              title: initialTitle,
               themeName: "默认主题",
             };
             await openFile(newFile);
@@ -487,6 +492,7 @@ export function useFileSystem() {
             createdAt: new Date(),
             updatedAt: new Date(),
             size: initialContent.length,
+            title: initialTitle,
             themeName: "默认主题",
           };
           await openFile(newFile);
@@ -510,13 +516,13 @@ export function useFileSystem() {
       const { markdown } = useEditorStore.getState();
       const { themeId: theme, themeName } = useThemeStore.getState();
 
-      // 构建 Frontmatter
-      const frontmatter = `---
-theme: ${theme}
-themeName: ${themeName}
----
-`;
-      const fullContent = frontmatter + "\n" + markdown;
+      const baseContent = useFileStore.getState().lastSavedContent;
+      const fullContent = applyMarkdownFileMeta(baseContent, {
+        body: markdown,
+        theme,
+        themeName,
+        title: currentFile.title || stripMarkdownExtension(currentFile.name),
+      });
 
       // 检查内容是否有变化 (使用全局状态)
       if (fullContent === useFileStore.getState().lastSavedContent) {
@@ -560,43 +566,76 @@ themeName: ${themeName}
     [currentFile, electron, adapter, storageReady],
   );
 
-  // 7. 重命名文件保持不变...
-  const renameFile = useCallback(
+  // 7. 更新文章标题（不改文件名）
+  const updateFileTitle = useCallback(
     async (file: FileItem, newName: string) => {
-      const safeName = newName.endsWith(".md") ? newName : `${newName}.md`;
+      const nextTitle = newName.trim();
+      if (!nextTitle) {
+        toast.error("标题不能为空");
+        return;
+      }
 
+      let content = "";
       if (electron) {
-        const res = await electron.fs.renameFile({
-          oldPath: file.path,
-          newName,
-        });
-        if (res.success) {
-          toast.success("重命名成功");
-          await refreshFiles();
-          if (currentFile && currentFile.path === file.path) {
-            setCurrentFile({
-              ...currentFile,
-              path: res.filePath!,
-              name: safeName,
-            });
-          }
-        } else {
-          toast.error(res.error || "重命名失败");
+        const readRes = await electron.fs.readFile(file.path);
+        if (!readRes.success || typeof readRes.content !== "string") {
+          toast.error(readRes.error || "读取文件失败");
+          return;
         }
+        content = readRes.content;
       } else if (adapter && storageReady) {
         try {
-          const { dir, sep } = splitPath(file.path);
-          const newPath = dir ? `${dir}${sep}${safeName}` : safeName;
-          await adapter.renameFile(file.path, newPath);
-          toast.success("重命名成功");
-          await refreshFiles();
-          if (currentFile && currentFile.path === file.path) {
-            setCurrentFile({ ...currentFile, path: newPath, name: safeName });
-          }
+          content = await adapter.readFile(file.path);
         } catch {
-          toast.error("重命名失败");
+          toast.error("读取文件失败");
+          return;
+        }
+      } else {
+        toast.error("当前模式不支持此操作");
+        return;
+      }
+
+      const parsed = parseMarkdownFileContent(content);
+      const fullContent = applyMarkdownFileMeta(content, {
+        body: parsed.body,
+        theme: parsed.theme,
+        themeName: parsed.themeName,
+        title: nextTitle,
+      });
+
+      let success = false;
+      let errorMsg = "";
+      if (electron) {
+        const saveRes = await electron.fs.saveFile({
+          filePath: file.path,
+          content: fullContent,
+        });
+        success = saveRes.success;
+        errorMsg = saveRes.error || "";
+      } else if (adapter && storageReady) {
+        try {
+          await adapter.writeFile(file.path, fullContent);
+          success = true;
+        } catch (e: unknown) {
+          errorMsg = e instanceof Error ? e.message : String(e);
         }
       }
+
+      if (!success) {
+        toast.error(errorMsg || "更新标题失败");
+        return;
+      }
+
+      if (currentFile && currentFile.path === file.path) {
+        setCurrentFile({ ...currentFile, title: nextTitle });
+        const currentState = useFileStore.getState();
+        if (!currentState.isDirty) {
+          setLastSavedContent(fullContent);
+        }
+      }
+
+      toast.success("标题已更新");
+      await refreshFiles();
     },
     // zustand setters 都是稳定引用无需加入依赖
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -725,12 +764,12 @@ themeName: ${themeName}
     if (isRestoring) return; // 正在恢复中，跳过
 
     const { themeId: theme, themeName } = useThemeStore.getState();
-    const frontmatter = `---
-theme: ${theme}
-themeName: ${themeName}
----
-`;
-    const fullContent = frontmatter + "\n" + markdown;
+    const fullContent = applyMarkdownFileMeta(lastSavedContent, {
+      body: markdown,
+      theme,
+      themeName,
+      title: currentFile.title || stripMarkdownExtension(currentFile.name),
+    });
 
     if (fullContent !== lastSavedContent) {
       setIsDirty(true);
@@ -1018,7 +1057,9 @@ themeName: ${themeName}
     openFile,
     createFile,
     saveFile,
-    renameFile,
+    updateFileTitle,
+    // 兼容旧调用，后续可移除
+    renameFile: updateFileTitle,
     deleteFile,
     // 文件夹操作
     createFolder,

@@ -36,7 +36,7 @@ export function useSidebarState() {
     currentFile,
     openFile,
     createFile,
-    renameFile,
+    updateFileTitle,
     deleteFile,
     selectWorkspace,
     workspacePath,
@@ -104,10 +104,16 @@ export function useSidebarState() {
   const filteredItems = useMemo(() => {
     if (!filter) return files;
     const flatFiles = flattenFiles(files);
+    const keyword = filter.toLowerCase();
     return flatFiles.filter((f) =>
-      f.name.toLowerCase().includes(filter.toLowerCase()),
+      (f.title || f.name).toLowerCase().includes(keyword),
     );
   }, [files, filter, flattenFiles]);
+
+  const getDisplayTitle = useCallback(
+    (file: FileItem) => file.title?.trim() || file.name.replace(/\.md$/i, ""),
+    [],
+  );
 
   const toggleFolder = useCallback((folderPath: string) => {
     setCollapsedFolders((prev) => {
@@ -233,16 +239,16 @@ export function useSidebarState() {
   const startRename = useCallback(
     (file: FileItem) => {
       setRenamingPath(file.path);
-      setRenameValue(file.name.replace(".md", ""));
+      setRenameValue(getDisplayTitle(file));
       closeMenu();
     },
-    [closeMenu],
+    [closeMenu, getDisplayTitle],
   );
 
   const copyTitle = useCallback(
     async (file: FileItem) => {
       try {
-        const title = file.name.replace(".md", "");
+        const title = getDisplayTitle(file);
         await navigator.clipboard.writeText(title);
         toast.success("标题已复制");
       } catch {
@@ -250,7 +256,7 @@ export function useSidebarState() {
       }
       closeMenu();
     },
-    [closeMenu],
+    [closeMenu, getDisplayTitle],
   );
 
   const submitRename = useCallback(async () => {
@@ -258,11 +264,11 @@ export function useSidebarState() {
       const flatFiles = flattenFiles(files);
       const file = flatFiles.find((f) => f.path === renamingPath);
       if (file) {
-        await renameFile(file, renameValue);
+        await updateFileTitle(file, renameValue);
       }
     }
     setRenamingPath(null);
-  }, [renamingPath, renameValue, files, flattenFiles, renameFile]);
+  }, [renamingPath, renameValue, files, flattenFiles, updateFileTitle]);
 
   const handleCreateFolder = useCallback(async () => {
     if (!newFolderName.trim()) {

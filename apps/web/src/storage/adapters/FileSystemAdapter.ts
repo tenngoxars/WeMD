@@ -120,16 +120,37 @@ export class FileSystemAdapter implements StorageAdapter {
         const fileHandle = entry as FileSystemFileHandle;
         const file = await fileHandle.getFile();
 
-        // 读取文件开头 500 字节提取 themeName
+        // 读取文件开头提取 frontmatter 元数据
         let themeName: string | undefined;
+        let title: string | undefined;
         try {
-          const slice = file.slice(0, 500);
+          const slice = file.slice(0, 1200);
           const text = await slice.text();
           const match = text.match(/^---\n([\s\S]*?)\n---/);
           if (match) {
+            const parseValue = (raw?: string) => {
+              if (!raw) return undefined;
+              const trimmed = raw.trim();
+              if (
+                (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+                (trimmed.startsWith("'") && trimmed.endsWith("'"))
+              ) {
+                const quote = trimmed[0];
+                const inner = trimmed.slice(1, -1);
+                if (quote === '"') {
+                  return inner.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+                }
+                return inner.replace(/\\'/g, "'");
+              }
+              return trimmed;
+            };
             const themeMatch = match[1].match(/themeName:\s*(.+)/);
+            const titleMatch = match[1].match(/title:\s*(.+)/);
             if (themeMatch) {
-              themeName = themeMatch[1].trim().replace(/^['"]|['"]$/g, "");
+              themeName = parseValue(themeMatch[1]);
+            }
+            if (titleMatch) {
+              title = parseValue(titleMatch[1]);
             }
           }
         } catch {
@@ -143,7 +164,7 @@ export class FileSystemAdapter implements StorageAdapter {
           updatedAt: file.lastModified
             ? new Date(file.lastModified).toISOString()
             : undefined,
-          meta: { themeName, isDirectory: false },
+          meta: { themeName, title, isDirectory: false },
         });
       }
     }
@@ -181,10 +202,25 @@ export class FileSystemAdapter implements StorageAdapter {
   }
 
   async renameFile(oldPath: string, newPath: string): Promise<void> {
-    if (oldPath === newPath) return;
-    const content = await this.readFile(oldPath);
-    await this.writeFile(newPath, content);
-    await this.deleteFile(oldPath);
+    const normalizedOld = this.normalizePath(oldPath);
+    const normalizedNew = this.normalizePath(newPath);
+
+    if (normalizedOld === normalizedNew) return;
+
+    const { dir: oldDir } = this.splitPath(normalizedOld);
+    const { dir: newDir, name: nextName } = this.splitPath(normalizedNew);
+
+    if (!nextName || nextName === "." || nextName === "..") {
+      throw new Error("文件名不能为空");
+    }
+    if (oldDir !== newDir) {
+      throw new Error("仅支持同目录重命名");
+    }
+
+    const targetPath = oldDir ? `${oldDir}/${nextName}` : nextName;
+    const content = await this.readFile(normalizedOld);
+    await this.writeFile(targetPath, content);
+    await this.deleteFile(normalizedOld);
   }
 
   async exists(path: string): Promise<boolean> {
@@ -429,6 +465,18 @@ export class FileSystemAdapter implements StorageAdapter {
 
   private normalizePath(input: string): string {
     return input.replace(/\\/g, "/");
+  }
+
+  private splitPath(path: string): { dir: string; name: string } {
+    const normalized = this.normalizePath(path);
+    const lastSlash = normalized.lastIndexOf("/");
+    if (lastSlash < 0) {
+      return { dir: "", name: normalized };
+    }
+    return {
+      dir: normalized.slice(0, lastSlash),
+      name: normalized.slice(lastSlash + 1),
+    };
   }
 
   private async moveFolderPath(

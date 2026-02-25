@@ -69,8 +69,11 @@ export function FileSidebar() {
             </div>
           ) : (
             <>
-              <span className="fs-title" title={file.name}>
-                {file.name.replace(/\.md$/, "")}
+              <span
+                className="fs-title"
+                title={file.title || file.name.replace(/\.md$/, "")}
+              >
+                {file.title || file.name.replace(/\.md$/, "")}
               </span>
               <div className="fs-meta-row">
                 <span className="fs-time">

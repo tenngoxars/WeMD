@@ -9,6 +9,7 @@ import {
   updateHistoryInDb,
 } from "./historyDb";
 import type { HistorySnapshot, HistorySnapshotInput } from "./historyTypes";
+import { normalizeMarkdownFileName } from "../utils/fileName";
 
 export type { HistorySnapshot } from "./historyTypes";
 
@@ -50,14 +51,6 @@ const getElectronFile = (): ElectronFileAPI | null => {
     window as typeof window & { electron?: { file?: ElectronFileAPI } }
   ).electron;
   return electron?.file ?? null;
-};
-
-const normalizeFileName = (title: string) => {
-  const base = (title || "未命名文章").trim() || "未命名文章";
-  return `${base
-    .replace(/[\\\\/:*?"<>|]/g, "_")
-    .replace(/\s+/g, " ")
-    .slice(0, 60)}.md`;
 };
 
 const splitPath = (filePath: string) => {
@@ -267,7 +260,11 @@ export const useHistoryStore = create<HistoryStore>((set, get) => {
       let nextFilePath = entry?.filePath;
       if (entry?.filePath) {
         const { dir, sep } = splitPath(entry.filePath);
-        const target = joinPath(dir, normalizeFileName(trimmed), sep);
+        const target = joinPath(
+          dir,
+          normalizeMarkdownFileName(trimmed, { maxLength: 60 }),
+          sep,
+        );
         if (target !== entry.filePath) {
           const electronFile = getElectronFile();
           if (electronFile?.renameFile) {

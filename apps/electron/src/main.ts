@@ -115,6 +115,7 @@ interface FileEntry {
     createdAt: Date;
     updatedAt: Date;
     size: number;
+    title?: string;
     themeName: string;
     children?: FileEntry[]; // 用于文件夹
 }
@@ -123,17 +124,35 @@ interface FileEntry {
 function readFileEntry(fullPath: string, name: string): FileEntry {
     const stats = fs.statSync(fullPath);
     let themeName = '默认主题';
+    let title: string | undefined;
     try {
         const fd = fs.openSync(fullPath, 'r');
-        const buffer = Buffer.alloc(500);
-        const bytesRead = fs.readSync(fd, buffer, 0, 500, 0);
+        const buffer = Buffer.alloc(1200);
+        const bytesRead = fs.readSync(fd, buffer, 0, 1200, 0);
         fs.closeSync(fd);
         const content = buffer.toString('utf8', 0, bytesRead);
         const match = content.match(/^---\n([\s\S]*?)\n---/);
         if (match) {
+            const parseValue = (raw?: string) => {
+                if (!raw) return undefined;
+                const trimmed = raw.trim();
+                if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+                    const quote = trimmed[0];
+                    const inner = trimmed.slice(1, -1);
+                    if (quote === '"') {
+                        return inner.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                    }
+                    return inner.replace(/\\'/g, "'");
+                }
+                return trimmed;
+            };
             const themeMatch = match[1].match(/themeName:\s*(.+)/);
+            const titleMatch = match[1].match(/title:\s*(.+)/);
             if (themeMatch) {
-                themeName = themeMatch[1].trim().replace(/^['"]|['"]$/g, '');
+                themeName = parseValue(themeMatch[1]) || '默认主题';
+            }
+            if (titleMatch) {
+                title = parseValue(titleMatch[1]) || undefined;
             }
         }
     } catch (e) { /* 忽略 */ }
@@ -144,6 +163,7 @@ function readFileEntry(fullPath: string, name: string): FileEntry {
         createdAt: stats.birthtime,
         updatedAt: stats.mtime,
         size: stats.size,
+        title,
         themeName,
     };
 }
