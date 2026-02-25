@@ -17,6 +17,7 @@ import { SaveIndicator } from "./SaveIndicator";
 import toast from "react-hot-toast";
 import "./MarkdownEditor.css";
 import { customKeymap } from "./editorShortcuts";
+import { paragraphSelectionStyle } from "./mouseSelectionStyle";
 
 const SYNC_SCROLL_EVENT = "wemd-sync-scroll";
 
@@ -62,6 +63,7 @@ export function MarkdownEditor() {
           : wechatMarkdownHighlighting,
         githubLight,
         EditorView.lineWrapping,
+        paragraphSelectionStyle,
         EditorView.domEventHandlers({
           paste: (event, view) => {
             const items = event.clipboardData?.items;

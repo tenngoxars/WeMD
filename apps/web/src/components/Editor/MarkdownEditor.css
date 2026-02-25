@@ -136,7 +136,7 @@
 }
 
 .editor-container .cm-line {
-  padding: 0 4px;
+  padding: 0;
 }
 
 /* === Markdown 标记符号淡化 === */
