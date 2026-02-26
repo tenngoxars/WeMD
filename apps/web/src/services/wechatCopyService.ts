@@ -7,6 +7,7 @@ import { hasMathFormula } from "../utils/katexRenderer";
 import { convertLinksToFootnotes } from "../utils/linkFootnote";
 import { getLinkToFootnoteEnabled } from "../components/Editor/ToolbarState";
 import { useThemeStore } from "../store/themeStore";
+import { resolveInlineStyleVariablesForCopy } from "./inlineStyleVarResolver";
 import {
   materializeCounterPseudoContent,
   stripCounterPseudoRules,
@@ -35,6 +36,156 @@ const convertCheckboxesToEmoji = (html: string): string => {
     "⬜&nbsp;",
   );
   return result;
+};
+
+export const stripCopyMetadata = (container: HTMLElement): void => {
+  const root = container.firstElementChild;
+  if (root instanceof HTMLElement && root.id === "wemd") {
+    root.removeAttribute("id");
+  }
+
+  container.querySelectorAll<HTMLElement>("[data-tool]").forEach((node) => {
+    node.removeAttribute("data-tool");
+  });
+
+  container
+    .querySelectorAll<HTMLElement>("[data-wemd-counter-generated]")
+    .forEach((node) => {
+      node.removeAttribute("data-wemd-counter-generated");
+    });
+};
+
+const parseAlpha = (token: string): number | null => {
+  const trimmed = token.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.endsWith("%")) {
+    const percent = Number.parseFloat(trimmed.slice(0, -1));
+    return Number.isFinite(percent) ? percent / 100 : null;
+  }
+
+  const value = Number.parseFloat(trimmed);
+  return Number.isFinite(value) ? value : null;
+};
+
+const getFunctionalColorAlpha = (normalized: string): number | null => {
+  const match = normalized.match(/^(rgba?|hsla?)\((.*)\)$/);
+  if (!match) return null;
+
+  const fnName = match[1];
+  const body = match[2].trim();
+
+  if (body.includes("/")) {
+    const slashIndex = body.lastIndexOf("/");
+    const alphaToken = body.slice(slashIndex + 1);
+    return parseAlpha(alphaToken);
+  }
+
+  if (fnName === "rgba" || fnName === "hsla") {
+    const commaParts = body.split(",");
+    if (commaParts.length === 4) {
+      return parseAlpha(commaParts[3]);
+    }
+  }
+
+  return null;
+};
+
+const transformWemdRootSectionToDiv = (container: HTMLElement): void => {
+  const root = container.firstElementChild;
+  if (
+    !(root instanceof HTMLElement) ||
+    root.tagName !== "SECTION" ||
+    root.id !== "wemd" ||
+    container.childElementCount !== 1
+  ) {
+    return;
+  }
+
+  const wrapper = document.createElement("div");
+  Array.from(root.attributes).forEach((attr) => {
+    wrapper.setAttribute(attr.name, attr.value);
+  });
+  while (root.firstChild) {
+    wrapper.appendChild(root.firstChild);
+  }
+  container.replaceChildren(wrapper);
+};
+
+const isTransparentBackground = (value: string): boolean => {
+  const normalized = value.replace(/\s+/g, "").toLowerCase();
+  if (normalized === "transparent" || normalized.startsWith("transparent")) {
+    return true;
+  }
+
+  // #RGBA / #RRGGBBAA
+  if (/^#[0-9a-f]{4}$/.test(normalized)) {
+    return normalized[4] === "0";
+  }
+  if (/^#[0-9a-f]{8}$/.test(normalized)) {
+    return normalized.slice(6, 8) === "00";
+  }
+
+  const alpha = getFunctionalColorAlpha(normalized);
+  return alpha !== null && alpha <= 0;
+};
+
+const stripTransparentRootBackgroundStyles = (container: HTMLElement): void => {
+  const root = container.firstElementChild;
+  if (!(root instanceof HTMLElement)) return;
+
+  const background = root.style.getPropertyValue("background");
+  if (background && isTransparentBackground(background)) {
+    root.style.removeProperty("background");
+  }
+
+  const backgroundColor = root.style.getPropertyValue("background-color");
+  if (backgroundColor && isTransparentBackground(backgroundColor)) {
+    root.style.removeProperty("background-color");
+  }
+
+  if (root.style.length === 0 && root.hasAttribute("style")) {
+    root.removeAttribute("style");
+  }
+};
+
+const normalizeBlockBackgroundForWechat = (container: HTMLElement): void => {
+  const blocks = container.querySelectorAll<HTMLElement>(
+    "p,h1,h2,h3,h4,h5,h6,li,figure,figcaption",
+  );
+
+  blocks.forEach((node) => {
+    const background = node.style.getPropertyValue("background");
+    const backgroundColor = node.style.getPropertyValue("background-color");
+    const hasExplicitBackground =
+      (background && !isTransparentBackground(background)) ||
+      (backgroundColor && !isTransparentBackground(backgroundColor));
+
+    if (hasExplicitBackground) return;
+
+    node.style.setProperty("background-image", "none", "important");
+    node.style.setProperty("background-color", "inherit", "important");
+  });
+};
+
+export const normalizeCopyContainer = (container: HTMLElement): void => {
+  transformWemdRootSectionToDiv(container);
+  stripCopyMetadata(container);
+  stripTransparentRootBackgroundStyles(container);
+  normalizeBlockBackgroundForWechat(container);
+};
+
+const copyViaNativeExecCommand = (container: HTMLElement): boolean => {
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(container);
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+  try {
+    return document.execCommand("copy");
+  } finally {
+    selection?.removeAllRanges();
+  }
 };
 
 let mermaidInitialized = false;
@@ -207,22 +358,22 @@ export async function copyToWechat(
       themedCss,
     );
     const styledHtml = processHtml(materializedHtml, sanitizedCss, true, true);
+    const resolvedHtml = resolveInlineStyleVariablesForCopy(styledHtml);
     // 转换 checkbox 为 emoji，微信不支持 input 标签
-    const finalHtml = convertCheckboxesToEmoji(styledHtml);
+    const finalHtml = convertCheckboxesToEmoji(resolvedHtml);
 
     container.innerHTML = finalHtml;
+    normalizeCopyContainer(container);
 
     await renderMermaidBlocks(container);
 
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(container);
-    selection?.removeAllRanges();
-    selection?.addRange(range);
+    let copied = copyViaNativeExecCommand(container);
 
-    document.execCommand("copy");
-
-    if (navigator.clipboard && window.ClipboardItem) {
+    // 最后回退到 Clipboard API
+    if (!copied && navigator.clipboard && window.ClipboardItem) {
+      console.warn(
+        "[WeMD] native execCommand copy unavailable, fallback to Clipboard API",
+      );
       try {
         const blob = new Blob([container.innerHTML], { type: "text/html" });
         const textBlob = new Blob([markdown], { type: "text/plain" });
@@ -232,9 +383,14 @@ export async function copyToWechat(
             "text/plain": textBlob,
           }),
         ]);
+        copied = true;
       } catch (e) {
         console.error("Clipboard API 失败，使用回退方案", e);
       }
+    }
+
+    if (!copied) {
+      throw new Error("浏览器剪贴板写入失败");
     }
 
     toast.success("已复制，可以直接粘贴至微信公众号", {
