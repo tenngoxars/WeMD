@@ -123,4 +123,68 @@ title: "旧标题"
     expect(latestCall[1]).toContain('title: "A/B 标题"');
     expect(latestCall[1]).toContain('author: "Alice"');
   });
+
+  it("新建文章时继承当前选中主题", async () => {
+    const contentMap = new Map<string, string>();
+    const writeFile = vi.fn(async (path: string, content: string) => {
+      contentMap.set(path, content);
+    });
+    const readFile = vi.fn(async (path: string) => contentMap.get(path) || "");
+    const listFiles = vi.fn(async (): Promise<FileItem[]> => []);
+
+    useThemeStore.setState({
+      themeId: "custom-green",
+      themeName: "森林绿",
+      customCSS: "body { color: green; }",
+      customThemes: [
+        {
+          id: "custom-green",
+          name: "森林绿",
+          css: "body { color: green; }",
+          isBuiltIn: false,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          editorMode: "css",
+        },
+      ],
+    });
+
+    const adapter: StorageAdapter = {
+      type: "filesystem",
+      name: "FileSystem Access",
+      ready: true,
+      supportsFolders: true,
+      init: async () => ({ ready: true }),
+      listFiles,
+      readFile,
+      writeFile,
+      deleteFile: async () => undefined,
+      renameFile: async () => undefined,
+      exists: async () => true,
+      teardown: async () => undefined,
+    };
+
+    const { container } = render(<FileSystemHistory adapter={adapter} />);
+
+    const createButton = container.querySelector(
+      'button[data-tooltip="新建文章"]',
+    ) as HTMLButtonElement | null;
+    if (!createButton) {
+      throw new Error("create button not found");
+    }
+
+    fireEvent.click(createButton);
+
+    await waitFor(() => {
+      expect(writeFile).toHaveBeenCalled();
+    });
+
+    const firstCall = writeFile.mock.calls.at(0);
+    if (!firstCall) {
+      throw new Error("writeFile was not called");
+    }
+    const writtenContent = firstCall[1] as string;
+    expect(writtenContent).toContain("theme: custom-green");
+    expect(writtenContent).toContain('themeName: "森林绿"');
+  });
 });

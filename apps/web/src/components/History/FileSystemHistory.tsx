@@ -11,19 +11,11 @@ import type { StorageAdapter } from "../../storage/StorageAdapter";
 import type { FileItem as StorageFileItem } from "../../storage/types";
 import {
   applyMarkdownFileMeta,
+  buildMarkdownFileContent,
   parseMarkdownFileContent,
   stripMarkdownExtension,
 } from "../../utils/markdownFileMeta";
-
-const defaultFsContent = `---
-theme: default
-themeName: 默认主题
-title: 新文章
----
-
-# 新文章
-
-`;
+import { resolveNewArticleThemeSnapshot } from "../../utils/newArticleTheme";
 
 function getFileTitle(file: StorageFileItem): string {
   const fromMeta =
@@ -148,7 +140,18 @@ export function FileSystemHistory({ adapter }: FileSystemHistoryProps) {
   const handleCreate = async () => {
     try {
       const fileName = `文稿-${Date.now()}.md`;
-      await adapter.writeFile(fileName, defaultFsContent);
+      const themeState = useThemeStore.getState();
+      const targetTheme = resolveNewArticleThemeSnapshot(
+        themeState,
+        themeState.getAllThemes(),
+      );
+      const initialContent = buildMarkdownFileContent({
+        body: "# 新文章\n\n",
+        theme: targetTheme.themeId,
+        themeName: targetTheme.themeName,
+        title: "新文章",
+      });
+      await adapter.writeFile(fileName, initialContent);
       await refreshFiles();
       await handleOpen({ path: fileName, name: fileName } as StorageFileItem);
     } catch (error) {

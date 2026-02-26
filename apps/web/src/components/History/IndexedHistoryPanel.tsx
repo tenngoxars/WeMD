@@ -18,6 +18,7 @@ import { useHistoryStore } from "../../store/historyStore";
 import { useUITheme } from "../../hooks/useUITheme";
 import { SidebarFooter } from "../Sidebar/SidebarFooter";
 import type { HistorySnapshot } from "../../store/historyStore";
+import { resolveNewArticleThemeSnapshot } from "../../utils/newArticleTheme";
 
 const PAGE_SIZE = 50;
 
@@ -103,6 +104,10 @@ export function IndexedHistoryPanel() {
     const initial = "# 新文章\n\n";
     const editorState = useEditorStore.getState();
     const themeState = useThemeStore.getState();
+    const targetTheme = resolveNewArticleThemeSnapshot(
+      themeState,
+      themeState.getAllThemes(),
+    );
     await persistActive({
       markdown: editorState.markdown,
       theme: themeState.themeId,
@@ -111,17 +116,17 @@ export function IndexedHistoryPanel() {
     });
     resetDocument({
       markdown: initial,
-      theme: "default",
-      customCSS: "",
-      themeName,
+      theme: targetTheme.themeId,
+      customCSS: targetTheme.customCSS,
+      themeName: targetTheme.themeName,
     });
     const newEntry = await saveSnapshot(
       {
         markdown: initial,
-        theme: "default",
-        customCSS: "",
+        theme: targetTheme.themeId,
+        customCSS: targetTheme.customCSS,
         title: "新文章",
-        themeName,
+        themeName: targetTheme.themeName,
       },
       { force: true },
     );

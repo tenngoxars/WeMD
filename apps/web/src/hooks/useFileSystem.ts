@@ -11,6 +11,7 @@ import {
   parseMarkdownFileContent,
   stripMarkdownExtension,
 } from "../utils/markdownFileMeta";
+import { resolveNewArticleThemeSnapshot } from "../utils/newArticleTheme";
 
 // 本地定义 Electron API 类型以确保类型安全
 interface ElectronFileItem {
@@ -450,10 +451,15 @@ export function useFileSystem() {
       isCreating.current = true;
 
       const initialTitle = "新文章";
+      const themeState = useThemeStore.getState();
+      const targetTheme = resolveNewArticleThemeSnapshot(
+        themeState,
+        themeState.getAllThemes(),
+      );
       const initialContent = buildMarkdownFileContent({
         body: "# 新文章\n\n",
-        theme: "default",
-        themeName: "默认主题",
+        theme: targetTheme.themeId,
+        themeName: targetTheme.themeName,
         title: initialTitle,
       });
 
@@ -476,7 +482,7 @@ export function useFileSystem() {
               updatedAt: new Date(),
               size: 0,
               title: initialTitle,
-              themeName: "默认主题",
+              themeName: targetTheme.themeName,
             };
             await openFile(newFile);
             toast.success("已创建新文章");
@@ -493,7 +499,7 @@ export function useFileSystem() {
             updatedAt: new Date(),
             size: initialContent.length,
             title: initialTitle,
-            themeName: "默认主题",
+            themeName: targetTheme.themeName,
           };
           await openFile(newFile);
           toast.success("已创建新文章");
