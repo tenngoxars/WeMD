@@ -130,6 +130,24 @@ const isTransparentBackground = (value: string): boolean => {
   return alpha !== null && alpha <= 0;
 };
 
+const hasExplicitBackgroundImage = (value: string): boolean => {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return false;
+
+  if (/^none(\s*,\s*none)*$/.test(normalized)) return false;
+  if (
+    normalized === "initial" ||
+    normalized === "inherit" ||
+    normalized === "unset" ||
+    normalized === "revert" ||
+    normalized === "revert-layer"
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
 const stripTransparentRootBackgroundStyles = (container: HTMLElement): void => {
   const root = container.firstElementChild;
   if (!(root instanceof HTMLElement)) return;
@@ -151,20 +169,23 @@ const stripTransparentRootBackgroundStyles = (container: HTMLElement): void => {
 
 const normalizeBlockBackgroundForWechat = (container: HTMLElement): void => {
   const blocks = container.querySelectorAll<HTMLElement>(
-    "p,h1,h2,h3,h4,h5,h6,li,figure,figcaption",
+    "p,h1,h2,h3,h4,h5,h6,ul,ol,li,section,figure,figcaption",
   );
 
   blocks.forEach((node) => {
     const background = node.style.getPropertyValue("background");
     const backgroundColor = node.style.getPropertyValue("background-color");
+    const backgroundImage = node.style.getPropertyValue("background-image");
     const hasExplicitBackground =
       (background && !isTransparentBackground(background)) ||
-      (backgroundColor && !isTransparentBackground(backgroundColor));
+      (backgroundColor && !isTransparentBackground(backgroundColor)) ||
+      hasExplicitBackgroundImage(backgroundImage);
 
     if (hasExplicitBackground) return;
 
+    node.style.setProperty("background", "transparent", "important");
     node.style.setProperty("background-image", "none", "important");
-    node.style.setProperty("background-color", "inherit", "important");
+    node.style.setProperty("background-color", "transparent", "important");
   });
 };
 

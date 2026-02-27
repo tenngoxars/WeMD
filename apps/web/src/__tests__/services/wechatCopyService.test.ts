@@ -291,10 +291,10 @@ describe("wechatCopyService clipboard strategy", () => {
 
     const paragraphs = container.querySelectorAll("p");
     expect(paragraphs[0].style.marginTop).toBe("18px");
-    expect(paragraphs[0].style.backgroundColor).toBe("inherit");
+    expect(paragraphs[0].style.backgroundColor).toBe("transparent");
     expect(paragraphs[0].style.backgroundImage).toBe("none");
     expect(paragraphs[1].style.background).toContain("rgb(1, 2, 3)");
-    expect(paragraphs[1].style.backgroundColor).not.toBe("inherit");
+    expect(paragraphs[1].style.backgroundColor).not.toBe("transparent");
   });
 
   it("normalizes figure background without overriding explicit figure background", () => {
@@ -306,9 +306,56 @@ describe("wechatCopyService clipboard strategy", () => {
 
     const figures = container.querySelectorAll("figure");
     expect(figures).toHaveLength(2);
-    expect(figures[0].style.backgroundColor).toBe("inherit");
+    expect(figures[0].style.backgroundColor).toBe("transparent");
     expect(figures[0].style.backgroundImage).toBe("none");
     expect(figures[1].style.background).toContain("rgb(245, 245, 245)");
+  });
+
+  it("normalizes list item section background without overriding explicit section background", () => {
+    const container = document.createElement("div");
+    container.innerHTML =
+      '<section id="wemd"><ul><li><section>A</section></li><li><section style="background-color:#f5f5f5;">B</section></li></ul></section>';
+
+    normalizeCopyContainer(container);
+
+    const sections = container.querySelectorAll("li > section");
+    expect(sections).toHaveLength(2);
+    expect((sections[0] as HTMLElement).style.backgroundColor).toBe(
+      "transparent",
+    );
+    expect((sections[0] as HTMLElement).style.backgroundImage).toBe("none");
+    expect((sections[1] as HTMLElement).style.backgroundColor).toBe(
+      "rgb(245, 245, 245)",
+    );
+  });
+
+  it("normalizes list container background without overriding explicit list background", () => {
+    const container = document.createElement("div");
+    container.innerHTML =
+      '<section id="wemd"><ul><li><section>A</section></li></ul><ol style="background-color:#f5f5f5;"><li><section>B</section></li></ol></section>';
+
+    normalizeCopyContainer(container);
+
+    const ul = container.querySelector("ul") as HTMLElement | null;
+    const ol = container.querySelector("ol") as HTMLElement | null;
+    expect(ul).toBeTruthy();
+    expect(ol).toBeTruthy();
+    expect(ul!.style.backgroundColor).toBe("transparent");
+    expect(ul!.style.backgroundImage).toBe("none");
+    expect(ol!.style.backgroundColor).toBe("rgb(245, 245, 245)");
+  });
+
+  it("keeps explicit list background-image untouched", () => {
+    const container = document.createElement("div");
+    container.innerHTML =
+      '<section id="wemd"><ul style="background-image:linear-gradient(#111,#222);"><li><section>A</section></li></ul></section>';
+
+    normalizeCopyContainer(container);
+
+    const ul = container.querySelector("ul") as HTMLElement | null;
+    expect(ul).toBeTruthy();
+    expect(ul!.style.backgroundImage).toContain("linear-gradient");
+    expect(ul!.style.backgroundColor).not.toBe("transparent");
   });
 
   it("strips root transparent background written in modern color syntax", () => {
