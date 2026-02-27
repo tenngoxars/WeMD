@@ -18,6 +18,11 @@ import toast from "react-hot-toast";
 import "./MarkdownEditor.css";
 import { customKeymap } from "./editorShortcuts";
 import { paragraphSelectionStyle } from "./mouseSelectionStyle";
+import {
+  WECHAT_IMAGE_MAX_SIZE_BYTES,
+  formatImageSize,
+} from "../../services/image/autoCompressImage";
+import { uploadEditorImage } from "../../services/image/imageUploadFlow";
 
 const SYNC_SCROLL_EVENT = "wemd-sync-scroll";
 
@@ -75,33 +80,23 @@ export function MarkdownEditor() {
                 const file = item.getAsFile();
                 if (!file) continue;
 
-                // 检查图片大小，超过 2MB 拒绝上传
-                const MAX_SIZE_MB = 2;
-                const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-                if (file.size > MAX_SIZE_BYTES) {
-                  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-                  toast.error(
-                    `请压缩图片后再试，公众号不支持超过 2MB 的图片外链(当前 ${sizeMB}MB)`,
-                    { duration: 4000 },
-                  );
-                  continue;
-                }
+                const needAutoCompress =
+                  file.size > WECHAT_IMAGE_MAX_SIZE_BYTES;
 
-                // 使用 ImageHostManager 统一上传
+                // 使用统一流程自动压缩并上传
                 const uploadPromise = (async () => {
-                  const saved = localStorage.getItem("imageHostConfig");
-                  const imageHostConfig = saved
-                    ? JSON.parse(saved)
-                    : { type: "official" };
-                  const { ImageHostManager } = await import(
-                    "../../services/image/ImageUploader"
-                  );
-                  const manager = new ImageHostManager(imageHostConfig);
-                  const url = await manager.upload(file);
-                  return { url, filename: file.name };
+                  const result = await uploadEditorImage(file, {
+                    compressionOptions: {
+                      maxSizeBytes: WECHAT_IMAGE_MAX_SIZE_BYTES,
+                    },
+                  });
+                  return result;
                 })();
 
-                const loadingText = `![上传中... ${file.name}]()`;
+                const loadingToken = `wemd-upload-${Date.now()}-${Math.random()
+                  .toString(36)
+                  .slice(2, 8)}`;
+                const loadingText = `![上传中... ${file.name}](${loadingToken})`;
                 const range = view.state.selection.main;
                 view.dispatch({
                   changes: {
@@ -112,7 +107,9 @@ export function MarkdownEditor() {
                 });
 
                 toast.promise(uploadPromise, {
-                  loading: "正在上传图片...",
+                  loading: needAutoCompress
+                    ? "正在压缩并上传图片..."
+                    : "正在上传图片...",
                   success: (result) => {
                     const imageText = `![](${result.url})`;
                     const currentDoc = view.state.doc.toString();
@@ -127,7 +124,11 @@ export function MarkdownEditor() {
                         },
                       });
                     }
-                    return "图片上传成功";
+                    return result.compressed
+                      ? `图片上传成功（已自动压缩 ${formatImageSize(
+                          result.originalSize,
+                        )} -> ${formatImageSize(result.finalSize)}）`
+                      : "图片上传成功";
                   },
                   error: (err) => {
                     const currentDoc = view.state.doc.toString();
