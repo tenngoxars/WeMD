@@ -1,5 +1,6 @@
 import { Globe, BookOpen } from "lucide-react";
 import { useUITheme } from "../../hooks/useUITheme";
+import { resolveAppAssetPath } from "../../utils/assetPath";
 import "./SidebarFooter.css";
 
 const GithubIcon = ({ size = 24 }: { size?: number | string }) => (
@@ -21,8 +22,9 @@ const GithubIcon = ({ size = 24 }: { size?: number | string }) => (
 
 export function SidebarFooter() {
   const uiTheme = useUITheme((state) => state.theme);
-  const logoSrc =
-    uiTheme === "dark" ? "/favicon-light.svg" : "/favicon-dark.svg";
+  const logoSrc = resolveAppAssetPath(
+    uiTheme === "dark" ? "favicon-light.svg" : "favicon-dark.svg",
+  );
 
   return (
     <div className="sidebar-footer">

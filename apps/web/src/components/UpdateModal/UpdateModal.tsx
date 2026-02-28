@@ -1,5 +1,6 @@
 import { X, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { resolveAppAssetPath } from "../../utils/assetPath";
 import "./UpdateModal.css";
 
 interface UpdateModalProps {
@@ -19,6 +20,7 @@ export function UpdateModal({
   onSkipVersion,
 }: UpdateModalProps) {
   const [showNotes, setShowNotes] = useState(false);
+  const iconSrc = resolveAppAssetPath("favicon-dark.svg");
 
   // 简单处理 Markdown 格式的 release notes
   const formatReleaseNotes = (notes: string) => {
@@ -40,7 +42,7 @@ export function UpdateModal({
         </button>
 
         <div className="update-modal-icon">
-          <img src="/favicon-dark.svg" alt="WeMD" width={64} height={64} />
+          <img src={iconSrc} alt="WeMD" width={64} height={64} />
         </div>
 
         <h2 className="update-modal-title">发现新版本</h2>

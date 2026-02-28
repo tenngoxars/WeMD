@@ -1,140 +1,9 @@
-const findNextVarFunctionStart = (
-  value: string,
-  startIndex: number,
-): number => {
-  let quote: "'" | '"' | null = null;
-  let escapeNext = false;
-
-  for (let i = startIndex; i < value.length; i += 1) {
-    const char = value[i];
-
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-
-    if (char === "\\") {
-      escapeNext = true;
-      continue;
-    }
-
-    if (quote) {
-      if (char === quote) {
-        quote = null;
-      }
-      continue;
-    }
-
-    if (char === "'" || char === '"') {
-      quote = char;
-      continue;
-    }
-
-    if (char === "v" && value.slice(i, i + 4).toLowerCase() === "var(") {
-      return i;
-    }
-  }
-
-  return -1;
-};
-
-const hasResolvableVarFunction = (value: string): boolean => {
-  return findNextVarFunctionStart(value, 0) >= 0;
-};
-
-const findMatchingParenthesis = (value: string, openIndex: number): number => {
-  let depth = 0;
-  let quote: "'" | '"' | null = null;
-  let escapeNext = false;
-
-  for (let i = openIndex; i < value.length; i += 1) {
-    const char = value[i];
-
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-
-    if (char === "\\") {
-      escapeNext = true;
-      continue;
-    }
-
-    if (quote) {
-      if (char === quote) {
-        quote = null;
-      }
-      continue;
-    }
-
-    if (char === "'" || char === '"') {
-      quote = char;
-      continue;
-    }
-
-    if (char === "(") {
-      depth += 1;
-      continue;
-    }
-
-    if (char === ")") {
-      depth -= 1;
-      if (depth === 0) {
-        return i;
-      }
-    }
-  }
-
-  return -1;
-};
-
-const splitVarArguments = (input: string): [string, string | undefined] => {
-  let depth = 0;
-  let quote: "'" | '"' | null = null;
-  let escapeNext = false;
-
-  for (let i = 0; i < input.length; i += 1) {
-    const char = input[i];
-
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-
-    if (char === "\\") {
-      escapeNext = true;
-      continue;
-    }
-
-    if (quote) {
-      if (char === quote) {
-        quote = null;
-      }
-      continue;
-    }
-
-    if (char === "'" || char === '"') {
-      quote = char;
-      continue;
-    }
-
-    if (char === "(") {
-      depth += 1;
-      continue;
-    }
-
-    if (char === ")") {
-      depth -= 1;
-      continue;
-    }
-
-    if (char === "," && depth === 0) {
-      return [input.slice(0, i), input.slice(i + 1)];
-    }
-  }
-
-  return [input, undefined];
-};
+import {
+  findNextVarStart,
+  hasVarFunction,
+  findMatchingParen,
+  splitVarArgs,
+} from "./cssVarParser";
 
 const resolveVarFunctions = (
   value: string,
@@ -145,7 +14,7 @@ const resolveVarFunctions = (
   let cursor = 0;
 
   while (cursor < value.length) {
-    const varStart = findNextVarFunctionStart(value, cursor);
+    const varStart = findNextVarStart(value, cursor);
     if (varStart < 0) {
       output += value.slice(cursor);
       break;
@@ -154,14 +23,14 @@ const resolveVarFunctions = (
     output += value.slice(cursor, varStart);
 
     const openParen = varStart + 3;
-    const closeParen = findMatchingParenthesis(value, openParen);
+    const closeParen = findMatchingParen(value, openParen);
     if (closeParen < 0) {
       output += value.slice(varStart);
       break;
     }
 
     const rawArgs = value.slice(openParen + 1, closeParen);
-    const [rawName, rawFallback] = splitVarArguments(rawArgs);
+    const [rawName, rawFallback] = splitVarArgs(rawArgs);
     const variableName = rawName.trim();
     const fallback = rawFallback?.trim();
     const unresolved = `var(${rawArgs})`;
@@ -177,7 +46,7 @@ const resolveVarFunctions = (
           resolveVariable,
           nextStack,
         );
-        if (fallback && hasResolvableVarFunction(resolvedVariableValue)) {
+        if (fallback && hasVarFunction(resolvedVariableValue)) {
           replacement = resolveVarFunctions(
             fallback,
             resolveVariable,
@@ -283,11 +152,11 @@ const resolveElementTreeVars = (
   });
 
   declarations.forEach(({ name, value, priority }) => {
-    if (name.startsWith("--") || !hasResolvableVarFunction(value)) return;
+    if (name.startsWith("--") || !hasVarFunction(value)) return;
     const computedValue = getComputedStyleForElement()
       .getPropertyValue(name)
       .trim();
-    if (computedValue && !hasResolvableVarFunction(computedValue)) {
+    if (computedValue && !hasVarFunction(computedValue)) {
       element.style.setProperty(name, computedValue, priority);
       return;
     }

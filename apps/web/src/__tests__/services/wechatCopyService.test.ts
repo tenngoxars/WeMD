@@ -7,6 +7,9 @@ const mocked = vi.hoisted(() => ({
   processHtmlMock: vi.fn(),
   clipboardWrite: vi.fn(),
   electronClipboardWrite: vi.fn(),
+  resolveInlineStyleVariablesForCopy: vi.fn((html: string) => html),
+  materializeCounterPseudoContent: vi.fn((html: string) => html),
+  stripCounterPseudoRules: vi.fn((css: string) => css),
 }));
 
 vi.mock("react-hot-toast", () => ({
@@ -47,12 +50,12 @@ vi.mock("../../components/Editor/ToolbarState", () => ({
 }));
 
 vi.mock("../../services/inlineStyleVarResolver", () => ({
-  resolveInlineStyleVariablesForCopy: (html: string) => html,
+  resolveInlineStyleVariablesForCopy: mocked.resolveInlineStyleVariablesForCopy,
 }));
 
 vi.mock("../../services/wechatCounterCompat", () => ({
-  materializeCounterPseudoContent: (html: string) => html,
-  stripCounterPseudoRules: (css: string) => css,
+  materializeCounterPseudoContent: mocked.materializeCounterPseudoContent,
+  stripCounterPseudoRules: mocked.stripCounterPseudoRules,
 }));
 
 vi.mock("../../utils/mermaidConfig", () => ({
@@ -161,6 +164,7 @@ describe("wechatCopyService clipboard strategy", () => {
       configurable: true,
       value: {
         isElectron: true,
+        platform: "darwin",
         clipboard: {
           writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
             success: true,
@@ -179,11 +183,36 @@ describe("wechatCopyService clipboard strategy", () => {
     expect(mocked.toastError).not.toHaveBeenCalled();
   });
 
+  it("prefers native execCommand in electron win32 runtime", async () => {
+    Object.defineProperty(window, "electron", {
+      configurable: true,
+      value: {
+        isElectron: true,
+        platform: "win32",
+        clipboard: {
+          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+            success: true,
+          }),
+        },
+      },
+    });
+    const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(true);
+
+    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+
+    expect(execSpy).toHaveBeenCalledWith("copy");
+    expect(mocked.electronClipboardWrite).not.toHaveBeenCalled();
+    expect(mocked.clipboardWrite).not.toHaveBeenCalled();
+    expect(mocked.toastSuccess).toHaveBeenCalled();
+    expect(mocked.toastError).not.toHaveBeenCalled();
+  });
+
   it("falls back to native execCommand when electron bridge returns failure", async () => {
     Object.defineProperty(window, "electron", {
       configurable: true,
       value: {
         isElectron: true,
+        platform: "darwin",
         clipboard: {
           writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
             success: false,
@@ -208,6 +237,7 @@ describe("wechatCopyService clipboard strategy", () => {
       configurable: true,
       value: {
         isElectron: true,
+        platform: "darwin",
         clipboard: {
           writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
             success: false,
@@ -223,6 +253,30 @@ describe("wechatCopyService clipboard strategy", () => {
     expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
     expect(execSpy).toHaveBeenCalledWith("copy");
     expect(mocked.clipboardWrite).toHaveBeenCalledTimes(1);
+    expect(mocked.toastSuccess).toHaveBeenCalled();
+    expect(mocked.toastError).not.toHaveBeenCalled();
+  });
+
+  it("falls back to electron bridge when win32 execCommand fails", async () => {
+    Object.defineProperty(window, "electron", {
+      configurable: true,
+      value: {
+        isElectron: true,
+        platform: "win32",
+        clipboard: {
+          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+            success: true,
+          }),
+        },
+      },
+    });
+    const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(false);
+
+    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+
+    expect(execSpy).toHaveBeenCalledWith("copy");
+    expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
+    expect(mocked.clipboardWrite).not.toHaveBeenCalled();
     expect(mocked.toastSuccess).toHaveBeenCalled();
     expect(mocked.toastError).not.toHaveBeenCalled();
   });

@@ -5,7 +5,6 @@ import { Plus, Trash2, Edit2, Save } from "lucide-react";
 import { useEditorStore } from "../../store/editorStore";
 import { useFileStore } from "../../store/fileStore";
 import { useThemeStore } from "../../store/themeStore";
-import { useUITheme } from "../../hooks/useUITheme";
 import { SidebarFooter } from "../Sidebar/SidebarFooter";
 import type { StorageAdapter } from "../../storage/StorageAdapter";
 import type { FileItem as StorageFileItem } from "../../storage/types";
@@ -230,10 +229,6 @@ export function FileSystemHistory({ adapter }: FileSystemHistoryProps) {
       toast.error("更新标题失败");
     }
   };
-
-  const uiTheme = useUITheme((state) => state.theme);
-  const logoSrc =
-    uiTheme === "dark" ? "/favicon-light.svg" : "/favicon-dark.svg";
 
   return (
     <aside className="history-sidebar">

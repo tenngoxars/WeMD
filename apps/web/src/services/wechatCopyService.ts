@@ -12,6 +12,7 @@ import {
   materializeCounterPseudoContent,
   stripCounterPseudoRules,
 } from "./wechatCounterCompat";
+import { expandCSSVariables } from "./cssVariableExpander";
 import {
   getMermaidConfig,
   getThemedMermaidDiagram,
@@ -19,7 +20,9 @@ import {
 
 const buildCopyCss = (themeCss: string) => {
   if (!themeCss) return katexCss;
-  return `${themeCss}\n${katexCss}`;
+  // 复制前展开 CSS 变量为具体值，消除微信清洗 var() 导致的样式丢失
+  const expandedCss = expandCSSVariables(themeCss);
+  return `${expandedCss}\n${katexCss}`;
 };
 
 /**
@@ -229,6 +232,17 @@ const copyViaElectronClipboard = async (
   });
 };
 
+const shouldPreferElectronClipboard = (): boolean => {
+  const electron = window.electron;
+  if (!electron?.isElectron) return false;
+
+  // Windows 下优先使用与手动复制一致的选区链路，降低公众号样式丢失概率
+  if (electron.platform === "win32") return false;
+  if (electron.platform === "darwin" || electron.platform === "linux")
+    return true;
+  return false;
+};
+
 let mermaidInitialized = false;
 
 const ensureMermaidInitialized = () => {
@@ -410,7 +424,13 @@ export async function copyToWechat(
 
     let copied = false;
 
-    if (window.electron?.isElectron) {
+    const preferElectronClipboard = shouldPreferElectronClipboard();
+
+    if (!preferElectronClipboard) {
+      copied = copyViaNativeExecCommand(container);
+    }
+
+    if (!copied && window.electron?.isElectron) {
       try {
         const electronResult = await copyViaElectronClipboard(container);
         if (electronResult) {
@@ -427,7 +447,7 @@ export async function copyToWechat(
       }
     }
 
-    if (!copied) {
+    if (!copied && preferElectronClipboard) {
       copied = copyViaNativeExecCommand(container);
     }
 
