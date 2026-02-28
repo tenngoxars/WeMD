@@ -351,6 +351,43 @@ describe("wechatCopyService clipboard strategy", () => {
     expect(paragraphs[1].style.backgroundColor).not.toBe("transparent");
   });
 
+  it("relocates root horizontal padding to direct children", () => {
+    const container = document.createElement("div");
+    container.innerHTML =
+      '<section id="wemd" style="padding: 0px 16px; color: rgb(9, 9, 9);"><p>A</p><p>B</p></section>';
+
+    normalizeCopyContainer(container);
+
+    const rootDiv = container.firstElementChild as HTMLElement | null;
+    expect(rootDiv).toBeTruthy();
+    expect(rootDiv!.tagName).toBe("DIV");
+    expect(rootDiv!.style.padding).toBe("");
+    expect(rootDiv!.style.paddingLeft).toBe("");
+    expect(rootDiv!.style.paddingRight).toBe("");
+
+    const paragraphs = rootDiv!.querySelectorAll("p");
+    expect(paragraphs).toHaveLength(2);
+    expect((paragraphs[0] as HTMLElement).style.paddingLeft).toBe("16px");
+    expect((paragraphs[0] as HTMLElement).style.paddingRight).toBe("16px");
+    expect((paragraphs[1] as HTMLElement).style.paddingLeft).toBe("16px");
+    expect((paragraphs[1] as HTMLElement).style.paddingRight).toBe("16px");
+  });
+
+  it("merges root horizontal padding with existing child padding", () => {
+    const container = document.createElement("div");
+    container.innerHTML =
+      '<section id="wemd" style="padding: 0px 16px;"><blockquote style="padding: 12px 10px;"><p>A</p></blockquote></section>';
+
+    normalizeCopyContainer(container);
+
+    const blockquote = container.querySelector("blockquote") as HTMLElement;
+    expect(blockquote).toBeTruthy();
+    expect(blockquote.style.paddingLeft).toContain("26px");
+    expect(blockquote.style.paddingRight).toContain("26px");
+    expect(blockquote.style.paddingTop).toBe("12px");
+    expect(blockquote.style.paddingBottom).toBe("12px");
+  });
+
   it("normalizes figure background without overriding explicit figure background", () => {
     const container = document.createElement("div");
     container.innerHTML =

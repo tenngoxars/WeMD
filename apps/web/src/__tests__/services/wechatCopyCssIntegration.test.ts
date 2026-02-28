@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { processHtml } from "@wemd/core";
 import { resolveInlineStyleVariablesForCopy } from "../../services/inlineStyleVarResolver";
+import { normalizeCopyContainer } from "../../services/wechatCopyService";
 import { defaultVariables } from "../../components/Theme/ThemeDesigner/defaults";
 import { generateCSS } from "../../components/Theme/ThemeDesigner/generateCSS";
 
@@ -140,5 +141,30 @@ describe("wechat copy css integration", () => {
     expect(heading!.getAttribute("style")).toContain("font-size");
     expect(output).not.toContain("var(--wemd-");
     expect(output).not.toMatch(/--wemd-[\w-]+\s*:/);
+  });
+
+  it("relocates horizontal page padding in full pipeline", () => {
+    const html = "<p>段落</p><h2><span class='content'>标题</span></h2>";
+    const css = generateCSS({
+      ...defaultVariables,
+      pagePadding: 48,
+    });
+
+    const resolved = resolveInlineStyleVariablesForCopy(
+      processHtml(html, css, true, true),
+    );
+    const container = document.createElement("div");
+    container.innerHTML = resolved;
+
+    normalizeCopyContainer(container);
+
+    const paragraph = container.querySelector("p") as HTMLElement | null;
+    const heading = container.querySelector("h2") as HTMLElement | null;
+    expect(paragraph).toBeTruthy();
+    expect(heading).toBeTruthy();
+    expect(paragraph!.style.paddingLeft).toBe("48px");
+    expect(paragraph!.style.paddingRight).toBe("48px");
+    expect(heading!.style.paddingLeft).toBe("48px");
+    expect(heading!.style.paddingRight).toBe("48px");
   });
 });

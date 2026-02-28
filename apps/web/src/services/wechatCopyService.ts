@@ -151,6 +151,104 @@ const hasExplicitBackgroundImage = (value: string): boolean => {
   return true;
 };
 
+const isZeroSpacing = (value: string): boolean => {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return true;
+  if (normalized === "0" || normalized === "0px" || normalized === "0%") {
+    return true;
+  }
+  return normalized.split(/\s+/).every((token) => {
+    return token === "0" || token === "0px" || token === "0%";
+  });
+};
+
+const mergeHorizontalPadding = (
+  existingPadding: string,
+  rootPadding: string,
+): string => {
+  if (isZeroSpacing(existingPadding)) {
+    return rootPadding;
+  }
+  return `calc(${existingPadding} + ${rootPadding})`;
+};
+
+/**
+ * 微信编辑器会清理粘贴内容最外层元素的 padding。
+ * 复制前将根节点 padding 迁移到内层包裹元素，确保页面左右留白生效。
+ */
+const relocateRootPaddingToInnerWrapper = (container: HTMLElement): void => {
+  const root = container.firstElementChild;
+  if (!(root instanceof HTMLElement)) return;
+
+  const paddingLeft = root.style.getPropertyValue("padding-left").trim();
+  const paddingRight = root.style.getPropertyValue("padding-right").trim();
+  const paddingTop = root.style.getPropertyValue("padding-top").trim();
+  const paddingBottom = root.style.getPropertyValue("padding-bottom").trim();
+
+  const hasHorizontalPadding =
+    !isZeroSpacing(paddingLeft) || !isZeroSpacing(paddingRight);
+  const hasVerticalPadding =
+    !isZeroSpacing(paddingTop) || !isZeroSpacing(paddingBottom);
+
+  if (!hasHorizontalPadding && !hasVerticalPadding) {
+    return;
+  }
+
+  const elementChildren = Array.from(root.children).filter(
+    (node): node is HTMLElement => node instanceof HTMLElement,
+  );
+
+  // 左右留白优先下沉到一级内容块，避免微信清洗外层容器 padding。
+  if (hasHorizontalPadding && elementChildren.length > 0) {
+    elementChildren.forEach((child) => {
+      if (!isZeroSpacing(paddingLeft)) {
+        const existingPaddingLeft = child.style
+          .getPropertyValue("padding-left")
+          .trim();
+        child.style.setProperty(
+          "padding-left",
+          mergeHorizontalPadding(existingPaddingLeft, paddingLeft),
+        );
+      }
+      if (!isZeroSpacing(paddingRight)) {
+        const existingPaddingRight = child.style
+          .getPropertyValue("padding-right")
+          .trim();
+        child.style.setProperty(
+          "padding-right",
+          mergeHorizontalPadding(existingPaddingRight, paddingRight),
+        );
+      }
+    });
+  }
+
+  // 仅当存在垂直 padding 时，才额外包一层承接上下留白。
+  if (hasVerticalPadding) {
+    const innerWrapper = document.createElement("div");
+    innerWrapper.style.display = "block";
+    innerWrapper.style.width = "100%";
+    innerWrapper.style.boxSizing = "border-box";
+
+    if (!isZeroSpacing(paddingTop)) {
+      innerWrapper.style.setProperty("padding-top", paddingTop);
+    }
+    if (!isZeroSpacing(paddingBottom)) {
+      innerWrapper.style.setProperty("padding-bottom", paddingBottom);
+    }
+
+    while (root.firstChild) {
+      innerWrapper.appendChild(root.firstChild);
+    }
+    root.appendChild(innerWrapper);
+  }
+
+  root.style.removeProperty("padding");
+  root.style.removeProperty("padding-left");
+  root.style.removeProperty("padding-right");
+  root.style.removeProperty("padding-top");
+  root.style.removeProperty("padding-bottom");
+};
+
 const stripTransparentRootBackgroundStyles = (container: HTMLElement): void => {
   const root = container.firstElementChild;
   if (!(root instanceof HTMLElement)) return;
@@ -196,6 +294,7 @@ export const normalizeCopyContainer = (container: HTMLElement): void => {
   transformWemdRootSectionToDiv(container);
   stripCopyMetadata(container);
   stripTransparentRootBackgroundStyles(container);
+  relocateRootPaddingToInnerWrapper(container);
   normalizeBlockBackgroundForWechat(container);
 };
 
