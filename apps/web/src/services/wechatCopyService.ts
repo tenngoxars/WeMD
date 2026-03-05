@@ -309,26 +309,41 @@ const relocateRootPaddingToInnerWrapper = (container: HTMLElement): void => {
   root.style.removeProperty("padding-bottom");
 };
 
-const stripTransparentRootBackgroundStyles = (container: HTMLElement): void => {
+/**
+ * 提取根元素的背景色并从根元素上移除。
+ * 微信会清洗最外层容器样式，因此背景色需要下沉到子块。
+ * 返回有效（非透明）的背景色字符串，无则返回 null。
+ */
+const extractRootBackgroundColor = (container: HTMLElement): string | null => {
   const root = container.firstElementChild;
-  if (!(root instanceof HTMLElement)) return;
+  if (!(root instanceof HTMLElement)) return null;
 
   const background = root.style.getPropertyValue("background");
-  if (background && isTransparentBackground(background)) {
-    root.style.removeProperty("background");
+  const backgroundColor = root.style.getPropertyValue("background-color");
+
+  // 找出有效的非透明背景色
+  let effectiveBg: string | null = null;
+  if (backgroundColor && !isTransparentBackground(backgroundColor)) {
+    effectiveBg = backgroundColor;
+  } else if (background && !isTransparentBackground(background)) {
+    effectiveBg = background;
   }
 
-  const backgroundColor = root.style.getPropertyValue("background-color");
-  if (backgroundColor && isTransparentBackground(backgroundColor)) {
-    root.style.removeProperty("background-color");
-  }
+  // 清理根元素上的背景属性
+  if (background) root.style.removeProperty("background");
+  if (backgroundColor) root.style.removeProperty("background-color");
 
   if (root.style.length === 0 && root.hasAttribute("style")) {
     root.removeAttribute("style");
   }
+
+  return effectiveBg;
 };
 
-const normalizeBlockBackgroundForWechat = (container: HTMLElement): void => {
+const normalizeBlockBackgroundForWechat = (
+  container: HTMLElement,
+  rootBgColor: string | null,
+): void => {
   const blocks = container.querySelectorAll<HTMLElement>(
     "p,h1,h2,h3,h4,h5,h6,ul,ol,li,section,figure,figcaption",
   );
@@ -344,18 +359,22 @@ const normalizeBlockBackgroundForWechat = (container: HTMLElement): void => {
 
     if (hasExplicitBackground) return;
 
-    node.style.setProperty("background", "transparent", "important");
+    if (rootBgColor) {
+      node.style.setProperty("background-color", rootBgColor, "important");
+    } else {
+      node.style.setProperty("background", "transparent", "important");
+      node.style.setProperty("background-color", "transparent", "important");
+    }
     node.style.setProperty("background-image", "none", "important");
-    node.style.setProperty("background-color", "transparent", "important");
   });
 };
 
 export const normalizeCopyContainer = (container: HTMLElement): void => {
   transformWemdRootSectionToDiv(container);
   stripCopyMetadata(container);
-  stripTransparentRootBackgroundStyles(container);
+  const rootBgColor = extractRootBackgroundColor(container);
   relocateRootPaddingToInnerWrapper(container);
-  normalizeBlockBackgroundForWechat(container);
+  normalizeBlockBackgroundForWechat(container, rootBgColor);
 };
 
 const copyViaNativeExecCommand = (container: HTMLElement): boolean => {

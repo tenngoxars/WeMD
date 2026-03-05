@@ -169,4 +169,36 @@ describe("wechat copy css integration", () => {
     expect(heading!.style.paddingLeft).not.toBe("48px");
     expect(heading!.style.paddingRight).not.toBe("48px");
   });
+
+  it("propagates #wemd background-color to child blocks after normalization (#52)", () => {
+    const html = "<p>段落</p><blockquote><p>引用</p></blockquote>";
+    const css = `
+      #wemd {
+        background-color: #f5f3ef;
+      }
+      #wemd p {
+        color: #333;
+      }
+    `;
+
+    const resolved = resolveInlineStyleVariablesForCopy(
+      processHtml(html, css, true, true),
+    );
+    const container = document.createElement("div");
+    container.innerHTML = resolved;
+
+    // juice 正确内联到根元素
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.style.backgroundColor).toBe("rgb(245, 243, 239)");
+
+    // normalizeCopyContainer 将背景色下沉到子块
+    normalizeCopyContainer(container);
+
+    const paragraph = container.querySelector("p") as HTMLElement;
+    expect(paragraph.style.backgroundColor).toBe("rgb(245, 243, 239)");
+
+    // 根元素背景已清除（微信会清洗最外层样式）
+    const newRoot = container.firstElementChild as HTMLElement;
+    expect(newRoot.style.backgroundColor).toBeFalsy();
+  });
 });
