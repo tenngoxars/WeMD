@@ -52,10 +52,10 @@ export const lineHeightOptions: StyleOption[] = [
 ];
 
 export const headingSizePresets = {
-  h1: { min: 20, max: 32, default: 24 },
-  h2: { min: 18, max: 28, default: 20 },
-  h3: { min: 16, max: 24, default: 18 },
-  h4: { min: 14, max: 20, default: 16 },
+  h1: { min: 16, max: 32, default: 24 },
+  h2: { min: 14, max: 28, default: 20 },
+  h3: { min: 12, max: 24, default: 18 },
+  h4: { min: 10, max: 20, default: 16 },
 };
 
 export const marginPresets = {

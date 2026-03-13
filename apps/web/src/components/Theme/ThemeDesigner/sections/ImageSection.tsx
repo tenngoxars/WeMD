@@ -26,6 +26,18 @@ export function ImageSection({ variables, updateVariable }: SectionProps) {
         />
       </div>
 
+      <div className="designer-field-row">
+        <span>阴影</span>
+        <label className="designer-switch">
+          <input
+            type="checkbox"
+            checked={variables.imageShadow}
+            onChange={(e) => updateVariable("imageShadow", e.target.checked)}
+          />
+          <span className="switch-slider" />
+        </label>
+      </div>
+
       <div className="designer-group-label mt-4">图片说明</div>
       <div className="designer-field">
         <label>说明文字颜色</label>

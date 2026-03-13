@@ -192,5 +192,6 @@ ${
   height: auto;
   margin: var(--wemd-image-margin) auto;
   border-radius: var(--wemd-image-border-radius);
+  box-shadow: var(--wemd-image-shadow);
 }`;
 }

@@ -109,6 +109,7 @@ export function generateVariables(
   /* 图片 */
   --wemd-image-margin: ${v.imageMargin}px;
   --wemd-image-border-radius: ${v.imageBorderRadius}px;
+  --wemd-image-shadow: ${v.imageShadow ? "0 4px 12px rgba(0, 0, 0, 0.12)" : "none"};
   --wemd-image-caption-color: ${v.imageCaptionColor};
   --wemd-image-caption-font-size: ${v.imageCaptionFontSize}px;
   --wemd-image-caption-align: ${v.imageCaptionTextAlign};

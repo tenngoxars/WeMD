@@ -65,6 +65,7 @@ export interface DesignerVariables {
   // 图片
   imageMargin: number;
   imageBorderRadius: number;
+  imageShadow: boolean;
   imageCaptionColor: string;
   imageCaptionFontSize: number;
   imageCaptionTextAlign: string;

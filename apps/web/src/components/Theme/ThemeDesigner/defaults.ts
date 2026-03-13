@@ -90,6 +90,7 @@ export const defaultVariables: DesignerVariables = {
   // 图片
   imageMargin: 20,
   imageBorderRadius: 4,
+  imageShadow: false,
   imageCaptionColor: "#999",
   imageCaptionFontSize: 14,
   imageCaptionTextAlign: "center",
