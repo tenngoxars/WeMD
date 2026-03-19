@@ -62,4 +62,26 @@ tags: [a, b]
     expect(next).toContain('title: "产品/需求"');
     expect(next).toContain("\n\n新正文");
   });
+
+  it("支持 CRLF 与 BOM 的 frontmatter，更新时不会重复生成块", () => {
+    const source =
+      "\uFEFF---\r\ntitle: 标题\r\ncreateTime: 2026/01/12 01:22:23\r\npermalink: /test/\r\ntags:\r\n  - tag1\r\n  - tag2\r\ncopyright:\r\n  creation: original\r\n  author:\r\n    name: Blogger\r\n---\r\n\r\n测试内容\r\n";
+    const next = applyMarkdownFileMeta(source, {
+      theme: "default",
+      themeName: "默认主题",
+      title: "标题",
+      body: "测试内容",
+    });
+
+    expect(next).toContain("createTime: 2026/01/12 01:22:23");
+    expect(next).toContain("permalink: /test/");
+    expect(next).toContain("tags:");
+    expect(next).toContain("copyright:");
+    expect(next).toContain('themeName: "默认主题"');
+    expect(next.startsWith("\uFEFF---\r\n")).toBe(true);
+    const delimiterCount = next
+      .split("\r\n")
+      .filter((line) => line.replace("\uFEFF", "") === "---");
+    expect(delimiterCount.length).toBe(2);
+  });
 });

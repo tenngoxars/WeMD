@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, dialog, ipcMain, nativeImage, IpcMainInvokeEv
 import * as path from 'path';
 import * as fs from 'fs';
 import { checkForUpdates, openReleasesPage } from './updater';
+import { extractFrontmatterMeta } from './utils/frontmatter';
 
 // 判断是否为开发模式 - 使用 app.isPackaged 是最可靠的方式
 // 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
@@ -131,30 +132,9 @@ function readFileEntry(fullPath: string, name: string): FileEntry {
         const bytesRead = fs.readSync(fd, buffer, 0, 1200, 0);
         fs.closeSync(fd);
         const content = buffer.toString('utf8', 0, bytesRead);
-        const match = content.match(/^---\n([\s\S]*?)\n---/);
-        if (match) {
-            const parseValue = (raw?: string) => {
-                if (!raw) return undefined;
-                const trimmed = raw.trim();
-                if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-                    const quote = trimmed[0];
-                    const inner = trimmed.slice(1, -1);
-                    if (quote === '"') {
-                        return inner.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-                    }
-                    return inner.replace(/\\'/g, "'");
-                }
-                return trimmed;
-            };
-            const themeMatch = match[1].match(/themeName:\s*(.+)/);
-            const titleMatch = match[1].match(/title:\s*(.+)/);
-            if (themeMatch) {
-                themeName = parseValue(themeMatch[1]) || '默认主题';
-            }
-            if (titleMatch) {
-                title = parseValue(titleMatch[1]) || undefined;
-            }
-        }
+        const parsed = extractFrontmatterMeta(content);
+        themeName = parsed.themeName;
+        title = parsed.title;
     } catch (e) { /* 忽略 */ }
     return {
         name,

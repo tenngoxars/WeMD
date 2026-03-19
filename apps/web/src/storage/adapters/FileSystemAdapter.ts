@@ -126,7 +126,9 @@ export class FileSystemAdapter implements StorageAdapter {
         try {
           const slice = file.slice(0, 1200);
           const text = await slice.text();
-          const match = text.match(/^---\n([\s\S]*?)\n---/);
+          const match = text.match(
+            /^(?:\uFEFF)?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/,
+          );
           if (match) {
             const parseValue = (raw?: string) => {
               if (!raw) return undefined;

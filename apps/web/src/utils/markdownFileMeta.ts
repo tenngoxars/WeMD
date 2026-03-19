@@ -13,6 +13,8 @@ interface SplitMarkdownResult {
   hasFrontmatter: boolean;
   frontmatter: string;
   body: string;
+  hasBom: boolean;
+  lineEnding: "\n" | "\r\n";
 }
 
 interface MarkdownFileMetaPatch {
@@ -20,6 +22,12 @@ interface MarkdownFileMetaPatch {
   theme?: string;
   themeName?: string;
   title?: string | null;
+}
+
+const FRONTMATTER_REGEX = /^(\uFEFF)?---(\r?\n)([\s\S]*?)\2---(?:\r?\n|$)/;
+
+function detectLineEnding(content: string): "\n" | "\r\n" {
+  return content.includes("\r\n") ? "\r\n" : "\n";
 }
 
 function parseFrontmatterValue(raw?: string): string | undefined {
@@ -45,18 +53,23 @@ function quoteFrontmatterValue(value: string): string {
 }
 
 function splitMarkdownContent(content: string): SplitMarkdownResult {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  const match = content.match(FRONTMATTER_REGEX);
   if (!match) {
     return {
       hasFrontmatter: false,
       frontmatter: "",
       body: content,
+      hasBom: content.startsWith("\uFEFF"),
+      lineEnding: detectLineEnding(content),
     };
   }
+  const lineEnding = match[2] === "\r\n" ? "\r\n" : "\n";
   return {
     hasFrontmatter: true,
-    frontmatter: match[1],
+    frontmatter: match[3],
     body: content.slice(match[0].length).trimStart(),
+    hasBom: Boolean(match[1]),
+    lineEnding,
   };
 }
 
@@ -65,6 +78,7 @@ function replaceFrontmatterLine(
   key: string,
   value: string,
 ): string {
+  const lineEnding = detectLineEnding(raw);
   const lines = raw ? raw.split(/\r?\n/) : [];
   const regex = new RegExp(`^\\s*${key}\\s*:`);
   const index = lines.findIndex((line) => regex.test(line));
@@ -74,14 +88,15 @@ function replaceFrontmatterLine(
   } else {
     lines.push(line);
   }
-  return lines.join("\n");
+  return lines.join(lineEnding);
 }
 
 function removeFrontmatterLine(raw: string, key: string): string {
   if (!raw) return "";
+  const lineEnding = detectLineEnding(raw);
   const regex = new RegExp(`^\\s*${key}\\s*:`);
   const lines = raw.split(/\r?\n/).filter((line) => !regex.test(line));
-  return lines.join("\n");
+  return lines.join(lineEnding);
 }
 
 export function parseMarkdownFileContent(content: string): MarkdownFileMeta {
@@ -122,6 +137,8 @@ export function applyMarkdownFileMeta(
   const split = splitMarkdownContent(content);
   const body = patch.body ?? split.body;
   let frontmatter = split.frontmatter;
+  const lineEnding = split.lineEnding;
+  const bomPrefix = split.hasBom ? "\uFEFF" : "";
 
   if (patch.theme !== undefined) {
     frontmatter = replaceFrontmatterLine(frontmatter, "theme", patch.theme);
@@ -147,7 +164,7 @@ export function applyMarkdownFileMeta(
   }
 
   if (!frontmatter.trim()) {
-    return body;
+    return `${bomPrefix}${body}`;
   }
-  return `---\n${frontmatter}\n---\n\n${body}`;
+  return `${bomPrefix}---${lineEnding}${frontmatter}${lineEnding}---${lineEnding}${lineEnding}${body}`;
 }

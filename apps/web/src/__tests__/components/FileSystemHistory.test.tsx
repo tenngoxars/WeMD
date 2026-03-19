@@ -189,4 +189,80 @@ title: "旧标题"
     expect(writtenContent).toContain("theme: custom-green");
     expect(writtenContent).toContain('themeName: "森林绿"');
   });
+
+  it("CRLF frontmatter 文件保存时不会重复生成 frontmatter 块", async () => {
+    const source =
+      "\uFEFF---\r\ntitle: 标题\r\ncreateTime: 2026/01/12 01:22:23\r\npermalink: /test/\r\ntags:\r\n  - tag1\r\n  - tag2\r\ncopyright:\r\n  creation: original\r\n  author:\r\n    name: Blogger\r\n---\r\n\r\n测试内容\r\n";
+    const writeFile = vi.fn(
+      async (_path: string, _content: string) => undefined,
+    );
+    const listFiles = vi.fn(
+      async (): Promise<FileItem[]> => [
+        {
+          path: "test.md",
+          name: "test.md",
+          updatedAt: new Date().toISOString(),
+          meta: { isDirectory: false, title: "标题" },
+        },
+      ],
+    );
+    const readFile = vi.fn(async () => source);
+
+    const adapter: StorageAdapter = {
+      type: "filesystem",
+      name: "FileSystem Access",
+      ready: true,
+      supportsFolders: true,
+      init: async () => ({ ready: true }),
+      listFiles,
+      readFile,
+      writeFile,
+      deleteFile: async () => undefined,
+      renameFile: async () => undefined,
+      exists: async () => true,
+      teardown: async () => undefined,
+    };
+
+    const { container } = render(<FileSystemHistory adapter={adapter} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("标题")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("标题"));
+
+    await waitFor(() => {
+      expect(useFileStore.getState().currentFile?.title).toBe("标题");
+    });
+
+    const saveButton = container.querySelector(
+      'button[data-tooltip="保存当前"]',
+    ) as HTMLButtonElement | null;
+    if (!saveButton) {
+      throw new Error("save button not found");
+    }
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(writeFile).toHaveBeenCalled();
+    });
+
+    const latestCall = writeFile.mock.calls.at(-1);
+    if (!latestCall) {
+      throw new Error("writeFile was not called");
+    }
+
+    const writtenContent = latestCall[1] as string;
+    expect(writtenContent).toContain("createTime: 2026/01/12 01:22:23");
+    expect(writtenContent).toContain("permalink: /test/");
+    expect(writtenContent).toContain("tags:");
+    expect(writtenContent).toContain("copyright:");
+    expect(writtenContent).toContain("theme: default");
+    expect(writtenContent).toContain('themeName: "默认主题"');
+    expect(writtenContent.startsWith("\uFEFF---\r\n")).toBe(true);
+    const delimiterCount = writtenContent
+      .split("\r\n")
+      .filter((line) => line.replace("\uFEFF", "") === "---");
+    expect(delimiterCount.length).toBe(2);
+  });
 });
