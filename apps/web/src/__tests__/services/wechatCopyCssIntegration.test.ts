@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { processHtml } from "@wemd/core";
-import { resolveInlineStyleVariablesForCopy } from "../../services/inlineStyleVarResolver";
+import {
+  applyLightRootVars,
+  resolveInlineStyleVariablesForCopy,
+} from "../../services/inlineStyleVarResolver";
 import { normalizeCopyContainer } from "../../services/wechatCopyService";
 import { defaultVariables } from "../../components/Theme/ThemeDesigner/defaults";
 import { generateCSS } from "../../components/Theme/ThemeDesigner/generateCSS";
@@ -117,6 +120,47 @@ describe("wechat copy css integration", () => {
     expect(output).not.toMatch(/--(?:a|b)\s*:/);
   });
 
+  it("does not read runtime global css variables outside copy content", () => {
+    document.documentElement.style.setProperty(
+      "--external-text-color",
+      "#d4d4d4",
+    );
+    try {
+      const html = "<p>段落</p>";
+      const css = `
+        #wemd p {
+          color: var(--external-text-color, #111111);
+        }
+      `;
+
+      const output = resolveInlineStyleVariablesForCopy(
+        processHtml(html, css, true, true),
+      );
+      const container = document.createElement("div");
+      container.innerHTML = output;
+      const paragraph = container.querySelector("p");
+
+      expect(paragraph).toBeTruthy();
+      expect(paragraph!.style.color).toBe("rgb(17, 17, 17)");
+      expect(paragraph!.style.color).not.toBe("rgb(212, 212, 212)");
+    } finally {
+      document.documentElement.style.removeProperty("--external-text-color");
+    }
+  });
+
+  it("injects light ui token baseline into copy host", () => {
+    const host = document.createElement("div");
+    applyLightRootVars(host);
+
+    expect(host.style.getPropertyValue("--text-primary").trim()).toBe(
+      "#0f172a",
+    );
+    expect(host.style.getPropertyValue("--border-light").trim()).toBe(
+      "#e2e8f0",
+    );
+    expect(host.style.getPropertyValue("--bg-primary").trim()).toBe("#ffffff");
+  });
+
   it("materializes visual theme styles without remaining css variables", () => {
     const html = `
       <h2><span class="content">标题</span></h2>
@@ -200,5 +244,24 @@ describe("wechat copy css integration", () => {
     // 根元素背景已清除（微信会清洗最外层样式）
     const newRoot = container.firstElementChild as HTMLElement;
     expect(newRoot.style.backgroundColor).toBeFalsy();
+  });
+
+  it("materializes inherited text color to avoid ui theme leakage", () => {
+    const container = document.createElement("div");
+    container.innerHTML = `
+      <section id="wemd" style="color: var(--text-primary);">
+        <div class="callout">
+          <p class="callout-title">需要注意的问题</p>
+        </div>
+      </section>
+    `;
+
+    normalizeCopyContainer(container);
+
+    const calloutTitle = container.querySelector(
+      ".callout-title",
+    ) as HTMLElement;
+    expect(calloutTitle).toBeTruthy();
+    expect(calloutTitle.style.color).toBe("rgb(26, 26, 26)");
   });
 });

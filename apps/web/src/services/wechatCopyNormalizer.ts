@@ -81,6 +81,66 @@ const hasExplicitBackgroundImage = (value: string): boolean => {
   return true;
 };
 
+const DEFAULT_COPY_TEXT_COLOR = "#1a1a1a";
+
+const isUnresolvedColorValue = (value: string): boolean => {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return true;
+
+  if (
+    normalized === "inherit" ||
+    normalized === "initial" ||
+    normalized === "unset" ||
+    normalized === "revert" ||
+    normalized === "revert-layer" ||
+    normalized === "currentcolor"
+  ) {
+    return true;
+  }
+
+  return (
+    normalized.includes("var(") ||
+    normalized.includes("color-mix(") ||
+    normalized.includes("oklch(") ||
+    normalized.includes("oklab(") ||
+    normalized.includes("lab(") ||
+    normalized.includes("lch(")
+  );
+};
+
+const hasDirectTextContent = (element: HTMLElement): boolean => {
+  return Array.from(element.childNodes).some((node) => {
+    return node.nodeType === Node.TEXT_NODE && (node.textContent || "").trim();
+  });
+};
+
+const materializeTextColorForWechat = (container: HTMLElement): void => {
+  const root = container.firstElementChild;
+  if (!(root instanceof HTMLElement)) return;
+
+  const rootColorRaw = root.style.getPropertyValue("color").trim();
+  const baseColor = isUnresolvedColorValue(rootColorRaw)
+    ? DEFAULT_COPY_TEXT_COLOR
+    : rootColorRaw;
+
+  const walk = (node: HTMLElement, inheritedColor: string) => {
+    const ownColorRaw = node.style.getPropertyValue("color").trim();
+    const ownColor = isUnresolvedColorValue(ownColorRaw) ? null : ownColorRaw;
+    const effectiveColor = ownColor || inheritedColor;
+
+    if (hasDirectTextContent(node) && ownColor !== effectiveColor) {
+      node.style.setProperty("color", effectiveColor);
+    }
+
+    const children = Array.from(node.children).filter(
+      (child): child is HTMLElement => child instanceof HTMLElement,
+    );
+    children.forEach((child) => walk(child, effectiveColor));
+  };
+
+  walk(root, baseColor);
+};
+
 // ── 间距工具函数 ────────────────────────────────────
 
 const isZeroSpacing = (value: string): boolean => {
@@ -382,4 +442,5 @@ export const normalizeCopyContainer = (container: HTMLElement): void => {
   const rootBgColor = extractRootBackgroundColor(container);
   relocateRootPaddingToInnerWrapper(container);
   normalizeBlockBackgroundForWechat(container, rootBgColor);
+  materializeTextColorForWechat(container);
 };

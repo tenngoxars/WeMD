@@ -5,6 +5,141 @@ import {
   splitVarArgs,
 } from "./cssVarParser";
 
+const DEFAULT_LIGHT_ROOT_VARS: Record<string, string> = {
+  "--ui-bg-page": "#f8f9fa",
+  "--ui-bg-primary": "#ffffff",
+  "--ui-bg-secondary": "#f6f8fb",
+  "--ui-bg-tertiary": "#eef2f6",
+  "--ui-bg-card-muted": "#f1f5f9",
+  "--ui-bg-hover": "#e6f5eb",
+  "--ui-text-primary": "#0f172a",
+  "--ui-text-secondary": "#334155",
+  "--ui-text-tertiary": "#64748b",
+  "--ui-border-color": "#e2e8f0",
+  "--ui-border-light": "#e2e8f0",
+  "--ui-accent-primary": "#07c160",
+  "--bg-page": "#f8f9fa",
+  "--bg-primary": "#ffffff",
+  "--bg-secondary": "#f6f8fb",
+  "--bg-tertiary": "#eef2f6",
+  "--bg-card-muted": "#f1f5f9",
+  "--bg-hover": "#e6f5eb",
+  "--text-primary": "#0f172a",
+  "--text-secondary": "#334155",
+  "--text-tertiary": "#64748b",
+  "--border-light": "#e2e8f0",
+  "--border-color": "#e2e8f0",
+  "--accent-primary": "#07c160",
+};
+
+let cachedLightRootVars: Map<string, string> | null = null;
+
+const collectLightRootVarsFromStylesheets = (): Map<string, string> => {
+  const vars = new Map<string, string>();
+
+  const visitRuleList = (rules: CSSRuleList) => {
+    for (const rule of Array.from(rules)) {
+      if (rule instanceof CSSStyleRule) {
+        const selectors = rule.selectorText
+          .split(",")
+          .map((selector) => selector.trim());
+        if (!selectors.includes(":root")) continue;
+
+        for (let i = 0; i < rule.style.length; i += 1) {
+          const name = rule.style.item(i);
+          if (!name.startsWith("--")) continue;
+          const value = rule.style.getPropertyValue(name).trim();
+          if (value) vars.set(name, value);
+        }
+        continue;
+      }
+
+      if (rule instanceof CSSImportRule) {
+        try {
+          if (rule.styleSheet?.cssRules) {
+            visitRuleList(rule.styleSheet.cssRules);
+          }
+        } catch {
+          // ignore cross-origin stylesheet access errors
+        }
+      }
+    }
+  };
+
+  for (const sheet of Array.from(document.styleSheets)) {
+    try {
+      if (sheet.cssRules) {
+        visitRuleList(sheet.cssRules);
+      }
+    } catch {
+      // ignore cross-origin stylesheet access errors
+    }
+  }
+
+  return vars;
+};
+
+const getLightRootVars = (): Map<string, string> => {
+  if (cachedLightRootVars) {
+    return new Map(cachedLightRootVars);
+  }
+
+  const vars = new Map<string, string>(Object.entries(DEFAULT_LIGHT_ROOT_VARS));
+  const stylesheetVars = collectLightRootVarsFromStylesheets();
+  const resolvedStylesheetVars = new Map<string, string>();
+  const resolveStylesheetVar = (
+    name: string,
+    stack: Set<string>,
+  ): string | null => {
+    if (resolvedStylesheetVars.has(name)) {
+      return resolvedStylesheetVars.get(name) || "";
+    }
+
+    const rawValue = stylesheetVars.get(name);
+    if (!rawValue) {
+      return vars.get(name) || null;
+    }
+    if (stack.has(name)) {
+      return vars.get(name) || null;
+    }
+
+    stack.add(name);
+    const resolved = resolveVarFunctions(
+      rawValue,
+      (nestedName, nestedStack) =>
+        resolveStylesheetVar(nestedName, nestedStack),
+      stack,
+    );
+    stack.delete(name);
+
+    if (!hasVarFunction(resolved)) {
+      resolvedStylesheetVars.set(name, resolved);
+      return resolved;
+    }
+    return vars.get(name) || null;
+  };
+
+  stylesheetVars.forEach((_value, name) => {
+    const resolved = resolveStylesheetVar(name, new Set<string>());
+    if (resolved) {
+      vars.set(name, resolved);
+    }
+  });
+
+  cachedLightRootVars = vars;
+  return new Map(vars);
+};
+
+export const applyLightRootVars = (
+  target: HTMLElement,
+): Map<string, string> => {
+  const vars = getLightRootVars();
+  vars.forEach((value, name) => {
+    target.style.setProperty(name, value);
+  });
+  return vars;
+};
+
 const resolveVarFunctions = (
   value: string,
   resolveVariable: (name: string, stack: Set<string>) => string | null,
@@ -81,14 +216,6 @@ const resolveElementTreeVars = (
   element: HTMLElement,
   inheritedCustomVars: Map<string, string>,
 ) => {
-  let computedStyle: CSSStyleDeclaration | null = null;
-  const getComputedStyleForElement = (): CSSStyleDeclaration => {
-    if (!computedStyle) {
-      computedStyle = window.getComputedStyle(element);
-    }
-    return computedStyle;
-  };
-
   const declarations = Array.from(
     { length: element.style.length },
     (_, index) => element.style.item(index),
@@ -153,25 +280,14 @@ const resolveElementTreeVars = (
 
   declarations.forEach(({ name, value, priority }) => {
     if (name.startsWith("--") || !hasVarFunction(value)) return;
-    const computedValue = getComputedStyleForElement()
-      .getPropertyValue(name)
-      .trim();
-    if (computedValue && !hasVarFunction(computedValue)) {
-      element.style.setProperty(name, computedValue, priority);
-      return;
-    }
-
     const resolved = resolveVarFunctions(
       value,
       (varName, stack) => {
         if (stack.has(varName)) return null;
 
         if (!currentCustomVars.has(varName)) {
-          const computedVarValue = getComputedStyleForElement()
-            .getPropertyValue(varName)
-            .trim();
-          if (!computedVarValue) return null;
-          return computedVarValue;
+          // 仅解析复制内容自身变量，不回退到运行时页面环境（避免暗色 UI 变量污染复制结果）
+          return null;
         }
 
         stack.add(varName);
@@ -251,14 +367,28 @@ export const resolveInlineStyleVariablesForCopy = (html: string): string => {
   host.style.top = "-9999px";
   host.style.pointerEvents = "none";
   host.style.opacity = "0";
+  // 强制亮色模式，防止暗色 UI 下 getComputedStyle 回退到亮色文字默认值
+  host.style.colorScheme = "light";
+  host.style.color = "#000000";
+  const lightRootVars = applyLightRootVars(host);
   host.innerHTML = html;
+
+  // 临时移除 id="wemd"，阻断预览区暗色 <style> 通过 #wemd 选择器匹配到离屏容器
+  const wemdRoot = host.querySelector<HTMLElement>("#wemd");
+  if (wemdRoot) wemdRoot.removeAttribute("id");
+
   document.body.appendChild(host);
 
   try {
     const roots = Array.from(host.children).filter(
       (child): child is HTMLElement => child instanceof HTMLElement,
     );
-    roots.forEach((root) => resolveElementTreeVars(root, new Map()));
+    roots.forEach((root) =>
+      resolveElementTreeVars(root, new Map(lightRootVars)),
+    );
+
+    // 恢复 id，后续 normalizeCopyContainer 需要它
+    if (wemdRoot) wemdRoot.setAttribute("id", "wemd");
     return host.innerHTML;
   } finally {
     document.body.removeChild(host);

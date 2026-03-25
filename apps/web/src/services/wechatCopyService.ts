@@ -10,7 +10,10 @@ import { loadMathJax } from "../utils/mathJaxLoader";
 import { hasMathFormula } from "../utils/katexRenderer";
 import { convertLinksToFootnotes } from "../utils/linkFootnote";
 import { getLinkToFootnoteEnabled } from "../components/Editor/ToolbarState";
-import { resolveInlineStyleVariablesForCopy } from "./inlineStyleVarResolver";
+import {
+  applyLightRootVars,
+  resolveInlineStyleVariablesForCopy,
+} from "./inlineStyleVarResolver";
 import {
   materializeCounterPseudoContent,
   stripCounterPseudoRules,
@@ -104,6 +107,10 @@ export async function copyToWechat(
   container.style.position = "absolute";
   container.style.top = "-9999px";
   container.style.left = "-9999px";
+  // 强制亮色模式，防止暗色 UI 下 execCommand("copy") 序列化出亮色文字
+  container.style.colorScheme = "light";
+  container.style.color = "#000000";
+  applyLightRootVars(container);
   document.body.appendChild(container);
 
   try {
@@ -128,9 +135,8 @@ export async function copyToWechat(
     const finalHtml = convertCheckboxesToEmoji(resolvedHtml);
 
     container.innerHTML = finalHtml;
-    normalizeCopyContainer(container);
-
     await renderMermaidBlocks(container);
+    normalizeCopyContainer(container);
 
     let copied = false;
 
