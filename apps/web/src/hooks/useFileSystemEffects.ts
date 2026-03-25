@@ -47,6 +47,20 @@ interface UseFileSystemEffectsParams {
   >["setWorkspacePath"];
 }
 
+const getBrowserStorage = (): Storage | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const storage = window.localStorage as Partial<Storage> | null;
+    if (!storage) return null;
+    if (typeof storage.getItem !== "function") return null;
+    if (typeof storage.setItem !== "function") return null;
+    if (typeof storage.removeItem !== "function") return null;
+    return storage as Storage;
+  } catch {
+    return null;
+  }
+};
+
 export function useFileSystemEffects({
   enabled,
   electron,
@@ -91,8 +105,9 @@ export function useFileSystemEffects({
 
   useEffect(() => {
     if (!enabled) return;
+    const storage = getBrowserStorage();
     if (electron) {
-      const saved = localStorage.getItem(WORKSPACE_KEY);
+      const saved = storage?.getItem?.(WORKSPACE_KEY);
       if (saved) {
         void loadWorkspace(saved);
       }
@@ -110,7 +125,7 @@ export function useFileSystemEffects({
       void (async () => {
         try {
           await refreshFiles();
-          const lastPath = localStorage.getItem(LAST_FILE_KEY);
+          const lastPath = storage?.getItem?.(LAST_FILE_KEY);
           const { files: currentFiles } = useFileStore.getState();
           const flat = flattenFiles(currentFiles);
           if (flat.length > 0) {

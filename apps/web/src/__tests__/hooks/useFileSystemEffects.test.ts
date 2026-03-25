@@ -52,7 +52,13 @@ const buildElectronMock = () => {
 describe("useFileSystemEffects", () => {
   afterEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
+    if (
+      typeof window !== "undefined" &&
+      window.localStorage &&
+      typeof window.localStorage.clear === "function"
+    ) {
+      window.localStorage.clear();
+    }
   });
 
   it("单实例下正确注册并清理 Electron 监听器", async () => {
