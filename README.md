@@ -102,7 +102,7 @@ docker compose up -d
 如需指定版本镜像，可覆盖环境变量：
 
 ```bash
-WEMD_IMAGE=ghcr.io/tenngoxars/wemd-web:v1.2.4 docker compose up -d
+WEMD_IMAGE=ghcr.io/tenngoxars/wemd-web:<版本号> docker compose up -d
 ```
 
 ---
