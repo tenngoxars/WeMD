@@ -1,23 +1,22 @@
 /**
  * 微信复制表格样式强化
- * 覆盖表格布局参数（字号、行高、内边距），确保微信公众号中样式严格可控
+ * 覆盖表格布局参数（行高、内边距），确保微信公众号中样式严格可控
  *
  * 设计原则：
- * - 布局参数独立优化（13px/1.4/紧凑 padding），不绑定主题字号
+ * - 字号跟随主题 CSS（已通过 juice 内联到元素 style 上），不再硬编码覆盖
  * - 色彩（边框、背景、斑马纹）跟主题走，保持视觉统一
  * - 宽表格保持 nowrap + 外层 overflow-x:auto，微信手机端可左右滑动
  */
 
-/** 表格专用布局参数（独立于主题字号，针对手机可读性优化） */
+/** 表格专用布局参数（针对手机可读性优化） */
 const TABLE_LAYOUT_STYLES = {
-  fontSize: "13px",
   lineHeight: "1.4",
   cellPadding: "6px 8px",
 } as const;
 
 /**
- * 覆盖表格布局参数，保留主题色彩
- * 只改 font-size / line-height / padding，不碰 color / background / border-color
+ * 覆盖表格布局参数，保留主题色彩与主题字号
+ * 只改 line-height / padding，不碰 font-size / color / background / border-color
  */
 const applyTableLayoutStyles = (table: HTMLTableElement): void => {
   table.style.borderCollapse = "collapse";
@@ -29,7 +28,6 @@ const applyTableLayoutStyles = (table: HTMLTableElement): void => {
   const cells = table.querySelectorAll("th, td");
   for (const cell of cells) {
     const el = cell as HTMLElement;
-    el.style.fontSize = TABLE_LAYOUT_STYLES.fontSize;
     el.style.lineHeight = TABLE_LAYOUT_STYLES.lineHeight;
     el.style.padding = TABLE_LAYOUT_STYLES.cellPadding;
     el.style.whiteSpace = "nowrap";
