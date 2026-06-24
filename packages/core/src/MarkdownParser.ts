@@ -35,6 +35,7 @@ import highlightjs from "./utils/langHighlight";
 
 export interface MarkdownParserOptions {
   showMacBar?: boolean;
+  mathRenderer?: "auto" | "katex";
 }
 
 const MAC_CODE_SVG = `
@@ -93,7 +94,9 @@ export const createMarkdownParser = (options: MarkdownParserOptions = {}) => {
   markdownParser
     .use(markdownItSpan)
     .use(markdownItTableContainer)
-    .use(markdownItMath)
+    .use(markdownItMath, {
+      renderer: options.mathRenderer ?? "auto",
+    })
     .use(markdownItLinkfoot)
     .use(markdownItTableOfContents, {
       transformLink: () => "",

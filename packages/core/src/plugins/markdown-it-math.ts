@@ -13,7 +13,14 @@ const escapeHtml = (str: string) =>
 
 const escapeAttribute = (str: string) => escapeHtml(str).replace(/'/g, "&#39;");
 
-const renderMathJax = (latex: string, display: boolean): string | null => {
+type MathRenderer = "auto" | "katex";
+
+const renderMathJax = (
+  latex: string,
+  display: boolean,
+  renderer: MathRenderer,
+): string | null => {
+  if (renderer === "katex") return null;
   if (typeof window === "undefined") return null;
   const mathJax = window.MathJax;
   if (!mathJax || typeof mathJax.tex2svg !== "function") return null;
@@ -226,11 +233,13 @@ export default (md: MarkdownIt, options: any) => {
   // 默认选项
 
   options = options || {};
+  const renderer: MathRenderer =
+    options.renderer === "katex" ? "katex" : "auto";
 
   // 设置 KaTeX 为 markdown-it-simplemath 的渲染器
   var katexInline = function (latex: string) {
     options.displayMode = false;
-    const mathJaxContent = renderMathJax(latex, false);
+    const mathJaxContent = renderMathJax(latex, false, renderer);
     if (mathJaxContent) {
       return `<span class="inline-equation">${mathJaxContent}</span>`;
     }
@@ -254,7 +263,7 @@ export default (md: MarkdownIt, options: any) => {
 
   var katexBlock = function (latex: string) {
     options.displayMode = true;
-    const mathJaxContent = renderMathJax(latex, true);
+    const mathJaxContent = renderMathJax(latex, true, renderer);
     if (mathJaxContent) {
       return `<section class="block-equation">${mathJaxContent}</section>`;
     }

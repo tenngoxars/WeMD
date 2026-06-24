@@ -6,8 +6,6 @@
 import toast from "react-hot-toast";
 import { processHtml, createMarkdownParser } from "@wemd/core";
 import katexCss from "katex/dist/katex.min.css?raw";
-import { loadMathJax } from "../utils/mathJaxLoader";
-import { hasMathFormula } from "../utils/katexRenderer";
 import { convertLinksToFootnotes } from "../utils/linkFootnote";
 import { getLinkToFootnoteEnabled } from "../components/Editor/ToolbarState";
 import {
@@ -23,6 +21,10 @@ import {
   normalizeCopyContainer,
   stripCopyMetadata,
 } from "./wechatCopyNormalizer";
+import {
+  renderHighRiskMathAsImages,
+  stripHiddenMathMarkupForWechat,
+} from "./wechatMathCompat";
 import { renderMermaidBlocks } from "./wechatMermaidRenderer";
 import { renderTableBlocks } from "./wechatTableRenderer";
 
@@ -191,11 +193,8 @@ export async function copyToWechat(
   document.body.appendChild(container);
 
   try {
-    const shouldLoadMath = hasMathFormula(markdown);
-    if (shouldLoadMath) {
-      await loadMathJax();
-    }
     const parser = createMarkdownParser({
+      mathRenderer: "katex",
       showMacBar: options.showMacBar === true,
     });
     const rawHtml = parser.render(markdown);
@@ -214,6 +213,8 @@ export async function copyToWechat(
     const finalHtml = convertCheckboxesToEmoji(resolvedHtml);
 
     container.innerHTML = finalHtml;
+    const mathFallback = await renderHighRiskMathAsImages(container);
+    stripHiddenMathMarkupForWechat(container);
     await renderMermaidBlocks(container);
     await renderTableBlocks(container);
     await renderMacSignSvgsToImages(container);
@@ -274,10 +275,15 @@ export async function copyToWechat(
       throw new Error("浏览器剪贴板写入失败");
     }
 
-    toast.success("已复制，可以直接粘贴至微信公众号", {
-      duration: 3000,
-      icon: "✅",
-    });
+    toast.success(
+      mathFallback.imageCount > 0
+        ? "已复制，部分复杂公式已自动保真处理"
+        : "已复制，可以直接粘贴至微信公众号",
+      {
+        duration: 3000,
+        icon: "✅",
+      },
+    );
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error("复制失败详情:", error);

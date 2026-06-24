@@ -18,6 +18,11 @@ export function hasMathFormula(content: string): boolean {
  * 动态加载 MathJax
  */
 export function loadMathJax(): Promise<void> {
+  if (window.MathJax?.tex2svg) {
+    isLoaded = true;
+    return Promise.resolve();
+  }
+
   if (isLoaded && window.MathJax) {
     return Promise.resolve();
   }
@@ -49,6 +54,12 @@ export function loadMathJax(): Promise<void> {
           window.MathJax?.startup?.defaultReady();
           isLoaded = true;
           resolve();
+        },
+      },
+      loader: {
+        failed: (error: { message?: string }) => {
+          mathJaxPromise = null;
+          reject(new Error(error.message || "Failed to load MathJax"));
         },
       },
     };

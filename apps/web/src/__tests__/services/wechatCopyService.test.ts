@@ -415,6 +415,7 @@ describe("wechatCopyService clipboard strategy", () => {
     );
 
     expect(mocked.createMarkdownParserMock).toHaveBeenCalledWith({
+      mathRenderer: "katex",
       showMacBar: true,
     });
     const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
