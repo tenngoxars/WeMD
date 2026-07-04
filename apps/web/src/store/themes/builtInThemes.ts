@@ -17,6 +17,7 @@ import {
   receiptTheme,
   sunsetFilmTheme,
   templateTheme,
+  verdantTheme,
 } from "@wemd/core";
 
 // 从 ThemeDesigner 导入共享类型（解决类型重复定义问题）
@@ -139,6 +140,14 @@ export const builtInThemes: CustomTheme[] = [
     id: "sunset-film",
     name: "落日胶片",
     css: basicTheme + "\n" + sunsetFilmTheme + "\n" + codeGithubTheme,
+    isBuiltIn: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "verdant",
+    name: "萌绿",
+    css: basicTheme + "\n" + verdantTheme + "\n" + codeGithubTheme,
     isBuiltIn: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
