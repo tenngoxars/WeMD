@@ -60,32 +60,38 @@ export const createMarkdownParser = (options: MarkdownParserOptions = {}) => {
       if (lang === undefined || lang === "") {
         lang = "bash";
       }
+
+      // 核心修改：统一处理代码中的换行符，将其替换为 <br />
+      // 这样在复制到微信公众号时，换行格式就不会丢失
+      let formattedCode: string;
+
       // 加上custom则表示自定义样式，而非微信专属，避免被remove pre
       if (lang && highlightjs.getLanguage(lang)) {
         try {
-          const formatted = highlightjs.highlight(lang, str, true).value;
-          const macSign = showMacBar
-            ? `<span class="mac-sign" style="padding: 10px 14px 0;">${MAC_CODE_SVG}</span>`
-            : "";
-          return (
-            '<pre class="custom">' +
-            macSign +
-            '<code class="hljs">' +
-            formatted +
-            "</code></pre>"
-          );
+          formattedCode = highlightjs.highlight(lang, str, true).value;
         } catch {
-          // Ignore highlight errors
+          // 如果高亮报错，则对原始字符串进行转义
+          formattedCode = markdownParser.utils.escapeHtml(str);
         }
+      } else {
+        // 如果没有匹配到语言，也进行转义
+        formattedCode = markdownParser.utils.escapeHtml(str);
       }
+
+      // 将换行符替换为 <br />
+      formattedCode = formattedCode.replace(/\n/g, "<br />");
+
+      // 处理 Mac 窗口图标
       const macSign = showMacBar
         ? `<span class="mac-sign" style="padding: 10px 14px 0;">${MAC_CODE_SVG}</span>`
         : "";
+
+      // 统一返回拼接好的 HTML
       return (
         '<pre class="custom">' +
         macSign +
         '<code class="hljs">' +
-        markdownParser.utils.escapeHtml(str) +
+        formattedCode +
         "</code></pre>"
       );
     },
