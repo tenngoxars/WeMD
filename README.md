@@ -144,6 +144,12 @@ pnpm --filter wemd-electron run build:mac  # macOS
 pnpm --filter wemd-electron run build:win  # Windows
 ```
 
+### 命令行与本地 Skill
+
+仓库包含面向 Agent 的 `wemd-publish` 本地 Skill，使 Agent 可以直接调用 WeMD 完成本地 Markdown 的公众号排版；跨平台的 `@wemd/cli` 是该流程的稳定执行层。它们复用 WeMD Core，生成公众号兼容 HTML 和可在常规浏览器中点击复制的自包含页面；不会登录、保存或发布公众号草稿。
+
+安装方式、完整命令、主题选择、输出文件和安全边界见 [`skills/wemd-publish/SKILL.md`](skills/wemd-publish/SKILL.md)。
+
 ---
 
 ## 📁 项目结构
@@ -152,6 +158,7 @@ pnpm --filter wemd-electron run build:win  # Windows
 WeMD/
 ├── apps/
 │   ├── web/        # React + Vite 前端
+│   ├── cli/        # Markdown 渲染与自包含复制页 CLI
 │   ├── electron/   # Electron 桌面端
 │   └── server/     # NestJS 图片上传服务
 ├── packages/
