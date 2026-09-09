@@ -1,8 +1,8 @@
-import MarkdownIt from "markdown-it";
-import Token from "markdown-it/lib/token";
-import Renderer from "markdown-it/lib/renderer";
-import StateInline from "markdown-it/lib/rules_inline/state_inline";
-import StateCore from "markdown-it/lib/rules_core/state_core";
+import type MarkdownIt from "markdown-it";
+import type Token from "markdown-it/lib/token";
+import type Renderer from "markdown-it/lib/renderer";
+import type StateInline from "markdown-it/lib/rules_inline/state_inline";
+import type StateCore from "markdown-it/lib/rules_core/state_core";
 
 function renderFootnoteAnchorName(
   tokens: Token[],
@@ -30,7 +30,6 @@ function renderFootnoteCaption(tokens: Token[], idx: number) {
   return "[" + n + "]";
 }
 
-// eslint-disable-next-line
 function renderFootnoteWord(
   tokens: Token[],
   idx: number,
@@ -341,27 +340,27 @@ function footnoteTail(state: StateCore) {
   }
   const list = state.env.footnotes.list;
 
-  token = new Token("footnote_block_open", "", 1);
+  token = new state.Token("footnote_block_open", "", 1);
   state.tokens.push(token);
 
   for (i = 0, l = list.length; i < l; i++) {
-    token = new Token("footnote_open", "", 1);
+    token = new state.Token("footnote_open", "", 1);
     token.meta = { id: i, label: list[i].label };
     state.tokens.push(token);
 
     if (list[i].tokens) {
       tokens = [];
 
-      token = new Token("paragraph_open", "p", 1);
+      token = new state.Token("paragraph_open", "p", 1);
       token.block = true;
       tokens.push(token);
 
-      token = new Token("inline", "", 0);
+      token = new state.Token("inline", "", 0);
       token.children = list[i].tokens;
       token.content = "";
       tokens.push(token);
 
-      token = new Token("paragraph_close", "p", -1);
+      token = new state.Token("paragraph_close", "p", -1);
       token.block = true;
       tokens.push(token);
     } else if (list[i].label) {
@@ -381,11 +380,11 @@ function footnoteTail(state: StateCore) {
       state.tokens.push(lastParagraph);
     }
 
-    token = new Token("footnote_close", "", -1);
+    token = new state.Token("footnote_close", "", -1);
     state.tokens.push(token);
   }
 
-  token = new Token("footnote_block_close", "", -1);
+  token = new state.Token("footnote_block_close", "", -1);
   state.tokens.push(token);
 }
 

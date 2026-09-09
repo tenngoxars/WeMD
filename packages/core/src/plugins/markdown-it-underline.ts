@@ -1,5 +1,5 @@
-import MarkdownIt from "markdown-it";
-import StateInline from "markdown-it/lib/rules_inline/state_inline";
+import type MarkdownIt from "markdown-it";
+import type StateInline from "markdown-it/lib/rules_inline/state_inline";
 
 const MARKER = "+".charCodeAt(0);
 

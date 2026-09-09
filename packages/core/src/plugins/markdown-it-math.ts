@@ -1,8 +1,8 @@
 import katex from "katex";
-import MarkdownIt from "markdown-it";
-import StateInline from "markdown-it/lib/rules_inline/state_inline";
-import StateBlock from "markdown-it/lib/rules_block/state_block";
-import Token from "markdown-it/lib/token";
+import type MarkdownIt from "markdown-it";
+import type StateInline from "markdown-it/lib/rules_inline/state_inline";
+import type StateBlock from "markdown-it/lib/rules_block/state_block";
+import type Token from "markdown-it/lib/token";
 
 const escapeHtml = (str: string) =>
   str

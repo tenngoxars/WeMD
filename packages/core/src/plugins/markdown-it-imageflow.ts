@@ -1,6 +1,6 @@
-import MarkdownIt from "markdown-it";
-import StateBlock from "markdown-it/lib/rules_block/state_block";
-import Token from "markdown-it/lib/token";
+import type MarkdownIt from "markdown-it";
+import type StateBlock from "markdown-it/lib/rules_block/state_block";
+import type Token from "markdown-it/lib/token";
 
 const defaultOption = {
   limitless: false, // 限制图片数量

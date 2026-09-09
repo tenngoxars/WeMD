@@ -15,8 +15,8 @@
  */
 
 import type MarkdownIt from "markdown-it";
-import Token from "markdown-it/lib/token";
-import StateCore from "markdown-it/lib/rules_core/state_core";
+import type Token from "markdown-it/lib/token";
+import type StateCore from "markdown-it/lib/rules_core/state_core";
 
 interface AlertConfig {
   type: string;
@@ -132,16 +132,16 @@ export default function markdownItGitHubAlert(md: MarkdownIt): void {
       let titleInserted = false;
       for (let j = i + 1; j < closeIdx; j++) {
         if (tokens[j].type === "paragraph_open") {
-          const titleOpen = new Token("callout_title_open", "div", 1);
+          const titleOpen = new state.Token("callout_title_open", "div", 1);
           titleOpen.attrSet("class", "callout-title");
 
-          const titleContent = new Token("html_inline", "", 0);
+          const titleContent = new state.Token("html_inline", "", 0);
           const displayLabel = customTitle
             ? escapeHtml(customTitle)
             : alertConfig.label;
           titleContent.content = `<span class="callout-icon">${alertConfig.icon}</span><span>${displayLabel}</span>`;
 
-          const titleClose = new Token("callout_title_close", "div", -1);
+          const titleClose = new state.Token("callout_title_close", "div", -1);
           tokens.splice(j, 0, titleOpen, titleContent, titleClose);
           closeIdx += 3;
           titleInserted = true;

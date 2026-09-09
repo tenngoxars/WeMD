@@ -1,6 +1,6 @@
-import MarkdownIt from "markdown-it";
-import StateCore from "markdown-it/lib/rules_core/state_core";
-import Token from "markdown-it/lib/token";
+import type MarkdownIt from "markdown-it";
+import type StateCore from "markdown-it/lib/rules_core/state_core";
+import type Token from "markdown-it/lib/token";
 
 function makeRule() {
   return function addTableContainer(state: StateCore) {

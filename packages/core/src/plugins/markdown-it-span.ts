@@ -1,5 +1,5 @@
-import MarkdownIt from "markdown-it";
-import StateCore from "markdown-it/lib/rules_core/state_core";
+import type MarkdownIt from "markdown-it";
+import type StateCore from "markdown-it/lib/rules_core/state_core";
 
 function slugify(s: string, md: MarkdownIt) {
   // Unicode-friendly
