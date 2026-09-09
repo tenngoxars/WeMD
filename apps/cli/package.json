@@ -1,0 +1,29 @@
+{
+  "name": "@wemd/cli",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "wemd": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "test": "vitest",
+    "test:ci": "pnpm run build && pnpm run test --run --maxWorkers=1"
+  },
+  "dependencies": {
+    "@wemd/core": "workspace:*",
+    "katex": "0.16.27",
+    "mermaid": "11.12.2",
+    "playwright": "1.57.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.16"
+  }
+}
