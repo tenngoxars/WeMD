@@ -1,0 +1,2 @@
+# This acceptance fixture must remain byte-equivalent to Web's defaultMarkdown.
+apps/cli/fixtures/wemd-example.md

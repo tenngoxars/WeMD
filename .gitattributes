@@ -1,0 +1,2 @@
+# The upstream sample intentionally contains trailing spaces in defaultMarkdown.
+apps/cli/fixtures/wemd-example.md whitespace=-blank-at-eol
