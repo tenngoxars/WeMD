@@ -16,11 +16,10 @@ const withTimeout = async <T>(
   timeoutMs: number,
   message: string,
 ): Promise<T> => {
-  const { promise: timeoutPromise, reject } = Promise.withResolvers<never>();
-  const timeoutId = window.setTimeout(
-    () => reject(new Error(message)),
-    timeoutMs,
-  );
+  let timeoutId = 0;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
   try {
     return await Promise.race([promise, timeoutPromise]);
   } finally {
