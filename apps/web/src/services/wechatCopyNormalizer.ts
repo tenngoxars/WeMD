@@ -455,6 +455,69 @@ const normalizeBlockBackgroundForWechat = (
   });
 };
 
+const getTextDirection = (node: HTMLElement): "ltr" | "rtl" => {
+  let current: HTMLElement | null = node;
+  while (current) {
+    const direction = (
+      current.style.direction ||
+      current.getAttribute("dir") ||
+      ""
+    ).toLowerCase();
+    if (direction === "ltr" || direction === "rtl") return direction;
+    current = current.parentElement;
+  }
+  return "ltr";
+};
+
+const normalizeWechatSpecRules = (container: HTMLElement): void => {
+  container.querySelectorAll<HTMLElement>("[style]").forEach((node) => {
+    const textAlign = node.style.textAlign.trim().toLowerCase();
+    if (textAlign === "start" || textAlign === "end") {
+      const rtl = getTextDirection(node) === "rtl";
+      const normalized =
+        textAlign === "start"
+          ? rtl
+            ? "right"
+            : "left"
+          : rtl
+            ? "left"
+            : "right";
+      node.style.setProperty("text-align", normalized);
+    }
+
+    // 文章展示不需要控制编辑光标，交给公众号编辑器使用默认值。
+    node.style.removeProperty("caret-color");
+    if (node.style.length === 0) node.removeAttribute("style");
+  });
+  container.querySelectorAll<HTMLElement>("pre > code").forEach((code) => {
+    code.style.whiteSpace = "pre-wrap";
+    code.style.minWidth = "0";
+    code.style.overflowWrap = "anywhere";
+    code.style.wordBreak = "break-word";
+  });
+
+  container.querySelectorAll<SVGElement>("[begin]").forEach((node) => {
+    if (
+      !["animate", "animatetransform", "animatemotion"].includes(
+        node.localName.toLowerCase(),
+      )
+    ) {
+      return;
+    }
+
+    const begin = node.getAttribute("begin") || "";
+    if (/\btouchstart\b/i.test(begin) && !/\bclick\b/i.test(begin)) {
+      node.setAttribute("begin", `${begin}; click`);
+    }
+  });
+
+  container.querySelectorAll<HTMLImageElement>("img").forEach((image) => {
+    if (!image.hasAttribute("data-w") && image.naturalWidth > 0) {
+      image.setAttribute("data-w", String(image.naturalWidth));
+    }
+  });
+};
+
 // ── 对外入口 ────────────────────────────────────────
 
 export interface WechatCopyNormalizationResult {
@@ -480,6 +543,7 @@ export const normalizeCopyContainer = (
   }
   normalizeBlockBackgroundForWechat(container, rootBgColor);
   materializeTextColorForWechat(container);
+  normalizeWechatSpecRules(container);
 
   return {
     requiresExactHtmlTransport: preserveRootBackgroundCanvas,

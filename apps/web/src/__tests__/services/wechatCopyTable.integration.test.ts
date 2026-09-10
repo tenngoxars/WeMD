@@ -76,5 +76,18 @@ describe("微信复制表格布局", () => {
     expect(payload.html).toContain("min-width: 0");
     expect(payload.html).toContain("white-space: normal");
     expect(payload.html).toContain("overflow-wrap: anywhere");
+    expect(payload.html).not.toContain("data-ignore-width");
+  });
+
+  it("为横向滚动表格添加官方宽度检测豁免", async () => {
+    mocked.tableWrapEnabled = false;
+
+    await copyToWechat("| 表头 |", "#wemd td { min-width: 100px; }");
+
+    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+      { html: string; text: string },
+    ];
+    expect(payload.html).toContain('data-ignore-width=""');
+    expect(payload.html).toContain("overflow-x: auto");
   });
 });

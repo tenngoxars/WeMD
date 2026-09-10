@@ -21,10 +21,7 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   font-size: 16px;
 }
 
-/* 
- * 一级标题 - 渐变流光文字
- * 使用 background-clip 实现文字渐变
- */
+/* 一级标题 - 极光色标题 */
 #wemd h1 {
   margin-top: 60px;
   margin-bottom: 50px;
@@ -35,12 +32,7 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   font-size: 26px;
   font-weight: 800;
   display: inline-block;
-  /* 核心渐变色：蓝 -> 紫 -> 粉 */
-  background-image: linear-gradient(135deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  /* 文字透明，透出背景 */
+  color: #4158D0;
   line-height: 1.4;
   padding-bottom: 10px;
   /* 底部加一条极细的渐变线 */
@@ -53,10 +45,7 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   display: none;
 }
 
-/* 
- * 二级标题 - 悬浮渐变按钮
- * 看起来像一个精致的 APP 图标或按钮
- */
+/* 二级标题 - 悬浮色块 */
 #wemd h2 {
   margin-top: 60px;
   margin-bottom: 30px;
@@ -69,8 +58,7 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   font-weight: 700;
   color: #fff;
   /* 白字 */
-  /* 同样的极光渐变背景 */
-  background-image: linear-gradient(90deg, #4158D0 0%, #C850C0 100%);
+  background-color: #4158D0;
   padding: 8px 18px;
   border-radius: 20px 20px 20px 4px;
   /* 不对称圆角，更灵动 */
@@ -84,9 +72,7 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   display: none;
 }
 
-/* 
- * 三级标题 - 渐变下划线
- */
+/* 三级标题 - 半高下划线 */
 #wemd h3 {
   margin-top: 35px;
   margin-bottom: 15px;
@@ -98,13 +84,7 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   color: #333;
   display: inline-block;
   position: relative;
-  /* 使用 background 模拟只有一半高度的下划线 */
-  background: linear-gradient(90deg, rgba(65, 88, 208, 0.2) 0%, rgba(200, 80, 192, 0.2) 100%);
-  background-size: 100% 40%;
-  /* 宽度100%，高度40% */
-  background-repeat: no-repeat;
-  background-position: 0 90%;
-  /* 位于底部 */
+  box-shadow: inset 0 -0.4em rgba(65, 88, 208, 0.2);
   padding: 0 4px;
 }
 
@@ -229,20 +209,10 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   padding-bottom: 1px;
 }
 
-/* 
- * 加粗 - 渐变文字
- * 与 H1 呼应，非常高级
- */
+/* 加粗 */
 #wemd strong {
   font-weight: 700;
-  background-image: linear-gradient(135deg, #4158D0 0%, #C850C0 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  /* 文字透明，显示渐变 */
-  /* 兼容性回退：如果不支持渐变文字，会显示上面的 color (这里设为 transparent 需注意) */
-  /* 为了兼容，我们可以设一个 color fallback，但在 CSS 中很难覆盖 transparent */
-  /* 微信环境完全支持 background-clip: text */
+  color: #4158D0;
   margin: 0 1px;
 }
 
@@ -256,9 +226,9 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
   color: #C850C0;
 }
 
-/* 高亮 - 渐变背景 */
+/* 高亮 */
 #wemd mark {
-    background: linear-gradient(135deg, rgba(65, 88, 208, 0.15), rgba(200, 80, 192, 0.15));
+    background: rgba(65, 88, 208, 0.15);
     color: #4158D0;
     padding: 2px 4px;
     border-radius: 3px;
@@ -449,10 +419,7 @@ export const auroraGlassTheme = `/* 极光玻璃风格 */
 #wemd .callout-title {
   font-weight: 700;
   margin-bottom: 10px;
-  background: linear-gradient(135deg, #4158D0, #C850C0);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #4158D0;
   font-size: 16px;
 }
 

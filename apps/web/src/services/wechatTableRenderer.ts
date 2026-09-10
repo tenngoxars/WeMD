@@ -29,6 +29,7 @@ const applyTableLayoutStyles = (
   table.style.width = wrapEnabled ? "100%" : "auto";
   table.style.minWidth = wrapEnabled ? "0" : "100%";
   table.style.whiteSpace = wrapEnabled ? "normal" : "nowrap";
+  table.toggleAttribute("data-ignore-width", !wrapEnabled);
 
   const cells = table.querySelectorAll("th, td");
   for (const cell of cells) {
@@ -56,6 +57,7 @@ const applyContainerLayout = (
   wrapEnabled: boolean,
 ): void => {
   tableContainer.style.overflowX = wrapEnabled ? "visible" : "auto";
+  tableContainer.toggleAttribute("data-ignore-width", !wrapEnabled);
   if (wrapEnabled) {
     tableContainer.style.removeProperty("-webkit-overflow-scrolling");
   } else {

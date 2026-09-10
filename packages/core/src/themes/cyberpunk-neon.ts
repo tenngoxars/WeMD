@@ -57,7 +57,7 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
     font-weight: bold;
     color: #12161F;
     /* 深色字 */
-    background: linear-gradient(90deg, #00F3FF, #00F3FF);
+    background-color: #00F3FF;
     /* 纯青色背景 */
     padding: 6px 16px;
     /* 赛博切角 */
@@ -289,23 +289,6 @@ export const cyberpunkNeonTheme = `/* 赛博朋克风格 */
     position: relative;
 }
 
-/* 代码块故障效果 - 模拟扫描线（降低透明度，不影响可读性） */
-#wemd pre code.hljs::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-        transparent 50%,
-        rgba(0, 243, 255, 0.015) 50%
-    );
-    /* 降低扫描线透明度，从 0.03 改为 0.015 */
-    background-size: 100% 4px;
-    pointer-events: none;
-    border-radius: 4px;
-}
 
 /* 增强语法高亮颜色的对比度，确保在深色背景下清晰可见 */
 /* 基础文字颜色 - 确保默认文字足够亮 */

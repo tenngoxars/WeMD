@@ -16,9 +16,11 @@ describe("wechatTableRenderer", () => {
     const table = container.querySelector("table") as HTMLTableElement;
     const cell = container.querySelector("td") as HTMLTableCellElement;
     expect(wrapper.style.overflowX).toBe("visible");
+    expect(wrapper).not.toHaveAttribute("data-ignore-width");
     expect(table.style.width).toBe("100%");
     expect(table.style.minWidth).toBe("0");
     expect(table.style.whiteSpace).toBe("normal");
+    expect(table).not.toHaveAttribute("data-ignore-width");
     expect(cell.style.whiteSpace).toBe("normal");
     expect(cell.style.overflowWrap).toBe("anywhere");
     expect(cell.style.wordBreak).toBe("break-word");
@@ -55,9 +57,11 @@ describe("wechatTableRenderer", () => {
     const table = container.querySelector("table") as HTMLTableElement;
     const cell = container.querySelector("td") as HTMLTableCellElement;
     expect(wrapper.style.overflowX).toBe("auto");
+    expect(wrapper).toHaveAttribute("data-ignore-width");
     expect(table.style.width).toBe("auto");
     expect(table.style.minWidth).toBe("100%");
     expect(table.style.whiteSpace).toBe("nowrap");
+    expect(table).toHaveAttribute("data-ignore-width");
     expect(cell.style.whiteSpace).toBe("nowrap");
     expect(cell.style.overflowWrap).toBe("");
     expect(cell.style.wordBreak).toBe("");

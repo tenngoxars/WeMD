@@ -79,4 +79,29 @@ describe("公众号复制属性语法", () => {
     expect(payload.html).toContain("background-color: rgb(255, 230, 120)");
     expect(payload.html).not.toContain("data-tool");
   });
+  it("在最终剪贴板 HTML 中修正公众号不兼容属性", async () => {
+    await copyToWechat(
+      `正文内容。 {.spec-align}
+
+<svg viewBox="0 0 10 10">
+  <circle cx="5" cy="5" r="4">
+    <animate attributeName="opacity" begin="touchstart" dur="1s"></animate>
+  </circle>
+</svg>`,
+      `
+        #wemd .spec-align {
+          text-align: start;
+          caret-color: rgba(0, 0, 0, 0);
+        }
+      `,
+    );
+
+    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+      { html: string; text: string },
+    ];
+    expect(payload.html).toContain("text-align: left");
+    expect(payload.html).not.toMatch(/text-align:\s*(start|end)/i);
+    expect(payload.html).not.toContain("caret-color");
+    expect(payload.html).toContain('begin="touchstart; click"');
+  });
 });

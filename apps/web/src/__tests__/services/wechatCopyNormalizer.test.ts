@@ -365,4 +365,91 @@ describe("wechatCopyNormalizer", () => {
     expect(innerP.style.backgroundColor).toBe("");
     expect(outerP.style.backgroundColor).toBe("rgb(255, 255, 255)");
   });
+  it("normalizes logical text alignment and removes caret styling", () => {
+    const container = document.createElement("div");
+    container.innerHTML = `
+      <section id="wemd" dir="rtl">
+        <p id="rtl-start" style="text-align:start;caret-color:transparent;">A</p>
+        <p id="rtl-end" style="text-align:end;">B</p>
+        <p id="ltr-start" style="direction:ltr;text-align:start;">C</p>
+        <p id="center" style="text-align:center;">D</p>
+        <p id="justify" style="text-align:justify;">E</p>
+      </section>
+    `;
+
+    normalizeCopyContainer(container);
+
+    expect(
+      (container.querySelector("#rtl-start") as HTMLElement).style.textAlign,
+    ).toBe("right");
+    expect(
+      (container.querySelector("#rtl-end") as HTMLElement).style.textAlign,
+    ).toBe("left");
+    expect(
+      (container.querySelector("#ltr-start") as HTMLElement).style.textAlign,
+    ).toBe("left");
+    expect(
+      (container.querySelector("#center") as HTMLElement).style.textAlign,
+    ).toBe("center");
+    expect(
+      (container.querySelector("#justify") as HTMLElement).style.textAlign,
+    ).toBe("justify");
+    expect(
+      (container.querySelector("#rtl-start") as HTMLElement).style.caretColor,
+    ).toBe("");
+  });
+
+  it("adds click fallback to touch-only SVG animations", () => {
+    const container = document.createElement("div");
+    container.innerHTML = `
+      <section id="wemd">
+        <svg>
+          <animate id="touch-only" begin="touchstart"></animate>
+          <animateTransform id="with-click" begin="touchstart; click"></animateTransform>
+          <animateMotion id="timed" begin="2s"></animateMotion>
+        </svg>
+      </section>
+    `;
+
+    normalizeCopyContainer(container);
+
+    expect(container.querySelector("#touch-only")?.getAttribute("begin")).toBe(
+      "touchstart; click",
+    );
+    expect(container.querySelector("#with-click")?.getAttribute("begin")).toBe(
+      "touchstart; click",
+    );
+    expect(container.querySelector("#timed")?.getAttribute("begin")).toBe("2s");
+  });
+
+  it("wraps long code lines without losing preformatted whitespace", () => {
+    const container = document.createElement("div");
+    container.innerHTML =
+      '<section id="wemd"><pre><code style="white-space:pre;min-width:max-content;">  const value = "long";</code></pre></section>';
+
+    normalizeCopyContainer(container);
+
+    const code = container.querySelector("pre > code") as HTMLElement;
+    expect(code.textContent).toBe('  const value = "long";');
+    expect(code.style.whiteSpace).toBe("pre-wrap");
+    expect(code.style.minWidth).toBe("0");
+    expect(code.style.overflowWrap).toBe("anywhere");
+    expect(code.style.wordBreak).toBe("break-word");
+  });
+
+  it("adds data-w only when an image has a known natural width", () => {
+    const container = document.createElement("div");
+    container.innerHTML =
+      '<section id="wemd"><img id="known" src="known.png"><img id="preset" src="preset.png" data-w="640"><img id="unknown" src="unknown.png"></section>';
+    const known = container.querySelector("#known") as HTMLImageElement;
+    const preset = container.querySelector("#preset") as HTMLImageElement;
+    Object.defineProperty(known, "naturalWidth", { value: 1080 });
+    Object.defineProperty(preset, "naturalWidth", { value: 1920 });
+
+    normalizeCopyContainer(container);
+
+    expect(known.getAttribute("data-w")).toBe("1080");
+    expect(preset.getAttribute("data-w")).toBe("640");
+    expect(container.querySelector("#unknown")).not.toHaveAttribute("data-w");
+  });
 });
