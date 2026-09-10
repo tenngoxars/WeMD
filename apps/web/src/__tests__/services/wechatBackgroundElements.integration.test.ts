@@ -133,6 +133,19 @@ describe("公众号背景文章综合元素复制", () => {
       },
     });
 
+    Object.defineProperty(window, "MathJax", {
+      configurable: true,
+      value: {
+        texReset: vi.fn(),
+        tex2svg: vi.fn(() => {
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML =
+            '<svg width="1ex" height="1ex" viewBox="0 0 10 10"><path d="M0 0h10v10H0z"></path></svg>';
+          return wrapper;
+        }),
+      },
+    });
+
     vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mermaid");
     vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
@@ -212,7 +225,8 @@ describe("公众号背景文章综合元素复制", () => {
     expect(root.querySelector("pre.custom > code")?.textContent).toContain(
       'const background = "section";',
     );
-    expect(root.querySelector(".katex-html")).toBeTruthy();
+    expect(root.querySelector(".inline-equation svg")).toBeTruthy();
+    expect(root.querySelector(".katex-html")).toBeNull();
     expect(root.querySelector(".katex-mathml")).toBeNull();
     expect(root.querySelector("pre.mermaid")).toBeNull();
     expect(
