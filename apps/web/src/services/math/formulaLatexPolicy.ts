@@ -1,17 +1,7 @@
-import katex from "katex";
-
 const BOLD_ITALIC_UPPER_A = 0x1d468;
 const BOLD_ITALIC_LOWER_A = 0x1d482;
 
 export const BOLDSYMBOL_COMMAND = "\\boldsymbol";
-
-const HIGH_RISK_MATH_PATTERNS = [
-  /\\begin\b/,
-  /\\(?:dfrac|tfrac|frac|sqrt|vec|hat|bar|tilde|overline|underline)\b/,
-  /\\(?:partial|nabla|infty|pm|times)\b/,
-  /[_^]/,
-  /[=+\-<>]/,
-];
 
 const toMathBoldItalicLatin = (value: string): string => {
   return Array.from(value)
@@ -103,30 +93,4 @@ export const normalizeBoldSymbolText = (container: HTMLElement): void => {
       child.textContent = toMathBoldItalicLatin(child.textContent);
     });
   });
-};
-
-export const rerenderFormulaWithSafeKatex = (
-  node: HTMLElement,
-  latex: string,
-  display: boolean,
-): boolean => {
-  const safeLatex = replaceBoldSymbolWithMathbf(latex);
-  if (safeLatex === latex) return false;
-
-  try {
-    node.innerHTML = katex.renderToString(safeLatex, {
-      displayMode: display,
-      throwOnError: false,
-    });
-    return true;
-  } catch (error) {
-    console.warn("boldsymbol 安全 KaTeX 兜底失败，保留原公式 HTML", error);
-    return false;
-  }
-};
-
-export const isHighRiskLatex = (latex: string, node: HTMLElement): boolean => {
-  if (node.classList.contains("block-equation")) return true;
-  if (node.querySelector(".katex-error")) return true;
-  return HIGH_RISK_MATH_PATTERNS.some((pattern) => pattern.test(latex));
 };

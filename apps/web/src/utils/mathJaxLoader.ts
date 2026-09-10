@@ -50,6 +50,7 @@ export function loadMathJax(): Promise<void> {
         },
       },
       startup: {
+        typeset: false,
         ready: () => {
           window.MathJax?.startup?.defaultReady();
           isLoaded = true;
