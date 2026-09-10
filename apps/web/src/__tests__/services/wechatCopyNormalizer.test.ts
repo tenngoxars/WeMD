@@ -452,4 +452,28 @@ describe("wechatCopyNormalizer", () => {
     expect(preset.getAttribute("data-w")).toBe("640");
     expect(container.querySelector("#unknown")).not.toHaveAttribute("data-w");
   });
+
+  it("puts callout title weight on inner text spans as WeChat bold", () => {
+    const container = document.createElement("div");
+    container.innerHTML = `
+      <section id="wemd">
+        <section class="callout">
+          <div class="callout-title" style="font-weight:600;">
+            <span class="callout-icon">📌</span>
+            <span>她觉得自己只是「着急」</span>
+          </div>
+        </section>
+      </section>
+    `;
+
+    normalizeCopyContainer(container);
+
+    const title = container.querySelector(".callout-title") as HTMLElement;
+    const icon = container.querySelector(".callout-icon") as HTMLElement;
+    const strong = title.querySelector("strong");
+    expect(title.style.fontWeight).toBe("bold");
+    expect(strong?.textContent).toBe("她觉得自己只是「着急」");
+    expect(title.querySelector("span:not(.callout-icon)")).toBeNull();
+    expect(icon.style.fontWeight).toBe("");
+  });
 });

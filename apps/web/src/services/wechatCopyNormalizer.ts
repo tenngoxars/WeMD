@@ -469,6 +469,30 @@ const getTextDirection = (node: HTMLElement): "ltr" | "rtl" => {
   return "ltr";
 };
 
+const wechatBoldWeight = (value: string): string | null => {
+  const weight = value.trim().toLowerCase();
+  if (weight === "bold" || weight === "bolder") return "bold";
+  const numeric = Number.parseInt(weight, 10);
+  return Number.isFinite(numeric) && numeric >= 600 ? "bold" : null;
+};
+
+const promoteCalloutTitleWeight = (container: HTMLElement): void => {
+  container.querySelectorAll<HTMLElement>(".callout-title").forEach((title) => {
+    const weight =
+      wechatBoldWeight(title.style.fontWeight) ||
+      wechatBoldWeight(window.getComputedStyle(title).fontWeight);
+    if (!weight) return;
+    title.style.fontWeight = weight;
+    title.querySelectorAll<HTMLElement>("span").forEach((span) => {
+      if (span.classList.contains("callout-icon")) return;
+      if (span.closest("strong")) return;
+      const strong = document.createElement("strong");
+      while (span.firstChild) strong.appendChild(span.firstChild);
+      span.replaceWith(strong);
+    });
+  });
+};
+
 const normalizeWechatSpecRules = (container: HTMLElement): void => {
   container.querySelectorAll<HTMLElement>("[style]").forEach((node) => {
     const textAlign = node.style.textAlign.trim().toLowerCase();
@@ -516,6 +540,8 @@ const normalizeWechatSpecRules = (container: HTMLElement): void => {
       image.setAttribute("data-w", String(image.naturalWidth));
     }
   });
+
+  promoteCalloutTitleWeight(container);
 };
 
 // ── 对外入口 ────────────────────────────────────────
