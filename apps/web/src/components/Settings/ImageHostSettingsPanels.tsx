@@ -543,6 +543,33 @@ export const S3Panel = ({
         </label>
         <small>MinIO 等自建服务需要开启此选项</small>
       </div>
+      <div className="config-field">
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={viewingConfig.config?.legacyCompatibility || false}
+            onChange={(e) =>
+              onConfigChange(
+                "legacyCompatibility",
+                e.target.checked ? "true" : "",
+              )
+            }
+            style={{ width: "auto", margin: 0 }}
+          />
+          <span>兼容旧版 S3</span>
+        </label>
+        <small>
+          老版本 S3 兼容服务报 501 NotImplemented 时开启（不发送新版 SDK
+          附加的校验和、x-amz-user-agent 等请求头与 x-id 查询参数）
+        </small>
+      </div>
       <div className="config-footer">
         {testResult && <TestResultMessage result={testResult} />}
         <button className="btn-test-connection" onClick={onTestConnection}>

@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  type S3ClientConfig,
 } from "@aws-sdk/client-s3";
 import type { ImageUploader } from "../ImageUploader";
 
@@ -14,7 +15,30 @@ interface S3Config {
   pathPrefix?: string; // 可选，路径前缀
   customDomain?: string; // 可选，自定义域名
   forcePathStyle?: boolean | string; // 可选，MinIO 等需要设为 true
+  legacyCompatibility?: boolean | string; // 可选，兼容旧版 S3 服务
 }
+
+/**
+ * 旧版 S3 服务不认的新式请求头，需在签名前剥离。
+ * 详见 https://github.com/aws/aws-sdk-js-v3/issues/6810
+ */
+const LEGACY_UNSUPPORTED_HEADERS = [
+  "x-amz-user-agent",
+  "x-amz-sdk-checksum-algorithm",
+  "x-amz-checksum-crc32",
+  "x-amz-checksum-crc32c",
+  "x-amz-checksum-crc64nvme",
+  "x-amz-checksum-sha1",
+  "x-amz-checksum-sha256",
+  "x-amz-checksum-mode",
+  "x-amz-trailer",
+];
+
+/**
+ * 新版 SDK 会追加 x-id=<Operation>，老服务视为未知参数并返回 501。
+ * 详见 https://github.com/aws/aws-sdk-js-v3/issues/5565
+ */
+const LEGACY_UNSUPPORTED_QUERY_PARAMS = ["x-id"];
 
 // 辅助函数：将可能的字符串转为布尔值
 const toBoolean = (value: boolean | string | undefined): boolean => {
@@ -50,6 +74,16 @@ export class S3Uploader implements ImageUploader {
         endpoint = `https://${endpoint}`;
       }
 
+      const legacyCompatibility = toBoolean(this.config.legacyCompatibility);
+
+      // 关掉 SDK 主动校验和，避开老服务对 x-amz-checksum-* 的 501
+      const checksumOverrides: Partial<S3ClientConfig> = legacyCompatibility
+        ? {
+            requestChecksumCalculation: "WHEN_REQUIRED",
+            responseChecksumValidation: "WHEN_REQUIRED",
+          }
+        : {};
+
       this.client = new S3Client({
         endpoint,
         region: this.config.region,
@@ -58,7 +92,37 @@ export class S3Uploader implements ImageUploader {
           secretAccessKey: this.config.secretAccessKey,
         },
         forcePathStyle: toBoolean(this.config.forcePathStyle),
+        ...checksumOverrides,
       });
+
+      if (legacyCompatibility) {
+        // 必须在 SigV4 签名之前剥离，否则签名与实际请求不一致
+        this.client.middlewareStack.add(
+          (next) => async (args) => {
+            // SDK 把 request 声明为 unknown，需自行收窄
+            const request = args.request as {
+              headers?: Record<string, string>;
+              query?: Record<string, string>;
+            };
+            if (request.headers) {
+              for (const name of LEGACY_UNSUPPORTED_HEADERS) {
+                delete request.headers[name];
+              }
+            }
+            if (request.query) {
+              for (const name of LEGACY_UNSUPPORTED_QUERY_PARAMS) {
+                delete request.query[name];
+              }
+            }
+            return next(args);
+          },
+          {
+            name: "legacyS3Compatibility",
+            step: "build",
+            priority: "low",
+          },
+        );
+      }
     }
     return this.client;
   }
