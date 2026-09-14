@@ -62,6 +62,7 @@ WeMD 当前内置 5 类图床，均通过 `ImageHostManager` 统一管理。
 - `pathPrefix`（可选）
 - `customDomain`（可选）
 - `forcePathStyle`（可选，MinIO 常用）
+- `legacyCompatibility`（可选，旧版 S3 兼容服务报 501 时开启）
 
 ## 使用示例
 
@@ -89,6 +90,15 @@ const url = await manager.upload(file);
 2. 在图床设置面板点击“测试连接”。
 3. 检查 Bucket 权限和 CORS 配置。
 4. 查看浏览器控制台报错信息。
+
+### Q: 测试连接返回 501 NotImplemented 怎么办？
+
+新版 AWS SDK 会附加一些老版本 S3 兼容服务不认识的请求头（`x-amz-checksum-*`、
+`x-amz-user-agent`）和 `x-id` 查询参数，老服务会直接返回 501。
+在 S3 面板勾选“兼容旧版 S3”后重试。
+
+背景参考：[S3 default integrity change](https://github.com/aws/aws-sdk-js-v3/issues/6810)（校验和请求头）、
+[NotImplemented: search parameter x-id not implemented](https://github.com/aws/aws-sdk-js-v3/issues/5565)（`x-id` 查询参数）。
 
 ## 开发指南
 
