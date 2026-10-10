@@ -16,6 +16,12 @@ interface ElectronAPI {
     readFile: (
       filePath: string,
     ) => Promise<{ success: boolean; content?: string; error?: string }>;
+    readImage: (filePath: string) => Promise<{
+      success: boolean;
+      data?: string;
+      mime?: string;
+      error?: string;
+    }>;
     createFile: (payload: { filename?: string; content?: string }) => Promise<{
       success: boolean;
       filePath?: string;

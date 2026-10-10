@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electron', {
         setWorkspace: (dir: string) => ipcRenderer.invoke('workspace:set', dir),
         listFiles: (dir?: string) => ipcRenderer.invoke('file:list', dir),
         readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
+        readImage: (filePath: string) => ipcRenderer.invoke('file:read-image', filePath),
         createFile: (payload: { filename?: string; content?: string }) => ipcRenderer.invoke('file:create', payload),
         saveFile: (payload: { filePath: string; content: string }) => ipcRenderer.invoke('file:save', payload),
         renameFile: (payload: { oldPath: string; newName: string }) => ipcRenderer.invoke('file:rename', payload),
