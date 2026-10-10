@@ -67,13 +67,13 @@ WeMD 当前内置 6 类图床，均通过 `ImageHostManager` 统一管理。
 
 ### 6. 微信图床（公众号官方接口）
 
-通过 apps/server 中转调用公众号 `media/uploadimg` 接口，需先启动 server（默认端口 4000）。
+桌面端（Electron）由主进程直连公众号 `media/uploadimg` 接口；网页版通过 apps/server 中转，需先启动 server（默认端口 4000）。
 
 需要填写：
 
 - `appid`
 - `secret`
-- `endpoint`（可选，默认 `/api/wechat/uploadimg`；Web 端与 server 不同源时填完整 URL，如 `http://localhost:4000/api/wechat/uploadimg`）
+- `endpoint`（可选，仅网页版需要；默认 `/api/wechat/uploadimg`，Web 端与 server 不同源时填完整 URL，如 `http://localhost:4000/api/wechat/uploadimg`）
 
 凭据仅保存在本机 localStorage；server 也可用环境变量 `WECHAT_APPID` / `WECHAT_SECRET` 兜底。
 

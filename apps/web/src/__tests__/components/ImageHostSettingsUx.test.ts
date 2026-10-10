@@ -77,6 +77,12 @@ describe("图床设置弹窗视觉与滚动约束", () => {
     );
   });
 
+  it("微信图床面板常驻 IP 白名单提示", () => {
+    expect(panelSource).toContain("IP 白名单");
+    expect(panelSource).toContain("40164");
+    expect(panelSource).toContain("测试号无此限制");
+  });
+
   it("设置弹窗不使用 emoji 表达状态或提示", () => {
     const emojiPattern = /[✅❌💡]/u;
     expect(settingsSource).not.toMatch(emojiPattern);

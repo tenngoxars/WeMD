@@ -113,11 +113,12 @@ WEMD_IMAGE=ghcr.io/tenngoxars/wemd-web:<版本号> docker compose up -d
 
 ### 微信官方图床
 
-通过公众号官方接口 `media/uploadimg` 上传图片，返回的图片地址可直接用于公众号图文。由于 AppSecret 不能放在前端，需由 `apps/server`（NestJS 服务）中转：
+通过公众号官方接口 `media/uploadimg` 上传图片，返回的图片地址可直接用于公众号图文。
 
-1. 启动 server（`pnpm --filter @wemd/server dev`，默认端口 4000）；
-2. 在「设置 - 图床设置」中选择**微信图床**，填写公众号 AppID / AppSecret；Web 端与 server 不同源时，还需填写完整的中转服务地址（如 `http://localhost:4000/api/wechat/uploadimg`）；
-3. 凭据仅保存在本机 localStorage；也可以在服务端通过环境变量 `WECHAT_APPID` / `WECHAT_SECRET` 配置，此时前端可不填。
+- **桌面端（Electron）**：由主进程直连 `api.weixin.qq.com`，无需启动 server；
+- **网页版**：由于 AppSecret 不能放在前端且受 CORS 限制，需由 `apps/server`（NestJS 服务）中转：先启动 server（`pnpm --filter @wemd/server dev`，默认端口 4000），Web 端与 server 不同源时还需在设置中填写完整的中转服务地址（如 `http://localhost:4000/api/wechat/uploadimg`）。
+
+在「设置 - 图床设置」中选择**微信图床**，填写公众号 AppID / AppSecret 即可。凭据仅保存在本机 localStorage；网页版也可以在服务端通过环境变量 `WECHAT_APPID` / `WECHAT_SECRET` 配置，此时前端可不填。
 
 ---
 

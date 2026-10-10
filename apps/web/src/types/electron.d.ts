@@ -95,6 +95,19 @@ interface ElectronAPI {
     }) => Promise<{ success: boolean; error?: string }>;
     writeText: (text: string) => Promise<{ success: boolean; error?: string }>;
   };
+  wechat?: {
+    uploadimg: (payload: {
+      appid: string;
+      secret: string;
+      fileBase64: string;
+      filename: string;
+      mime: string;
+    }) => Promise<{ success: boolean; url?: string; error?: string }>;
+    tokenTest: (payload: {
+      appid: string;
+      secret: string;
+    }) => Promise<{ success: boolean; error?: string }>;
+  };
 }
 
 declare global {

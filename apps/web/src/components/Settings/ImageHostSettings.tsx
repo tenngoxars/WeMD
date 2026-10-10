@@ -79,7 +79,12 @@ export function ImageHostSettings() {
       setTestResult(
         valid
           ? { status: "success", message: "配置有效" }
-          : { status: "error", message: "配置无效" },
+          : {
+              status: "error",
+              message: manager.lastError
+                ? `配置无效：${manager.lastError}`
+                : "配置无效",
+            },
       );
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -116,7 +121,9 @@ export function ImageHostSettings() {
       } else {
         setTestResult({
           status: "error",
-          message: "无法启用：图床连接测试失败，请检查配置",
+          message: manager.lastError
+            ? `无法启用：${manager.lastError}`
+            : "无法启用：图床连接测试失败，请检查配置",
         });
       }
     } catch (error: unknown) {

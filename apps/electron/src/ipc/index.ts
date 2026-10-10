@@ -6,6 +6,7 @@ import { registerImageHandlers } from "./imageHandlers";
 import { registerShellHandlers } from "./shellHandlers";
 import { registerThemeHandlers } from "./themeHandlers";
 import { registerUpdateHandlers } from "./updateHandlers";
+import { registerWechatHandlers } from "./wechatHandlers";
 import { registerWindowHandlers } from "./windowHandlers";
 import { registerWorkspaceHandlers } from "./workspaceHandlers";
 
@@ -21,4 +22,5 @@ export function registerIpcHandlers(
   registerShellHandlers();
   registerClipboardHandlers();
   registerUpdateHandlers();
+  registerWechatHandlers();
 }

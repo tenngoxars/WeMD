@@ -109,4 +109,12 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.invoke('clipboard:writeHTML', payload),
         writeText: (text: string) => ipcRenderer.invoke('clipboard:writeText', text),
     },
+
+    // 微信官方图床（主进程直连 api.weixin.qq.com，不受 CORS 限制）
+    wechat: {
+        uploadimg: (payload: { appid: string; secret: string; fileBase64: string; filename: string; mime: string }) =>
+            ipcRenderer.invoke('wechat:uploadimg', payload),
+        tokenTest: (payload: { appid: string; secret: string }) =>
+            ipcRenderer.invoke('wechat:token-test', payload),
+    },
 });

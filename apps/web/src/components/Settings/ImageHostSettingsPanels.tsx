@@ -602,6 +602,8 @@ export const WechatPanel = ({
   onTestConnection,
   onActivate,
 }: HostConfigPanelProps) => {
+  const isElectronEnv = typeof window !== "undefined" && !!window.electron;
+
   return (
     <div className="host-config">
       {activeType === "wechat" && (
@@ -611,18 +613,23 @@ export const WechatPanel = ({
         </div>
       )}
       <div className="config-field">
-        <label>中转服务地址（可选）</label>
+        <label>
+          中转服务地址（可选
+          {isElectronEnv ? "，仅网页版需要；桌面端直连微信接口" : ""}）
+        </label>
         <input
           type="text"
           placeholder="http://localhost:4000/api/wechat/uploadimg"
           value={viewingConfig.config?.endpoint || ""}
           onChange={(e) => onConfigChange("endpoint", e.target.value)}
         />
-        <small>
-          留空时默认请求同源 /api/wechat/uploadimg；Web 端与 server
-          不同源时请填写完整 URL（如
-          http://localhost:4000/api/wechat/uploadimg）
-        </small>
+        {!isElectronEnv && (
+          <small>
+            留空时默认请求同源 /api/wechat/uploadimg；Web 端与 server
+            不同源时请填写完整 URL（如
+            http://localhost:4000/api/wechat/uploadimg）
+          </small>
+        )}
       </div>
       <div className="config-field">
         <label>公众号 AppID</label>
@@ -642,14 +649,29 @@ export const WechatPanel = ({
           onChange={(e) => onConfigChange("secret", e.target.value)}
         />
         <small>
-          凭据仅保存在本机 localStorage，由自建 server 中转调用微信官方接口
-          media/uploadimg，返回的图片地址可直接用于公众号图文
+          凭据仅保存在本机 localStorage；
+          {isElectronEnv
+            ? "桌面端由主进程直连微信官方接口 media/uploadimg"
+            : "网页版经自建 server 中转调用微信官方接口 media/uploadimg"}
+          ，返回的图片地址可直接用于公众号图文
+        </small>
+      </div>
+      <div className="config-field">
+        <small>
+          正式公众号需在 developers.weixin.qq.com/console 「基本信息 → IP
+          白名单」（旧版后台 mp.weixin.qq.com 「设置与开发 → 基本配置 → IP
+          白名单」）中添加当前出口 IP，否则接口会返回 invalid ip 错误（errcode
+          40164）；测试号无此限制
         </small>
       </div>
       <div className="config-footer">
         <small>
           <a href="https://mp.weixin.qq.com/" target="_blank">
             微信公众平台
+          </a>
+          {" · "}
+          <a href="https://developers.weixin.qq.com/console" target="_blank">
+            开发者控制台（IP 白名单）
           </a>
         </small>
         {testResult && <TestResultMessage result={testResult} />}

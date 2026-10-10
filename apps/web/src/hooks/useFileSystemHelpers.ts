@@ -78,6 +78,19 @@ export interface ElectronAPI {
     onMenuSwitchWorkspace: (cb: () => void) => unknown;
     removeAllListeners: () => void;
   };
+  wechat?: {
+    uploadimg: (payload: {
+      appid: string;
+      secret: string;
+      fileBase64: string;
+      filename: string;
+      mime: string;
+    }) => Promise<{ success: boolean; url?: string; error?: string }>;
+    tokenTest: (payload: {
+      appid: string;
+      secret: string;
+    }) => Promise<{ success: boolean; error?: string }>;
+  };
 }
 
 export const WORKSPACE_KEY = "wemd-workspace-path";
