@@ -97,6 +97,15 @@ export const HostTabs = ({
           <span className="tab-active-badge">使用中</span>
         )}
       </button>
+      <button
+        className={`host-tab ${viewingType === "wechat" ? "active" : ""}`}
+        onClick={() => onTabChange("wechat")}
+      >
+        微信图床
+        {activeType === "wechat" && (
+          <span className="tab-active-badge">使用中</span>
+        )}
+      </button>
     </div>
   );
 };
@@ -579,6 +588,78 @@ export const S3Panel = ({
       {activeType !== "s3" && (
         <button className="btn-activate" onClick={() => onActivate("s3")}>
           启用 S3 图床
+        </button>
+      )}
+    </div>
+  );
+};
+
+export const WechatPanel = ({
+  activeType,
+  viewingConfig,
+  testResult,
+  onConfigChange,
+  onTestConnection,
+  onActivate,
+}: HostConfigPanelProps) => {
+  return (
+    <div className="host-config">
+      {activeType === "wechat" && (
+        <div className="active-status">
+          <span className="pulsing-dot"></span>
+          <span>当前使用中</span>
+        </div>
+      )}
+      <div className="config-field">
+        <label>中转服务地址（可选）</label>
+        <input
+          type="text"
+          placeholder="http://localhost:4000/api/wechat/uploadimg"
+          value={viewingConfig.config?.endpoint || ""}
+          onChange={(e) => onConfigChange("endpoint", e.target.value)}
+        />
+        <small>
+          留空时默认请求同源 /api/wechat/uploadimg；Web 端与 server
+          不同源时请填写完整 URL（如
+          http://localhost:4000/api/wechat/uploadimg）
+        </small>
+      </div>
+      <div className="config-field">
+        <label>公众号 AppID</label>
+        <input
+          type="text"
+          placeholder="从微信公众平台后台获取"
+          value={viewingConfig.config?.appid || ""}
+          onChange={(e) => onConfigChange("appid", e.target.value)}
+        />
+      </div>
+      <div className="config-field">
+        <label>公众号 AppSecret</label>
+        <input
+          type="password"
+          placeholder="从微信公众平台后台获取"
+          value={viewingConfig.config?.secret || ""}
+          onChange={(e) => onConfigChange("secret", e.target.value)}
+        />
+        <small>
+          凭据仅保存在本机 localStorage，由自建 server 中转调用微信官方接口
+          media/uploadimg，返回的图片地址可直接用于公众号图文
+        </small>
+      </div>
+      <div className="config-footer">
+        <small>
+          <a href="https://mp.weixin.qq.com/" target="_blank">
+            微信公众平台
+          </a>
+        </small>
+        {testResult && <TestResultMessage result={testResult} />}
+        <button className="btn-test-connection" onClick={onTestConnection}>
+          测试连接
+        </button>
+      </div>
+      {activeType !== "wechat" && (
+        <button className="btn-activate" onClick={() => onActivate("wechat")}>
+          启用微信图床
         </button>
       )}
     </div>

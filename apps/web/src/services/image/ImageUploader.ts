@@ -21,7 +21,7 @@ export interface ImageUploader {
  * 图床配置
  */
 export interface ImageHostConfig {
-  type: "official" | "qiniu" | "aliyun" | "tencent" | "s3";
+  type: "official" | "qiniu" | "aliyun" | "tencent" | "s3" | "wechat";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config?: any;
 }
@@ -68,6 +68,10 @@ export class ImageHostManager {
       case "s3": {
         const { S3Uploader } = await import("./uploaders/S3Uploader");
         return new S3Uploader(config.config);
+      }
+      case "wechat": {
+        const { WechatUploader } = await import("./uploaders/WechatUploader");
+        return new WechatUploader(config.config);
       }
       default: {
         const { OfficialUploader } = await import(

@@ -8,6 +8,7 @@ import {
   QiniuPanel,
   S3Panel,
   TencentPanel,
+  WechatPanel,
   type HostTestResult,
 } from "./ImageHostSettingsPanels";
 import "./ImageHostSettings.css";
@@ -20,6 +21,7 @@ interface AllConfigs {
     aliyun?: any;
     tencent?: any;
     s3?: any;
+    wechat?: any;
   };
 }
 
@@ -135,7 +137,9 @@ export function ImageHostSettings() {
                 ? "腾讯云 COS"
                 : type === "s3"
                   ? "S3 图床"
-                  : "七牛云图床"
+                  : type === "wechat"
+                    ? "微信图床"
+                    : "七牛云图床"
           }`;
       }
     }
@@ -192,6 +196,17 @@ export function ImageHostSettings() {
 
         {viewingConfig.type === "s3" && (
           <S3Panel
+            activeType={activeType}
+            viewingConfig={viewingConfig}
+            testResult={testResult}
+            onConfigChange={handleConfigChange}
+            onTestConnection={testConnection}
+            onActivate={handleActivate}
+          />
+        )}
+
+        {viewingConfig.type === "wechat" && (
+          <WechatPanel
             activeType={activeType}
             viewingConfig={viewingConfig}
             testResult={testResult}
