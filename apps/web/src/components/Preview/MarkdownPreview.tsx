@@ -2,8 +2,13 @@ import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import mermaid from "mermaid";
 import { createMarkdownParser, processHtml } from "@wemd/core";
 import { useEditorStore } from "../../store/editorStore";
+import { useFileStore } from "../../store/fileStore";
 import { useThemeStore } from "../../store/themeStore";
 import { useUITheme } from "../../hooks/useUITheme";
+import {
+  dirnameOf,
+  rewriteLocalImagesInHtml,
+} from "../../utils/localImageResolver";
 // 公式由 packages/core 的 markdown-it-math 在解析期完成渲染，这里只需要样式
 import "katex/dist/katex.min.css";
 import { convertLinksToFootnotes } from "../../utils/linkFootnote";
@@ -68,6 +73,12 @@ export function MarkdownPreview({
   onScrollContainerChange,
 }: MarkdownPreviewProps) {
   const { markdown } = useEditorStore();
+  const currentFilePath = useFileStore((state) => state.currentFile?.path);
+  // Electron 工作区模式下，以当前文件所在目录作为本地图片的解析基准
+  const localImageBaseDir =
+    typeof window !== "undefined" && window.electron && currentFilePath
+      ? dirnameOf(currentFilePath)
+      : null;
   const { themeId: theme, customCSS, getThemeCSS } = useThemeStore();
   const uiTheme = useUITheme((state) => state.theme);
   const [html, setHtml] = useState("");
@@ -145,7 +156,12 @@ export function MarkdownPreview({
     // 预览模式不使用内联样式，直接注入 style 标签，大幅降低内存占用
     const styledHtml = processHtml(previewHtml, css, false);
 
-    setHtml(styledHtml);
+    // 本地图片改写成 wemd-file:// 协议地址，预览才能加载工作区内的图片
+    const finalHtml = localImageBaseDir
+      ? rewriteLocalImagesInHtml(styledHtml, localImageBaseDir)
+      : styledHtml;
+
+    setHtml(finalHtml);
   }, [
     markdown,
     theme,
@@ -154,6 +170,7 @@ export function MarkdownPreview({
     parser,
     uiTheme,
     linkToFootnoteEnabled,
+    localImageBaseDir,
   ]);
 
   const mermaidTheme = designerVars?.mermaidTheme || "base";

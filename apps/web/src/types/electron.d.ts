@@ -16,6 +16,12 @@ interface ElectronAPI {
     readFile: (
       filePath: string,
     ) => Promise<{ success: boolean; content?: string; error?: string }>;
+    readImage: (filePath: string) => Promise<{
+      success: boolean;
+      data?: string;
+      mime?: string;
+      error?: string;
+    }>;
     createFile: (payload: { filename?: string; content?: string }) => Promise<{
       success: boolean;
       filePath?: string;
@@ -88,6 +94,19 @@ interface ElectronAPI {
       text: string;
     }) => Promise<{ success: boolean; error?: string }>;
     writeText: (text: string) => Promise<{ success: boolean; error?: string }>;
+  };
+  wechat?: {
+    uploadimg: (payload: {
+      appid: string;
+      secret: string;
+      fileBase64: string;
+      filename: string;
+      mime: string;
+    }) => Promise<{ success: boolean; url?: string; error?: string }>;
+    tokenTest: (payload: {
+      appid: string;
+      secret: string;
+    }) => Promise<{ success: boolean; error?: string }>;
   };
 }
 

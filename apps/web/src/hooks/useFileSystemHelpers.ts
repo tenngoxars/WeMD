@@ -27,6 +27,12 @@ export interface ElectronAPI {
     readFile: (
       path: string,
     ) => Promise<{ success: boolean; content?: string; error?: string }>;
+    readImage?: (path: string) => Promise<{
+      success: boolean;
+      data?: string;
+      mime?: string;
+      error?: string;
+    }>;
     createFile: (payload: {
       filename?: string;
       content?: string;
@@ -71,6 +77,19 @@ export interface ElectronAPI {
     onMenuSave: (cb: () => void) => unknown;
     onMenuSwitchWorkspace: (cb: () => void) => unknown;
     removeAllListeners: () => void;
+  };
+  wechat?: {
+    uploadimg: (payload: {
+      appid: string;
+      secret: string;
+      fileBase64: string;
+      filename: string;
+      mime: string;
+    }) => Promise<{ success: boolean; url?: string; error?: string }>;
+    tokenTest: (payload: {
+      appid: string;
+      secret: string;
+    }) => Promise<{ success: boolean; error?: string }>;
   };
 }
 

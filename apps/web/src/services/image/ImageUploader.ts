@@ -21,7 +21,7 @@ export interface ImageUploader {
  * 图床配置
  */
 export interface ImageHostConfig {
-  type: "official" | "qiniu" | "aliyun" | "tencent" | "s3";
+  type: "official" | "qiniu" | "aliyun" | "tencent" | "s3" | "wechat";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config?: any;
 }
@@ -33,6 +33,8 @@ export interface ImageHostConfig {
 export class ImageHostManager {
   private uploaderPromise: Promise<ImageUploader>;
   private config: ImageHostConfig;
+  /** validate() 失败时 uploader 提供的具体原因（若该图床支持，如微信图床） */
+  lastError?: string;
 
   constructor(config: ImageHostConfig) {
     this.config = config;
@@ -69,6 +71,10 @@ export class ImageHostManager {
         const { S3Uploader } = await import("./uploaders/S3Uploader");
         return new S3Uploader(config.config);
       }
+      case "wechat": {
+        const { WechatUploader } = await import("./uploaders/WechatUploader");
+        return new WechatUploader(config.config);
+      }
       default: {
         const { OfficialUploader } = await import(
           "./uploaders/OfficialUploader"
@@ -90,8 +96,13 @@ export class ImageHostManager {
 
   async validate(): Promise<boolean> {
     const uploader = await this.uploaderPromise;
+    this.lastError = undefined;
     if (uploader.validate) {
-      return await uploader.validate();
+      const valid = await uploader.validate();
+      if (!valid) {
+        this.lastError = (uploader as { lastError?: string }).lastError;
+      }
+      return valid;
     }
     return true;
   }

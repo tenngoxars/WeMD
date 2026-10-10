@@ -26,6 +26,7 @@ import {
   Send,
   Code,
   ImageIcon,
+  ImageUp,
   Sun,
   Moon,
   ChevronsUp,
@@ -33,6 +34,7 @@ import {
 } from "lucide-react";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useWindowControls } from "../../hooks/useWindowControls";
+import { useLocalImageUpload } from "../../hooks/useLocalImageUpload";
 import { resolveAppAssetPath } from "../../utils/assetPath";
 import { Modal, FloatingToolbarButton, WindowControls } from "../common";
 import { AI_SETTINGS_OPEN_EVENT } from "../../services/ai/aiConfig";
@@ -52,6 +54,15 @@ export function Header() {
   const uiTheme = useUITheme((state) => state.theme);
   const setTheme = useUITheme((state) => state.setTheme);
   const { isElectron, isWindows, platform } = useWindowControls();
+  const {
+    isElectronEnv,
+    canUploadLocalImages,
+    uploadingLocalImages,
+    uploadLocalImages,
+  } = useLocalImageUpload();
+  const localImageUploadTitle = canUploadLocalImages
+    ? "一键上传文档中的本地图片到图床，并替换为在线链接"
+    : "打开一个本地 Markdown 文件后，可批量上传其中的本地图片";
   const logoSrc = resolveAppAssetPath(
     uiTheme === "dark" ? "favicon-light.svg" : "favicon-dark.svg",
   );
@@ -121,6 +132,13 @@ export function Header() {
             label="图床设置"
             onClick={() => setShowImageHostModal(true)}
           />
+          {canUploadLocalImages && (
+            <FloatingToolbarButton
+              icon={<ImageUp size={18} strokeWidth={2} />}
+              label={uploadingLocalImages ? "上传中..." : "批量上传图片"}
+              onClick={uploadLocalImages}
+            />
+          )}
           <FloatingToolbarButton
             icon={<Palette size={18} strokeWidth={2} />}
             label="主题管理"
@@ -173,6 +191,16 @@ export function Header() {
             >
               图床设置
             </button>
+            {isElectronEnv && (
+              <button
+                className="header-nav-button"
+                onClick={uploadLocalImages}
+                disabled={!canUploadLocalImages || uploadingLocalImages}
+                title={localImageUploadTitle}
+              >
+                {uploadingLocalImages ? "上传中..." : "批量上传图片"}
+              </button>
+            )}
             <button
               className="header-nav-button"
               onClick={() => setShowThemePanel(true)}

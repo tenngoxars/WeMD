@@ -1,12 +1,13 @@
 # 图床支持
 
-WeMD 当前内置 5 类图床，均通过 `ImageHostManager` 统一管理。
+WeMD 当前内置 6 类图床，均通过 `ImageHostManager` 统一管理。
 
 ## 支持的图床
 
 | 图床       | 配置难度 | 说明                                         |
 | ---------- | -------- | -------------------------------------------- |
 | 官方图床   | ⭐       | 默认可用，开箱即用                           |
+| 微信图床   | ⭐⭐     | 公众号官方接口，需 apps/server 中转          |
 | 七牛云     | ⭐⭐⭐   | 适合国内常见对象存储场景                     |
 | 阿里云 OSS | ⭐⭐⭐   | 阿里云对象存储                               |
 | 腾讯云 COS | ⭐⭐⭐   | 腾讯云对象存储                               |
@@ -63,6 +64,18 @@ WeMD 当前内置 5 类图床，均通过 `ImageHostManager` 统一管理。
 - `customDomain`（可选）
 - `forcePathStyle`（可选，MinIO 常用）
 - `legacyCompatibility`（可选，旧版 S3 兼容服务报 501 时开启）
+
+### 6. 微信图床（公众号官方接口）
+
+桌面端（Electron）由主进程直连公众号 `media/uploadimg` 接口；网页版通过 apps/server 中转，需先启动 server（默认端口 4000）。
+
+需要填写：
+
+- `appid`
+- `secret`
+- `endpoint`（可选，仅网页版需要；默认 `/api/wechat/uploadimg`，Web 端与 server 不同源时填完整 URL，如 `http://localhost:4000/api/wechat/uploadimg`）
+
+凭据仅保存在本机 localStorage；server 也可用环境变量 `WECHAT_APPID` / `WECHAT_SECRET` 兜底。
 
 ## 使用示例
 
