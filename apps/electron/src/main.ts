@@ -5,6 +5,13 @@ import { checkForUpdates } from "./updater";
 import { configureAppIdentity, createWindow } from "./window";
 import { stopWatching } from "./watch/workspaceWatcher";
 import { configureSingleInstance } from "./singleInstance";
+import {
+  registerLocalFileProtocolHandler,
+  registerLocalFileScheme,
+} from "./protocol/localFileProtocol";
+
+// 必须在 app ready 之前注册特权 scheme
+registerLocalFileScheme();
 
 const isDev =
   !app.isPackaged ||
@@ -47,6 +54,7 @@ if (isPrimaryInstance) {
   registerIpcHandlers(getMainWindow);
 
   app.whenReady().then(() => {
+    registerLocalFileProtocolHandler();
     openMainWindow();
     createMenu(getMainWindow);
 
