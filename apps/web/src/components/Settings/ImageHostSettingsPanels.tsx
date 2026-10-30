@@ -178,6 +178,16 @@ interface HostConfigPanelProps {
   onActivate: (type: ImageHostConfig["type"]) => void;
 }
 
+// 只列 qiniu-js 3.4.3 内置 region 常量支持的区域
+const QINIU_REGIONS = [
+  ["z0", "华东-浙江"],
+  ["cn-east-2", "华东-浙江2"],
+  ["z1", "华北-河北"],
+  ["z2", "华南-广东"],
+  ["na0", "北美-洛杉矶"],
+  ["as0", "亚太-新加坡"],
+] as const;
+
 export const QiniuPanel = ({
   activeType,
   viewingConfig,
@@ -186,6 +196,11 @@ export const QiniuPanel = ({
   onTestConnection,
   onActivate,
 }: HostConfigPanelProps) => {
+  const savedRegion: string | undefined = viewingConfig.config?.region;
+  const unsupportedRegion =
+    savedRegion && !QINIU_REGIONS.some(([value]) => value === savedRegion)
+      ? savedRegion
+      : null;
   return (
     <div className="host-config">
       {activeType === "qiniu" && (
@@ -224,7 +239,7 @@ export const QiniuPanel = ({
       <div className="config-field">
         <label>存储区域</label>
         <select
-          value={viewingConfig.config?.region || "z0"}
+          value={unsupportedRegion ? "" : savedRegion || "z0"}
           onChange={(e) => onConfigChange("region", e.target.value)}
           style={{
             width: "100%",
@@ -236,13 +251,16 @@ export const QiniuPanel = ({
             backgroundColor: "white",
           }}
         >
-          <option value="z0">华东-浙江 (z0)</option>
-          <option value="cn-east-2">华东-浙江2 (cn-east-2)</option>
-          <option value="z1">华北-河北 (z1)</option>
-          <option value="z2">华南-广东 (z2)</option>
-          <option value="na0">北美-洛杉矶 (na0)</option>
-          <option value="as0">亚太-新加坡 (as0)</option>
-          <option value="ap-northeast-1">亚太-首尔 (ap-northeast-1)</option>
+          {unsupportedRegion && (
+            <option value="" disabled>
+              {unsupportedRegion}（不可用，请重新选择）
+            </option>
+          )}
+          {QINIU_REGIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label} ({value})
+            </option>
+          ))}
         </select>
       </div>
       <div className="config-field">
@@ -282,6 +300,9 @@ export const AliyunPanel = ({
   onTestConnection,
   onActivate,
 }: HostConfigPanelProps) => {
+  const savedConfig = viewingConfig.config || {};
+  // 兼容旧配置：旧版本面板把自定义域名存在 endpoint 里
+  const cdnHost: string = savedConfig.cdnHost ?? savedConfig.endpoint ?? "";
   return (
     <div className="host-config">
       {activeType === "aliyun" && (
@@ -332,8 +353,8 @@ export const AliyunPanel = ({
         <input
           type="text"
           placeholder="https://cdn.example.com"
-          value={viewingConfig.config?.endpoint || ""}
-          onChange={(e) => onConfigChange("endpoint", e.target.value)}
+          value={cdnHost}
+          onChange={(e) => onConfigChange("cdnHost", e.target.value)}
         />
       </div>
       <div className="config-footer">
@@ -364,6 +385,9 @@ export const TencentPanel = ({
   onTestConnection,
   onActivate,
 }: HostConfigPanelProps) => {
+  const savedConfig = viewingConfig.config || {};
+  // 兼容旧配置：旧版本面板把自定义域名存在 endpoint 里
+  const cdnHost: string = savedConfig.cdnHost ?? savedConfig.endpoint ?? "";
   return (
     <div className="host-config">
       {activeType === "tencent" && (
@@ -415,8 +439,8 @@ export const TencentPanel = ({
         <input
           type="text"
           placeholder="https://cdn.example.com"
-          value={viewingConfig.config?.endpoint || ""}
-          onChange={(e) => onConfigChange("endpoint", e.target.value)}
+          value={cdnHost}
+          onChange={(e) => onConfigChange("cdnHost", e.target.value)}
         />
       </div>
       <div className="config-footer">
