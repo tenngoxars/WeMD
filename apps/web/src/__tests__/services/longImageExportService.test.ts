@@ -2,13 +2,18 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mocked = vi.hoisted(() => ({
   renderWechatContainer: vi.fn(),
-  toBlob: vi.fn(),
+  toCanvas: vi.fn(),
 }));
 
 vi.mock("../../services/wechatCopyService", () => ({
   renderWechatContainer: mocked.renderWechatContainer,
 }));
-vi.mock("html-to-image", () => ({ toBlob: mocked.toBlob }));
+vi.mock("html-to-image", () => ({ toCanvas: mocked.toCanvas }));
+
+const fakeCanvas = {
+  width: 750,
+  toBlob: (done: (blob: Blob | null) => void) => done(new Blob(["png"])),
+};
 vi.mock("react-hot-toast", () => ({
   default: Object.assign(vi.fn(), {
     loading: vi.fn(() => "toast-id"),
@@ -41,7 +46,7 @@ describe("exportLongImage", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     mocked.renderWechatContainer.mockReset();
-    mocked.toBlob.mockReset();
+    mocked.toCanvas.mockReset();
   });
 
   it("导出进行中再次触发会被忽略，结束后（包括失败）可以再次导出", async () => {
@@ -55,7 +60,7 @@ describe("exportLongImage", () => {
       document.body.appendChild(container);
       return { container };
     });
-    mocked.toBlob.mockResolvedValue(new Blob(["png"]));
+    mocked.toCanvas.mockResolvedValue(fakeCanvas);
 
     await Promise.all([
       exportLongImage("# 标题", ""),
@@ -64,7 +69,7 @@ describe("exportLongImage", () => {
     expect(mocked.renderWechatContainer).toHaveBeenCalledTimes(1);
     expect(download).toHaveBeenCalledTimes(1);
 
-    mocked.toBlob.mockRejectedValueOnce(new Error("boom"));
+    mocked.toCanvas.mockRejectedValueOnce(new Error("boom"));
     await exportLongImage("# 标题", "");
     await exportLongImage("# 标题", "");
     expect(mocked.renderWechatContainer).toHaveBeenCalledTimes(3);
