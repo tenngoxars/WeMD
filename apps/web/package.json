@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:ci": "pnpm run test --run --maxWorkers=1",
+    "test:ci": "pnpm run test --run",
     "test:ui-acceptance": "vitest run src/__tests__/components/EditorUxPolish.test.ts src/__tests__/components/Header.test.tsx src/__tests__/components/HeaderTypography.test.ts src/__tests__/components/MarkdownPreviewResponsive.test.ts src/__tests__/hooks/useMobileView.test.ts src/components/Workspace/useSplitPane.test.ts",
     "test:ui": "vitest --ui"
   },
