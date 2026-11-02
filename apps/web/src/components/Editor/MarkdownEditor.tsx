@@ -49,6 +49,13 @@ interface MarkdownEditorProps {
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max);
 
+// Linux 的 WebKitGTK（Tauri 桌面版）把输入法正在转换的那段同步成选区，编辑器据此画出底色并把光标停在该段末尾；
+// 其他引擎组词时选区与光标正常，不需要处理
+const isWebKitGtk =
+  typeof navigator !== "undefined" &&
+  /Linux/.test(navigator.userAgent) &&
+  !/Chrom|Android/.test(navigator.userAgent);
+
 export function MarkdownEditor({ onScrollSyncReady }: MarkdownEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -97,6 +104,17 @@ export function MarkdownEditor({ onScrollSyncReady }: MarkdownEditorProps) {
         EditorView.lineWrapping,
         paragraphSelectionStyle,
         EditorView.domEventHandlers({
+          // 组词期间隐藏选区与光标，只在 WebKitGTK 生效（见 isWebKitGtk 与 MarkdownEditor.css）
+          compositionstart: (_event, view) => {
+            if (isWebKitGtk) view.dom.classList.add("cm-ime-composing");
+          },
+          // 组词中途失焦时 compositionend 可能不触发，失焦也一并清除
+          compositionend: (_event, view) => {
+            view.dom.classList.remove("cm-ime-composing");
+          },
+          blur: (_event, view) => {
+            view.dom.classList.remove("cm-ime-composing");
+          },
           paste: (event, view) => {
             const items = event.clipboardData?.items;
             if (!items) return;
