@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "主窗口：自定义标题栏所需的窗口控制",
+  "description": "主窗口：自定义标题栏所需的窗口控制；官方图床上传",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -9,6 +9,10 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",
     "core:window:allow-is-maximized",
-    "core:window:allow-start-dragging"
+    "core:window:allow-start-dragging",
+    {
+      "identifier": "http:default",
+      "allow": [{ "url": "https://api.wemd.app/*" }]
+    }
   ]
 }

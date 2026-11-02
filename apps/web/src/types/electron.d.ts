@@ -89,6 +89,10 @@ interface ElectronAPI {
     }) => Promise<{ success: boolean; error?: string }>;
     writeText: (text: string) => Promise<{ success: boolean; error?: string }>;
   };
+  /** 桌面端由原生层发出的请求，不受浏览器跨域限制（Tauri 版提供） */
+  net?: {
+    fetch: typeof fetch;
+  };
 }
 
 declare global {

@@ -51,6 +51,10 @@
       removeUpdateListener: () => {},
       openReleases: () => invoke("open_external", { url: "https://github.com/tenngoxars/WeMD/releases" }),
     },
+    // 由 Rust 发出请求，不受跨域限制；可访问的地址由 capabilities/default.json 限定
+    net: {
+      fetch: (...args) => window.__TAURI__.http.fetch(...args),
+    },
     shell: {
       openExternal: (url) => invoke("open_external", { url }),
     },
