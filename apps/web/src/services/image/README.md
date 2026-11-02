@@ -26,7 +26,7 @@ WeMD 当前内置 5 类图床，均通过 `ImageHostManager` 统一管理。
 - `secretKey`
 - `bucket`
 - `domain`
-- `region`（可选，默认 `z0`；只支持 `z0` / `cn-east-2` / `z1` / `z2` / `na0` / `as0`，其它值会交给 SDK 自动识别空间所在区域）
+- `region`（可选，默认 `z0`）
 
 ### 3. 阿里云 OSS
 

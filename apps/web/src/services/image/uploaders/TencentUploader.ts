@@ -7,10 +7,7 @@ interface TencentConfig {
   bucket: string;
   region: string; // 例如：ap-guangzhou
   path?: string;
-  /** 自定义 CDN 域名，如 https://cdn.example.com */
   cdnHost?: string;
-  /** 旧版本设置面板把自定义域名存在这里，读取时兼容 */
-  endpoint?: string;
 }
 
 /**
@@ -83,15 +80,11 @@ export class TencentUploader implements ImageUploader {
         (err, data) => {
           if (err) {
             reject(new Error(`上传失败: ${err.message || err}`));
-            return;
-          }
-
-          const cdnHost = this.config.cdnHost ?? this.config.endpoint;
-          if (cdnHost) {
+          } else if (this.config.cdnHost) {
             resolve(
               path === ""
-                ? `${cdnHost}/${dateFilename}`
-                : `${cdnHost}/${path}/${dateFilename}`,
+                ? `${this.config.cdnHost}/${dateFilename}`
+                : `${this.config.cdnHost}/${path}/${dateFilename}`,
             );
           } else {
             resolve(`https://${data.Location}`);

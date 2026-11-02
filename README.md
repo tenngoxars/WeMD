@@ -37,7 +37,7 @@
 **排版**
 
 - 内置十余款文章主题，可用可视化设计器调整，也可直接写 CSS
-- 预览公众号深色模式下的效果，接近微信实机表现（[算法原理](https://wemd.app/docs/reference/dark-mode-algorithm.html)）
+- 预览公众号深色模式下的效果，还原度达 98% 以上（[算法原理](https://wemd.app/docs/reference/dark-mode-algorithm.html)）
 - 界面支持亮色和深色两种模式
 
 **AI 写作辅助**

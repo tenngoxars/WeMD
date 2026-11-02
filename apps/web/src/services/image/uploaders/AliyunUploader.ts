@@ -7,10 +7,7 @@ interface AliyunConfig {
   accessKeyId: string;
   accessKeySecret: string;
   useSSL?: boolean;
-  /** 自定义 CDN 域名，如 https://cdn.example.com */
   cdnHost?: string;
-  /** 旧版本设置面板把自定义域名存在这里，读取时兼容 */
-  endpoint?: string;
   path?: string;
 }
 
@@ -76,9 +73,8 @@ export class AliyunUploader implements ImageUploader {
 
     try {
       await client.put(dir, file);
-      const cdnHost = this.config.cdnHost ?? this.config.endpoint;
-      return cdnHost
-        ? `${cdnHost}/${dir}`
+      return this.config.cdnHost
+        ? `${this.config.cdnHost}/${dir}`
         : `${protocol}://${this.config.bucket}.${this.config.region}.aliyuncs.com/${dir}`;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
