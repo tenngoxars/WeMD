@@ -9,7 +9,7 @@
     "dev:electron": "ELECTRON_START_URL=http://localhost:5173 NODE_ENV=development pnpm --filter wemd-electron run dev -- --dev",
     "dev:desktop": "node scripts/run-desktop-dev.mjs",
     "lint": "turbo run lint",
-    "test": "turbo run test:ci --concurrency=1 --continue=always",
+    "test": "turbo run test:ci --continue=always --log-order=grouped",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "prepare": "husky"
   },

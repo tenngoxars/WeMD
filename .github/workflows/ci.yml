@@ -24,8 +24,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-test-build:
+  # 测试与 lint+构建互不依赖，拆成两台机器并行
+  check:
+    name: ${{ matrix.task }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: test
+            run: pnpm test
+          - task: lint-build
+            run: pnpm --filter @wemd/web lint && pnpm --filter @wemd/web build
 
     steps:
       - name: Checkout
@@ -45,11 +55,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test workspace
-        run: pnpm test
-
-      - name: Lint web
-        run: pnpm --filter @wemd/web lint
-
-      - name: Build web
-        run: pnpm --filter @wemd/web build
+      - name: ${{ matrix.task }}
+        run: ${{ matrix.run }}
