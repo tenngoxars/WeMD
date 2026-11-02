@@ -4,16 +4,23 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
   push:
     branches:
       - main
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# PR 连续推送只保留最新一次；main 每次运行独占一个分组，保证每个提交都完整跑过
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
