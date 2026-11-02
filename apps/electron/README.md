@@ -44,7 +44,7 @@ pnpm --filter wemd-electron run build:linux
 当前打包配置：
 
 - macOS：`zip`，自动发布 Apple Silicon 版本。
-- Windows：NSIS 安装包与 zip。
-- Linux：AppImage 与 deb。
+- Windows：NSIS 安装包。
+- Linux：AppImage。
 
 构建产物输出到 `apps/electron/release/`，不要手工编辑构建产物。

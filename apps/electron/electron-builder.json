@@ -18,7 +18,7 @@
     "icon": "assets/icon.icns"
   },
   "win": {
-    "target": ["nsis", "zip"],
+    "target": ["nsis"],
     "icon": "assets/icon.ico"
   },
   "nsis": {
@@ -29,9 +29,8 @@
     "createStartMenuShortcut": true
   },
   "linux": {
-    "target": ["AppImage", "deb"],
+    "target": ["AppImage"],
     "category": "Office",
-    "icon": "assets/icon.png",
-    "maintainer": "WeMD Team"
+    "icon": "assets/icon.png"
   }
 }
