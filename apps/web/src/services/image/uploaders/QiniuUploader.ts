@@ -108,8 +108,8 @@ export class QiniuUploader implements ImageUploader {
     });
   }
 
-  private getRegion(): QiniuRegion {
-    // 将配置的字符串区域映射到 SDK 的 Region 对象
+  private getRegion(): QiniuRegion | undefined {
+    // 只映射 qiniu-js 3.4.3 region 常量里存在的区域
     const regionMap: Record<string, QiniuRegion> = {
       z0: "z0",
       z1: "z1",
@@ -119,8 +119,10 @@ export class QiniuUploader implements ImageUploader {
       "cn-east-2": "cn-east-2",
     };
 
+    // 未选择时按默认华东-浙江处理；无法识别的区域交给 SDK 自动查询
+    // （SDK 会用 token 中的 AccessKey 和 bucket 向 api.qiniu.com 查真实上传域名）
     const region = this.config.region || "z0";
-    return regionMap[region] || qiniu.region.z0;
+    return regionMap[region];
   }
 
   private async getUploadToken(): Promise<string> {
