@@ -69,7 +69,7 @@
   // 拦下 Ctrl+V，由 Rust 读剪贴板，再交给页面现有的粘贴处理（编辑器图片上传、CodeMirror 文本粘贴）。
   const dispatchPaste = (target, data) => {
     const clipboardData = new DataTransfer();
-    if (data.file) clipboardData.items.add(data.file);
+    (data.files ?? []).forEach((file) => clipboardData.items.add(file));
     if (data.text != null) clipboardData.setData("text/plain", data.text);
     const event = new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true });
     target.dispatchEvent(event);
@@ -88,10 +88,26 @@
     }
   };
 
+  const IMAGE_TYPES = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", bmp: "image/bmp" };
+
   const pasteFromRust = async (target) => {
+    // 截图、浏览器「复制图片」：剪贴板里是图片数据
     const image = new Uint8Array(await invoke("clipboard_read_image"));
     if (image.byteLength > 0) {
-      dispatchPaste(target, { file: new File([image], "image.png", { type: "image/png" }) });
+      dispatchPaste(target, { files: [new File([image], "image.png", { type: "image/png" })] });
+      return;
+    }
+    // 文件管理器复制图片：剪贴板里只有文件路径，由 Rust 读取原文件
+    const names = await invoke("clipboard_image_files");
+    if (names.length > 0) {
+      const files = await Promise.all(
+        names.map(async (name, index) => {
+          const bytes = await invoke("clipboard_read_image_file", { index });
+          const type = IMAGE_TYPES[name.split(".").pop().toLowerCase()];
+          return new File([new Uint8Array(bytes)], name, { type });
+        }),
+      );
+      dispatchPaste(target, { files });
       return;
     }
     const text = await invoke("clipboard_read_text");

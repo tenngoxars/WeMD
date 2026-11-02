@@ -208,6 +208,47 @@ async fn clipboard_read_text(app: AppHandle) -> Option<String> {
     app.clipboard().read_text().ok()
 }
 
+const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "gif", "webp", "bmp"];
+const MAX_PASTE_FILE_BYTES: u64 = 50 * 1024 * 1024;
+
+/// 文件管理器复制图片时剪贴板里只有文件路径，这里列出其中的图片文件
+fn clipboard_image_paths() -> Vec<PathBuf> {
+    let files = arboard::Clipboard::new().and_then(|mut c| c.get().file_list());
+    files
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|p| {
+            p.extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|e| IMAGE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
+        })
+        .collect()
+}
+
+#[tauri::command]
+async fn clipboard_image_files() -> Vec<String> {
+    clipboard_image_paths()
+        .iter()
+        .filter_map(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
+        .collect()
+}
+
+/// 按序号读取剪贴板里的图片文件原始字节。只接受序号、不接受路径，网页不能借此读取任意文件
+#[tauri::command]
+async fn clipboard_read_image_file(index: usize) -> Result<tauri::ipc::Response, String> {
+    let path = clipboard_image_paths()
+        .into_iter()
+        .nth(index)
+        .ok_or("剪贴板内容已变化")?;
+    let size = fs::metadata(&path).map_err(|e| e.to_string())?.len();
+    if size > MAX_PASTE_FILE_BYTES {
+        return Err("图片超过 50 MB".into());
+    }
+    fs::read(&path)
+        .map(tauri::ipc::Response::new)
+        .map_err(|e| e.to_string())
+}
+
 /// 只放行 http/https，与 Electron 版一致
 #[tauri::command]
 fn open_external(url: String, app: AppHandle) {
@@ -235,6 +276,8 @@ fn main() {
             clipboard_write_text,
             clipboard_read_image,
             clipboard_read_text,
+            clipboard_image_files,
+            clipboard_read_image_file,
             open_external,
         ])
         .setup(|app| {

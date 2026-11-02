@@ -4628,6 +4628,7 @@ checksum = "a28ac98ddc8b9274cb41bb4d9d4d5c425b6020c50c46f25559911905610b4a88"
 name = "wemd-desktop"
 version = "1.6.0"
 dependencies = [
+ "arboard",
  "png",
  "serde",
  "serde_json",
