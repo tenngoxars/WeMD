@@ -135,7 +135,7 @@ pub fn scan(dir: &Path) -> Vec<FileEntry> {
         }
     }
     folders.sort_by(|a, b| a.0.cmp(&b.0));
-    files.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+    files.sort_by_key(|f| std::cmp::Reverse(f.updated_at));
     let mut out: Vec<FileEntry> = folders
         .into_iter()
         .map(|(name, path)| {

@@ -183,6 +183,31 @@ fn clipboard_write_text(text: String, app: AppHandle) -> Value {
     }
 }
 
+/// 剪贴板里的图片编码成 PNG 返回，没有图片时返回空内容。
+/// Linux 的 WebKitGTK 自己处理图片粘贴会崩溃（≥2.52）或拿不到图片（<2.52），粘贴由 bridge.js 拦下后走这里。
+#[tauri::command]
+async fn clipboard_read_image(app: AppHandle) -> tauri::ipc::Response {
+    let Ok(image) = app.clipboard().read_image() else {
+        return tauri::ipc::Response::new(Vec::new());
+    };
+    let mut png_bytes = Vec::new();
+    let mut encoder = png::Encoder::new(&mut png_bytes, image.width(), image.height());
+    encoder.set_color(png::ColorType::Rgba);
+    encoder.set_depth(png::BitDepth::Eight);
+    let encoded = encoder
+        .write_header()
+        .and_then(|mut writer| writer.write_image_data(image.rgba()));
+    if encoded.is_err() {
+        png_bytes.clear();
+    }
+    tauri::ipc::Response::new(png_bytes)
+}
+
+#[tauri::command]
+async fn clipboard_read_text(app: AppHandle) -> Option<String> {
+    app.clipboard().read_text().ok()
+}
+
 /// 只放行 http/https，与 Electron 版一致
 #[tauri::command]
 fn open_external(url: String, app: AppHandle) {
@@ -208,6 +233,8 @@ fn main() {
             theme_write,
             clipboard_write_html,
             clipboard_write_text,
+            clipboard_read_image,
+            clipboard_read_text,
             open_external,
         ])
         .setup(|app| {

@@ -104,6 +104,8 @@ function App() {
   }, [saveFile]);
 
   const isElectron = platform.isElectron;
+  // 桌面版文件走主进程，不依赖浏览器存储；不能等它就绪，否则 IndexedDB 打不开时界面永远停在加载中
+  const storageSettled = isElectron || ready;
 
   // 更新提示状态
   const [updateInfo, setUpdateInfo] = useState<{
@@ -321,8 +323,8 @@ function App() {
             aria-hidden={!showHistory}
           >
             <div className="history-pane__content">
-              {/* ready 后渲染，防止闪烁 */}
-              {ready &&
+              {/* 存储就绪后渲染，防止闪烁 */}
+              {storageSettled &&
                 (isElectron || storageType === "filesystem" ? (
                   <FileSidebar />
                 ) : (
@@ -340,7 +342,7 @@ function App() {
           </div>
           <EditorPreviewWorkspace
             loading={
-              !ready ||
+              !storageSettled ||
               fileLoading ||
               (historyLoading && !isElectron && storageType === "indexeddb")
             }
