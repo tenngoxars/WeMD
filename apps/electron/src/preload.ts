@@ -97,7 +97,7 @@ contextBridge.exposeInMainWorld('wemdDesktop', {
             ipcRenderer.removeListener('update:error', handler);
         },
         openReleases: () => ipcRenderer.invoke('update:openReleases'),
-        check: () => ipcRenderer.send('update:check'),
+        check: () => ipcRenderer.invoke('update:check'),
     },
 
     shell: {

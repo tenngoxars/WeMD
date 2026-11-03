@@ -95,8 +95,8 @@ export interface DesktopBridge {
     onUpdateError?: (callback: () => void) => () => void;
     removeUpdateListener?: (handler: (() => void) | undefined) => void;
     openReleases?: () => void;
-    /** 手动检查（强制），结果经上面三个回调返回 */
-    check?: () => void;
+    /** 手动检查（强制），结果经上面三个回调返回；Promise 在检查结束时完成 */
+    check?: () => Promise<void>;
     /** 当前安装方式能否应用内更新（仅 Tauri） */
     canInstall?: () => Promise<boolean>;
     /** 下载并安装更新后重启；无可用更新包时抛错（仅 Tauri） */

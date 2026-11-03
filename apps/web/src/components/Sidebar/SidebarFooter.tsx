@@ -1,8 +1,12 @@
-import { Globe, BookOpen } from "lucide-react";
+import { useState } from "react";
+import { Globe, BookOpen, RefreshCw } from "lucide-react";
 import { useUITheme } from "../../hooks/useUITheme";
 import { getDesktop } from "../../lib/platformAdapter";
 import { resolveAppAssetPath } from "../../utils/assetPath";
 import "./SidebarFooter.css";
+
+// 一圈动画的时长，与 SidebarFooter.css 的 footer-spin 一致
+const MIN_SPIN_MS = 900;
 
 const GithubIcon = ({ size = 24 }: { size?: number | string }) => (
   <svg
@@ -27,6 +31,23 @@ export function SidebarFooter() {
     uiTheme === "dark" ? "favicon-light.svg" : "favicon-dark.svg",
   );
   const checkUpdate = getDesktop()?.update?.check;
+  const [checking, setChecking] = useState(false);
+
+  const handleCheckUpdate = async () => {
+    if (!checkUpdate || checking) return;
+    setChecking(true);
+    try {
+      // 至少转一圈，避免网络很快时动效一闪而过
+      await Promise.all([
+        checkUpdate(),
+        new Promise((resolve) => setTimeout(resolve, MIN_SPIN_MS)),
+      ]);
+    } catch {
+      // 失败已由 onUpdateError 回调提示，这里只负责停止转动
+    } finally {
+      setChecking(false);
+    }
+  };
 
   return (
     <div className="sidebar-footer">
@@ -36,18 +57,7 @@ export function SidebarFooter() {
         </div>
         <div className="footer-info">
           <span className="footer-name">WeMD</span>
-          {checkUpdate ? (
-            <button
-              type="button"
-              className="footer-version footer-version-button"
-              onClick={checkUpdate}
-              title="检查更新"
-            >
-              v{__APP_VERSION__}
-            </button>
-          ) : (
-            <span className="footer-version">v{__APP_VERSION__}</span>
-          )}
+          <span className="footer-version">v{__APP_VERSION__}</span>
         </div>
       </div>
       <div className="footer-links">
@@ -78,6 +88,20 @@ export function SidebarFooter() {
         >
           <BookOpen size={16} />
         </a>
+        {/* 只有桌面端能检查更新，网页版不显示 */}
+        {checkUpdate && (
+          <button
+            type="button"
+            className={checking ? "is-checking" : undefined}
+            onClick={handleCheckUpdate}
+            disabled={checking}
+            aria-busy={checking}
+            data-tooltip={checking ? "正在检查更新" : "检查更新"}
+            aria-label={checking ? "正在检查更新" : "检查更新"}
+          >
+            <RefreshCw size={16} />
+          </button>
+        )}
       </div>
     </div>
   );
