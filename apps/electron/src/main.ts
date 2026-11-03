@@ -5,6 +5,7 @@ import { checkForUpdates } from "./updater";
 import { configureAppIdentity, createWindow } from "./window";
 import { stopWatching } from "./watch/workspaceWatcher";
 import { configureSingleInstance } from "./singleInstance";
+import { exportOnClose, exportSettings } from "./migration/exportSettings";
 
 const isDev =
   !app.isPackaged ||
@@ -14,6 +15,11 @@ const isDev =
 configureAppIdentity();
 
 let mainWindow: BrowserWindow | null = null;
+// 退出触发的 close 被导出拦下会取消本次退出，导出完成后需补一次 quit
+let quitting = false;
+app.on("before-quit", () => {
+  quitting = true;
+});
 
 const getMainWindow = () => mainWindow;
 
@@ -24,6 +30,12 @@ function openMainWindow(): BrowserWindow {
       mainWindow = null;
       stopWatching();
     },
+  });
+  const contents = mainWindow.webContents;
+  const exportNow = () => exportSettings(contents, app.getPath("userData"));
+  contents.on("did-finish-load", () => void exportNow());
+  exportOnClose(mainWindow, exportNow, () => {
+    if (quitting) app.quit();
   });
   return mainWindow;
 }

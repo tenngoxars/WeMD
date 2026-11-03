@@ -7,6 +7,7 @@ mod clipboard;
 mod download;
 mod files;
 mod folders;
+mod migration;
 // 菜单只在 macOS 安装，其余平台仍参与编译检查
 #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 mod menu;
@@ -76,6 +77,8 @@ fn main() {
             clipboard::clipboard_read_image_file,
             open_external,
             updater_supported,
+            migration::migration_read,
+            migration::migration_delete,
         ])
         .setup(|app| {
             let builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())

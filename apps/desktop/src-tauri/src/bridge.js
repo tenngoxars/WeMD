@@ -55,6 +55,23 @@
     setTimeout(() => checkForUpdates(false), 3000);
   }
 
+  // Electron 版设置迁移（见 migration.rs）。初始化脚本拿不到同步结果，页面此时已用当前设置启动，
+  // 所以写入后 reload 一次，让应用以导入的设置重新启动。已有标记则不再导入，只删除残留文件。
+  // 标记键不在白名单内，导出端不会碰它
+  const MIGRATION_MARK = "wemd-electron-migrated-at";
+  invoke("migration_read")
+    .then(async (entries) => {
+      if (!entries) return;
+      const fresh = !localStorage.getItem(MIGRATION_MARK);
+      if (fresh) {
+        Object.entries(entries).forEach(([key, value]) => localStorage.setItem(key, value));
+        localStorage.setItem(MIGRATION_MARK, new Date().toISOString());
+      }
+      await invoke("migration_delete");
+      if (fresh) location.reload();
+    })
+    .catch((error) => console.error("[WeMD] 导入 Electron 设置失败", error?.name ?? ""));
+
   window.wemdDesktop = {
     platform,
     fs: {
