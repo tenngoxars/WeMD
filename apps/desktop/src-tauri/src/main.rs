@@ -24,6 +24,12 @@ fn open_external(url: String, app: AppHandle) {
     }
 }
 
+/// 能否应用内自更新：Linux 只有 AppImage 能替换自身，deb 等系统包交给包管理器
+#[tauri::command]
+fn updater_supported() -> bool {
+    cfg!(any(target_os = "macos", target_os = "windows")) || std::env::var_os("APPIMAGE").is_some()
+}
+
 fn main() {
     let builder = tauri::Builder::default()
         // 必须最先注册：第二次启动时聚焦已有窗口后直接退出
@@ -38,6 +44,8 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .manage(files::Workspace::default());
     #[cfg(target_os = "macos")]
     let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
@@ -67,6 +75,7 @@ fn main() {
             clipboard::clipboard_image_files,
             clipboard::clipboard_read_image_file,
             open_external,
+            updater_supported,
         ])
         .setup(|app| {
             let builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())

@@ -27,5 +27,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI0OTg5OTRDREJFRDlERTAKUldUZ25lM2JUSm1ZdEJwY21TRjZkOUNMVTFROTR5SE9ONmxYVmFkTWJQaUdQRW1DYjRhUHJQRkgK",
+      "endpoints": [
+        "https://github.com/tenngoxars/WeMD/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

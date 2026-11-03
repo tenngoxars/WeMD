@@ -43,6 +43,23 @@
     "liga" 0;
 }
 
+.footer-version-button {
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.footer-version-button:hover {
+  color: var(--text-secondary);
+}
+
+.footer-version-button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
 .footer-links {
   display: flex;
   align-items: center;

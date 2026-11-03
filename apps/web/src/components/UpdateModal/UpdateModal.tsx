@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Download } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getDesktop } from "../../lib/platformAdapter";
 import { Modal } from "../common";
 import "./UpdateModal.css";
 
@@ -11,6 +12,8 @@ interface UpdateModalProps {
   onDownload: () => void;
   onSkipVersion: () => void;
 }
+
+const formatMB = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
 // GitHub release notes 为 Markdown，此处仅做轻量符号化，不引入解析器
 const formatReleaseNotes = (notes: string) =>
@@ -32,6 +35,41 @@ export function UpdateModal({
   onSkipVersion,
 }: UpdateModalProps) {
   const [showNotes, setShowNotes] = useState(false);
+  const install = getDesktop()?.update?.install;
+  const [canInstall, setCanInstall] = useState(false);
+  // null 表示未在安装；否则为进度文字
+  const [progress, setProgress] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!install) return;
+    let active = true;
+    getDesktop()
+      ?.update?.canInstall?.()
+      .then((ok) => active && setCanInstall(ok))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [install]);
+
+  const handleInstall = async () => {
+    if (!install) return;
+    setError("");
+    setProgress("…");
+    try {
+      await install((downloaded, total) =>
+        setProgress(
+          total
+            ? `${Math.floor((downloaded / total) * 100)}%`
+            : formatMB(downloaded),
+        ),
+      );
+    } catch (e) {
+      setProgress(null);
+      setError(`应用内更新失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
 
   return (
     <Modal
@@ -65,6 +103,12 @@ export function UpdateModal({
         </div>
       )}
 
+      {error && (
+        <p className="update-modal-error" role="alert">
+          {error}
+        </p>
+      )}
+
       <div className="update-modal-actions">
         <button className="update-modal-skip" onClick={onSkipVersion}>
           跳过此版本
@@ -73,10 +117,22 @@ export function UpdateModal({
           <button className="update-modal-btn" onClick={onClose}>
             稍后提醒
           </button>
-          <button className="update-modal-btn primary" onClick={onDownload}>
+          <button
+            className={`update-modal-btn${canInstall ? "" : " primary"}`}
+            onClick={onDownload}
+          >
             <Download size={14} aria-hidden="true" />
             前往下载
           </button>
+          {canInstall && (
+            <button
+              className="update-modal-btn primary"
+              onClick={handleInstall}
+              disabled={progress !== null}
+            >
+              {progress === null ? "立即更新" : `正在更新 ${progress}`}
+            </button>
+          )}
         </div>
       </div>
     </Modal>

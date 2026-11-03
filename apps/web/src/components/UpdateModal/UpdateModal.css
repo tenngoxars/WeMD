@@ -109,6 +109,17 @@
   background: var(--accent-active);
 }
 
+.update-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.update-modal-error {
+  margin: 0;
+  color: var(--error);
+  font-size: 12px;
+}
+
 .update-modal-skip {
   padding: 4px 0;
   border: none;

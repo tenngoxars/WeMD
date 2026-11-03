@@ -1,5 +1,6 @@
 import { Globe, BookOpen } from "lucide-react";
 import { useUITheme } from "../../hooks/useUITheme";
+import { getDesktop } from "../../lib/platformAdapter";
 import { resolveAppAssetPath } from "../../utils/assetPath";
 import "./SidebarFooter.css";
 
@@ -25,6 +26,7 @@ export function SidebarFooter() {
   const logoSrc = resolveAppAssetPath(
     uiTheme === "dark" ? "favicon-light.svg" : "favicon-dark.svg",
   );
+  const checkUpdate = getDesktop()?.update?.check;
 
   return (
     <div className="sidebar-footer">
@@ -34,7 +36,18 @@ export function SidebarFooter() {
         </div>
         <div className="footer-info">
           <span className="footer-name">WeMD</span>
-          <span className="footer-version">v{__APP_VERSION__}</span>
+          {checkUpdate ? (
+            <button
+              type="button"
+              className="footer-version footer-version-button"
+              onClick={checkUpdate}
+              title="检查更新"
+            >
+              v{__APP_VERSION__}
+            </button>
+          ) : (
+            <span className="footer-version">v{__APP_VERSION__}</span>
+          )}
         </div>
       </div>
       <div className="footer-links">

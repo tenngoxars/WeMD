@@ -95,6 +95,22 @@
       onUpdateError: (callback) => on("update:error", callback),
       removeUpdateListener: (handler) => UPDATE_CHANNELS.forEach((channel) => listeners[channel]?.delete(handler)),
       openReleases: () => invoke("open_external", { url: RELEASES_URL }),
+      check: () => checkForUpdates(true),
+      canInstall: () => invoke("updater_supported"),
+      // 应用内更新：下载签名更新包（latest.json 由发版流水线生成）、安装后重启
+      install: async (onProgress) => {
+        const update = await window.__TAURI__.updater.check();
+        if (!update) throw new Error("未找到可安装的更新包");
+        let total;
+        let downloaded = 0;
+        await update.downloadAndInstall((event) => {
+          if (event.event === "Started") total = event.data.contentLength;
+          else if (event.event === "Progress") downloaded += event.data.chunkLength;
+          else return;
+          onProgress?.(downloaded, total);
+        });
+        await window.__TAURI__.process.relaunch();
+      },
     },
     // 由 Rust 发出请求，不受跨域限制；可访问的地址由 capabilities/default.json 限定
     net: {

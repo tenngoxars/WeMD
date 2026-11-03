@@ -24,6 +24,8 @@ notify = "8"
 # 删除文件与文件夹移到系统回收站（对应 Electron 的 shell.trashItem）
 trash = "5"
 tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2.14.1"
+tauri-plugin-process = "2.4.0"
 
 [features]
 # 测试构建专用，正式包不启用
