@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-contextBridge.exposeInMainWorld('electron', {
-    isElectron: true,
+contextBridge.exposeInMainWorld('wemdDesktop', {
     platform: process.platform,
 
     fs: {

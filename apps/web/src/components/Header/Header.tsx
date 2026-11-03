@@ -53,7 +53,7 @@ export function Header() {
 
   const uiTheme = useUITheme((state) => state.theme);
   const setTheme = useUITheme((state) => state.setTheme);
-  const { isElectron, isWindows, platform } = useWindowControls();
+  const { isDesktop, isWindows, platform } = useWindowControls();
   const logoSrc = resolveAppAssetPath(
     uiTheme === "dark" ? "favicon-light.svg" : "favicon-dark.svg",
   );
@@ -111,7 +111,7 @@ export function Header() {
             label={uiTheme === "dark" ? "亮色模式" : "暗色模式"}
             onClick={() => setTheme(uiTheme === "dark" ? "default" : "dark")}
           />
-          {!isElectron && (
+          {!isDesktop && (
             <FloatingToolbarButton
               icon={<Layers size={18} strokeWidth={2} />}
               label="存储模式"
@@ -148,7 +148,7 @@ export function Header() {
       )}
 
       {/* 隐藏标题栏由拖拽区与 Windows 窗控共同布局，避免两个命中区域重叠 */}
-      {isElectron && (
+      {isDesktop && (
         <div className={`hidden-titlebar ${autoHide ? "is-active" : ""}`}>
           <div className="hidden-titlebar-drag-region" aria-hidden="true" />
           {autoHide && isWindows && <WindowControls variant="compact" />}
@@ -166,7 +166,7 @@ export function Header() {
           </div>
           <span className="header-divider" aria-hidden="true" />
           <nav className="header-nav" aria-label="编辑器设置">
-            {!isElectron && (
+            {!isDesktop && (
               <button
                 className="header-nav-button"
                 onClick={() => setShowStorageModal(true)}

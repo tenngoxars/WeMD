@@ -9,7 +9,7 @@ export function useActiveArticleKey(): string {
   const activeId = useHistoryStore((state) => state.activeId);
   const currentFile = useFileStore((state) => state.currentFile);
   const workspaceRevision = useFileStore((state) => state.workspaceRevision);
-  const isFileMode = platform.isElectron || type === "filesystem";
+  const isFileMode = platform.isDesktop || type === "filesystem";
 
   if (isFileMode) {
     return `file:${workspaceRevision}:${currentFile?.path ?? "draft"}`;

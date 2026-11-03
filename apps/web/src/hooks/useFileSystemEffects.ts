@@ -11,12 +11,12 @@ import {
   flattenFiles,
   LAST_FILE_KEY,
   WORKSPACE_KEY,
-  type ElectronAPI,
+  type DesktopFsBridge,
 } from "./useFileSystemHelpers";
 
 interface UseFileSystemEffectsParams {
   enabled: boolean;
-  electron: ElectronAPI | null;
+  desktop: DesktopFsBridge | null;
   adapter: StorageAdapter | null;
   storageReady: boolean;
   storageType: StorageType;
@@ -64,7 +64,7 @@ const getBrowserStorage = (): Storage | null => {
 
 export function useFileSystemEffects({
   enabled,
-  electron,
+  desktop,
   adapter,
   storageReady,
   storageType,
@@ -114,7 +114,7 @@ export function useFileSystemEffects({
   useEffect(() => {
     if (!enabled) return;
     const storage = getBrowserStorage();
-    if (electron) {
+    if (desktop) {
       const saved = storage?.getItem?.(WORKSPACE_KEY);
       if (saved) {
         void loadWorkspace(saved);
@@ -162,40 +162,40 @@ export function useFileSystemEffects({
       setWorkspacePath("浏览器存储");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, electron, storageReady, storageType]);
+  }, [enabled, desktop, storageReady, storageType]);
 
   useEffect(() => {
     if (!enabled) return;
-    if (!electron) return;
-    const handler = electron.fs.onRefresh(() => {
+    if (!desktop) return;
+    const handler = desktop.fs.onRefresh(() => {
       void refreshFiles();
     });
     return () => {
-      electron.fs.removeRefreshListener(handler);
+      desktop.fs.removeRefreshListener(handler);
     };
-  }, [enabled, refreshFiles, electron]);
+  }, [enabled, refreshFiles, desktop]);
 
   useEffect(() => {
     if (!enabled) return;
-    if (!electron) return;
-    electron.fs.onMenuNewFile(() => {
+    if (!desktop) return;
+    desktop.fs.onMenuNewFile(() => {
       void createFileRef.current();
     });
-    electron.fs.onMenuSave(() => {
+    desktop.fs.onMenuSave(() => {
       void saveFileRef.current();
     });
-    electron.fs.onMenuSwitchWorkspace(() => {
+    desktop.fs.onMenuSwitchWorkspace(() => {
       void selectWorkspaceRef.current();
     });
 
     return () => {
-      electron.fs.removeAllListeners();
+      desktop.fs.removeAllListeners();
     };
-  }, [enabled, electron]);
+  }, [enabled, desktop]);
 
   useEffect(() => {
     if (!enabled) return;
-    if (electron) return;
+    if (desktop) return;
     if (!adapter || !storageReady || storageType !== "filesystem") return;
 
     const scheduleRefresh = () => {
@@ -225,7 +225,7 @@ export function useFileSystemEffects({
         focusRefreshTimer.current = null;
       }
     };
-  }, [enabled, electron, adapter, storageReady, storageType, isLoading]);
+  }, [enabled, desktop, adapter, storageReady, storageType, isLoading]);
 
   useEffect(() => {
     if (!enabled) return;

@@ -16,7 +16,7 @@ import {
   convertAdapterFilesToTreeItems,
   convertToTreeItems,
   flattenFiles,
-  getElectron,
+  getDesktopFs,
   joinPath,
   LAST_FILE_KEY,
   splitPath,
@@ -41,7 +41,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
     ready: storageReady,
     type: storageType,
   } = useStorageContext();
-  const electron = getElectron();
+  const desktop = getDesktopFs();
   const {
     workspacePath,
     workspaceRevision,
@@ -115,11 +115,11 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
   const refreshFiles = useCallback(
     async (dir?: string) => {
       const refreshGeneration = fileRefreshGenerationRef.current;
-      if (electron) {
+      if (desktop) {
         const target = dir || workspacePath;
         if (!target) return;
 
-        const res = await electron.fs.listFiles(target);
+        const res = await desktop.fs.listFiles(target);
         if (
           refreshGeneration === fileRefreshGenerationRef.current &&
           res.success &&
@@ -144,16 +144,16 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [workspacePath, electron, adapter, storageReady],
+    [workspacePath, desktop, adapter, storageReady],
   );
 
   const loadWorkspace = useCallback(
     async (path: string) => {
-      if (electron) {
+      if (desktop) {
         setLoading(true);
         invalidateFileRefreshes();
         try {
-          const res = await electron.fs.setWorkspace(path);
+          const res = await desktop.fs.setWorkspace(path);
           if (res.success) {
             resetActiveFile();
             setFiles([]);
@@ -179,7 +179,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       await refreshFiles();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [electron, invalidateFileRefreshes, resetActiveFile],
+    [desktop, invalidateFileRefreshes, resetActiveFile],
   );
 
   const openFile = useCallback(
@@ -201,9 +201,9 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
           title: activeFile.title || stripMarkdownExtension(activeFile.name),
         });
 
-        if (electron) {
+        if (desktop) {
           try {
-            const res = await electron.fs.saveFile({
+            const res = await desktop.fs.saveFile({
               filePath: activeFile.path,
               content: fullContent,
             });
@@ -234,8 +234,8 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       let content = "";
       let success = false;
 
-      if (electron) {
-        const res = await electron.fs.readFile(file.path);
+      if (desktop) {
+        const res = await desktop.fs.readFile(file.path);
         if (res.success && typeof res.content === "string") {
           content = res.content;
           success = true;
@@ -272,7 +272,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       localStorage.setItem(LAST_FILE_KEY, file.path);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setMarkdown, electron, adapter, storageReady, refreshFiles],
+    [setMarkdown, desktop, adapter, storageReady, refreshFiles],
   );
 
   const createFile = useCallback(
@@ -297,9 +297,9 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
         const filename = normalizeMarkdownFileName(initialTitle);
         const targetPath = joinPath(folderPath, filename);
 
-        if (electron) {
+        if (desktop) {
           if (!workspacePath) return;
-          const res = await electron.fs.createFile({
+          const res = await desktop.fs.createFile({
             filename: targetPath,
             content: initialContent,
           });
@@ -349,7 +349,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       workspacePath,
       refreshFiles,
       openFile,
-      electron,
+      desktop,
       adapter,
       storageReady,
       resolveAvailableFilePath,
@@ -358,7 +358,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
 
   const persistActiveFile = useActiveFilePersistence({
     adapter,
-    electron,
+    desktop,
     storageReady,
     setIsDirty,
     setLastSavedAt,
@@ -374,12 +374,12 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
   );
 
   const selectWorkspace = useCallback(async () => {
-    if (electron) {
+    if (desktop) {
       setLoading(true);
       try {
         if (!(await persistActiveFile(false, true))) return;
 
-        const res = await electron.fs.selectWorkspace();
+        const res = await desktop.fs.selectWorkspace();
         if (res.success && res.path) {
           await loadWorkspace(res.path);
         }
@@ -419,7 +419,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
   }, [
     adapter,
     bumpWorkspaceRevision,
-    electron,
+    desktop,
     invalidateFileRefreshes,
     loadWorkspace,
     persistActiveFile,
@@ -440,8 +440,8 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       }
 
       let content = "";
-      if (electron) {
-        const readRes = await electron.fs.readFile(file.path);
+      if (desktop) {
+        const readRes = await desktop.fs.readFile(file.path);
         if (!readRes.success || typeof readRes.content !== "string") {
           toast.error(readRes.error || "读取文件失败");
           return;
@@ -474,9 +474,9 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       let errorMsg = "";
       let nextPath = file.path;
       let nextName = file.name;
-      if (electron) {
+      if (desktop) {
         if (targetPath !== file.path) {
-          const renameRes = await electron.fs.renameFile({
+          const renameRes = await desktop.fs.renameFile({
             oldPath: file.path,
             newName: targetFileName,
           });
@@ -488,7 +488,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
           }
         }
         if (success || targetPath === file.path) {
-          const saveRes = await electron.fs.saveFile({
+          const saveRes = await desktop.fs.saveFile({
             filePath: nextPath,
             content: fullContent,
           });
@@ -535,15 +535,15 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       await refreshFiles();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [refreshFiles, currentFile, electron, adapter, storageReady],
+    [refreshFiles, currentFile, desktop, adapter, storageReady],
   );
 
   const deleteFile = useCallback(
     async (file: FileItem) => {
       let success = false;
 
-      if (electron) {
-        const res = await electron.fs.deleteFile(file.path);
+      if (desktop) {
+        const res = await desktop.fs.deleteFile(file.path);
         success = res.success;
       } else if (adapter && storageReady) {
         try {
@@ -568,11 +568,11 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [refreshFiles, currentFile, setMarkdown, electron, adapter, storageReady],
+    [refreshFiles, currentFile, setMarkdown, desktop, adapter, storageReady],
   );
 
   const folderActions = useFileSystemFolderActions({
-    electron,
+    desktop,
     adapter,
     refreshFiles,
     currentFile,
@@ -584,7 +584,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
 
   useFileSystemEffects({
     enabled: enableEffects,
-    electron,
+    desktop,
     adapter,
     storageReady,
     storageType,

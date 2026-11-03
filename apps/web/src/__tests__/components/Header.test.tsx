@@ -96,7 +96,7 @@ describe("Header", () => {
     );
 
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: false,
+      isDesktop: false,
       isWindows: false,
       isMac: true,
       platform: "web",
@@ -176,7 +176,7 @@ describe("Header", () => {
 
   it("does not render window controls on Web/Mac", () => {
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: false,
+      isDesktop: false,
       isWindows: false,
       isMac: true,
       platform: "web",
@@ -191,9 +191,9 @@ describe("Header", () => {
     expect(screen.queryByLabelText("关闭")).not.toBeInTheDocument();
   });
 
-  it("renders window controls on Windows Electron", () => {
+  it("renders window controls on Windows desktop", () => {
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: true,
+      isDesktop: true,
       isWindows: true,
       isMac: false,
       platform: "win32",
@@ -243,9 +243,9 @@ describe("Header", () => {
     ).toBeInTheDocument();
   });
 
-  it("keeps a window drag region when the header is hidden in Electron", () => {
+  it("keeps a window drag region when the header is hidden in desktop", () => {
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: true,
+      isDesktop: true,
       isWindows: false,
       isMac: true,
       platform: "darwin",
@@ -270,7 +270,7 @@ describe("Header", () => {
 
   it("places Windows controls beside the hidden drag region", () => {
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: true,
+      isDesktop: true,
       isWindows: true,
       isMac: false,
       platform: "win32",
@@ -295,7 +295,7 @@ describe("Header", () => {
     expect(mockClose).toHaveBeenCalledOnce();
   });
 
-  it("does not render the hidden titlebar outside Electron", () => {
+  it("does not render the hidden titlebar outside desktop", () => {
     render(<Header />);
 
     fireEvent.click(screen.getByLabelText("隐藏标题栏"));

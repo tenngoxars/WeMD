@@ -360,7 +360,7 @@
   color: var(--text-primary);
 }
 
-/* 顶栏纯图标按钮的样式化 tooltip（在按钮下方展开，兼容 Electron 无边框窗口） */
+/* 顶栏纯图标按钮的样式化 tooltip（在按钮下方展开，兼容桌面端无边框窗口） */
 .app-header [data-tooltip] {
   position: relative;
 }

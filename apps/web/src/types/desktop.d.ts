@@ -1,5 +1,11 @@
-interface ElectronAPI {
-  isElectron: boolean;
+export interface DesktopUpdateEventData {
+  latestVersion: string;
+  currentVersion: string;
+  releaseNotes?: string;
+  force?: boolean;
+}
+
+export interface DesktopBridge {
   platform: string;
   fs: {
     selectWorkspace: () => Promise<{
@@ -79,6 +85,17 @@ interface ElectronAPI {
     close: () => Promise<void>;
     isMaximized: () => Promise<boolean>;
   };
+  update?: {
+    onUpdateAvailable?: (
+      callback: (data: DesktopUpdateEventData) => void,
+    ) => () => void;
+    onUpToDate?: (
+      callback: (data: { currentVersion: string }) => void,
+    ) => () => void;
+    onUpdateError?: (callback: () => void) => () => void;
+    removeUpdateListener?: (handler: (() => void) | undefined) => void;
+    openReleases?: () => void;
+  };
   shell?: {
     openExternal: (url: string) => Promise<void>;
   };
@@ -97,7 +114,7 @@ interface ElectronAPI {
 
 declare global {
   interface Window {
-    electron?: ElectronAPI;
+    wemdDesktop?: DesktopBridge;
   }
 }
 

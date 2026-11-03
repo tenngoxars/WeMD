@@ -1,5 +1,4 @@
-// 原型阶段：在 Tauri 里提供与 Electron preload 同形的 window.electron，前端无需改动即可跑主流程。
-// 阶段 2 会收敛为前端的平台适配层，届时删除本文件。
+// Tauri 端的桌面桥实现：向前端注入 window.wemdDesktop，接口与 Electron preload 一致（类型见 apps/web/src/types/desktop.d.ts）。
 (() => {
   const invoke = (cmd, args) => window.__TAURI__.core.invoke(cmd, args);
   const currentWindow = () => window.__TAURI__.window.getCurrentWindow();
@@ -10,8 +9,7 @@
   // 菜单、文件监听、更新事件在原型里没有来源，返回占位句柄供前端解绑
   const noEvents = () => () => {};
 
-  window.electron = {
-    isElectron: true,
+  window.wemdDesktop = {
     platform,
     fs: {
       selectWorkspace: () => invoke("workspace_select"),

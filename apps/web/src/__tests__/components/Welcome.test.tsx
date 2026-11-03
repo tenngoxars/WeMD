@@ -26,7 +26,7 @@ describe("Welcome", () => {
       selector({ theme } as ReturnType<typeof useUITheme.getState>),
     );
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: false,
+      isDesktop: false,
       isWindows: false,
       isMac: false,
       platform: undefined,
@@ -59,9 +59,9 @@ describe("Welcome", () => {
     expect(selectWorkspace).toHaveBeenCalledOnce();
   });
 
-  it("Windows Electron 欢迎页提供可用的窗口控制", () => {
+  it("Windows 桌面端欢迎页提供可用的窗口控制", () => {
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: true,
+      isDesktop: true,
       isWindows: true,
       isMac: false,
       platform: "win32",

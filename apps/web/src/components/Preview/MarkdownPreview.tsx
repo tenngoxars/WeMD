@@ -32,6 +32,7 @@ import {
   loadMathJax,
   needsMathJaxPreview,
 } from "../../utils/mathJaxLoader";
+import { getDesktop } from "../../lib/platformAdapter";
 import "./MarkdownPreview.css";
 
 interface MarkdownPreviewProps {
@@ -349,9 +350,10 @@ export function MarkdownPreview({
         onClick={(e) => {
           const target = e.target as HTMLElement;
           const link = target.closest("a");
-          if (link && link.href && window.electron?.shell?.openExternal) {
+          const shell = getDesktop()?.shell;
+          if (link && link.href && shell?.openExternal) {
             e.preventDefault();
-            window.electron.shell.openExternal(link.href);
+            shell.openExternal(link.href);
           }
         }}
       >

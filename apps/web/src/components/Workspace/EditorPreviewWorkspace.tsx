@@ -61,7 +61,7 @@ export function EditorPreviewWorkspace({
   const currentFile = useFileStore((state) => state.currentFile);
   const workspaceRevision = useFileStore((state) => state.workspaceRevision);
   const fileMode =
-    platform.isElectron || Boolean(currentFile) || workspaceRevision > 0;
+    platform.isDesktop || Boolean(currentFile) || workspaceRevision > 0;
   const articleKey = fileMode
     ? `file:${workspaceRevision}:${currentFile?.path ?? "draft"}`
     : `history:${activeId ?? "draft"}`;

@@ -74,20 +74,19 @@ describe("公众号背景文章的 Mac Bar 布局", () => {
         setItem: vi.fn(),
       },
     });
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: {
         clipboard: {
           writeHTML: mocked.clipboardWrite.mockResolvedValue({ success: true }),
         },
-        isElectron: true,
         platform: "darwin",
       },
     });
   });
 
   afterEach(() => {
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: undefined,
     });

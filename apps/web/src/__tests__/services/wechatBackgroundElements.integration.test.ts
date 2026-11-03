@@ -130,13 +130,12 @@ describe("公众号背景文章综合元素复制", () => {
         setItem: vi.fn(),
       },
     });
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: {
         clipboard: {
           writeHTML: mocked.clipboardWrite.mockResolvedValue({ success: true }),
         },
-        isElectron: true,
         platform: "darwin",
       },
     });
@@ -193,7 +192,7 @@ describe("公众号背景文章综合元素复制", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: undefined,
     });

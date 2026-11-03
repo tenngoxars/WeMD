@@ -9,7 +9,7 @@ import {
   applyMarkdownFileMeta,
   stripMarkdownExtension,
 } from "../utils/markdownFileMeta";
-import type { ElectronAPI } from "./useFileSystemHelpers";
+import type { DesktopFsBridge } from "./useFileSystemHelpers";
 
 interface ActiveFileSnapshot {
   file: FileItem;
@@ -21,7 +21,7 @@ interface ActiveFileSnapshot {
 
 interface UseActiveFilePersistenceOptions {
   adapter: StorageAdapter | null;
-  electron: ElectronAPI | null;
+  desktop: DesktopFsBridge | null;
   storageReady: boolean;
   setIsDirty: ReturnType<typeof useFileStore.getState>["setIsDirty"];
   setLastSavedAt: ReturnType<typeof useFileStore.getState>["setLastSavedAt"];
@@ -35,7 +35,7 @@ const MAX_CURRENT_SAVE_ATTEMPTS = 2;
 
 export function useActiveFilePersistence({
   adapter,
-  electron,
+  desktop,
   storageReady,
   setIsDirty,
   setLastSavedAt,
@@ -103,8 +103,8 @@ export function useActiveFilePersistence({
           let success = false;
           let errorMessage = "";
           try {
-            if (electron) {
-              const result = await electron.fs.saveFile({
+            if (desktop) {
+              const result = await desktop.fs.saveFile({
                 filePath: snapshot.file.path,
                 content: snapshot.content,
               });
@@ -151,7 +151,7 @@ export function useActiveFilePersistence({
     [
       adapter,
       createActiveFileSnapshot,
-      electron,
+      desktop,
       isActiveFileSnapshotCurrent,
       setIsDirty,
       setLastSavedAt,
