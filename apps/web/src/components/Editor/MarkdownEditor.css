@@ -428,3 +428,13 @@
   .cm-scroller::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* 组词期间不画选区和光标：WebKitGTK 会把输入法高亮的那段同步成选区，显示成一块底色，光标也停在该段末尾 */
+.cm-editor.cm-ime-composing .cm-selectionLayer,
+.cm-editor.cm-ime-composing .cm-cursorLayer {
+  display: none;
+}
+
+.cm-editor.cm-ime-composing .cm-content ::selection {
+  background: transparent;
+}

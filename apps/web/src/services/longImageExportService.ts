@@ -2,7 +2,7 @@
  * 文章导出为长图：复用复制链路的最终 HTML，按手机宽度排版后截图为 PNG
  */
 
-import { toBlob } from "html-to-image";
+import { toCanvas } from "html-to-image";
 import toast from "react-hot-toast";
 import {
   renderWechatContainer,
@@ -19,6 +19,9 @@ const MAX_CANVAS_SIDE = 16_384;
 // 1×1 浅灰 PNG，图床未开跨域时用它占位，避免整张图导出失败
 const IMAGE_PLACEHOLDER =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN4+PDhfwAJLAPuzvzE0gAAAABJRU5ErkJggg==";
+// 1×1 透明 GIF，截图时占住图片的位置
+const TRANSPARENT_PIXEL =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 /** 在画布尺寸上限内取尽量高的倍率，超长文章自动降低清晰度而不是导出失败 */
 export function computeExportPixelRatio(width: number, height: number): number {
@@ -37,24 +40,142 @@ const buildFileName = (markdown: string): string => {
   return `${name}.png`;
 };
 
-// 图床没开跨域时截图库读不到像素，提前找出来提示用户
-const findBlockedImages = async (container: HTMLElement) => {
-  const sources = new Set(
-    Array.from(container.querySelectorAll("img"))
-      .map((img) => img.src)
-      .filter((src) => /^https?:/i.test(src)),
+interface ImageSlot {
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  radius: number;
+  contain: boolean;
+}
+
+/**
+ * 截图前把图片换成透明占位并记下位置，截完再把原图直接画到画布上。
+ * WebKit（Safari、Tauri 桌面版）不绘制 SVG foreignObject 里约 300KB 以上的 data URI 图片，
+ * Mermaid 图与照片经截图库内联后都会超过，直接绘制各引擎结果一致。
+ */
+const takeOutImages = (container: HTMLElement): ImageSlot[] => {
+  const origin = container.getBoundingClientRect();
+  const px = (value: string) => parseFloat(value) || 0;
+  return Array.from(container.querySelectorAll("img")).flatMap((img) => {
+    const rect = img.getBoundingClientRect();
+    if (!img.src || rect.width === 0 || rect.height === 0) return [];
+    const style = getComputedStyle(img);
+    const left = px(style.borderLeftWidth) + px(style.paddingLeft);
+    const top = px(style.borderTopWidth) + px(style.paddingTop);
+    const width =
+      rect.width - left - px(style.borderRightWidth) - px(style.paddingRight);
+    const height =
+      rect.height - top - px(style.borderBottomWidth) - px(style.paddingBottom);
+    const corner = style.borderTopLeftRadius;
+    const slot: ImageSlot = {
+      src: img.currentSrc || img.src,
+      x: rect.left - origin.left + left,
+      y: rect.top - origin.top + top,
+      width,
+      height,
+      radius: corner.endsWith("%")
+        ? (Math.min(width, height) * px(corner)) / 100
+        : px(corner),
+      contain: style.objectFit === "contain",
+    };
+    // 锁定尺寸后再换占位，版式不变
+    img.style.setProperty("width", `${rect.width}px`, "important");
+    img.style.setProperty("height", `${rect.height}px`, "important");
+    img.removeAttribute("srcset");
+    img.src = TRANSPARENT_PIXEL;
+    return [slot];
+  });
+};
+
+/**
+ * 读取失败返回 null（图床没开跨域等）。远程图片绕过缓存重新请求：
+ * 预览里的 <img> 可能缓存了不带 CORS 头的响应，WebKit 复用它会读取失败。
+ */
+const loadImage = async (
+  src: string,
+): Promise<{ image: HTMLImageElement; release: () => void } | null> => {
+  let url = src;
+  try {
+    if (/^https?:/i.test(src)) {
+      const response = await fetch(src, { mode: "cors", cache: "no-store" });
+      if (!response.ok) return null;
+      url = URL.createObjectURL(await response.blob());
+    }
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    return {
+      image,
+      release: () => url !== src && URL.revokeObjectURL(url),
+    };
+  } catch {
+    if (url !== src) URL.revokeObjectURL(url);
+    return null;
+  }
+};
+
+/** roundRect 在 Safari 15.x、Firefox ≤111、Chrome ≤98 不存在，缺失时用 arcTo 画同样的圆角路径 */
+const roundedRect = (
+  context: CanvasRenderingContext2D,
+  { x, y, width, height, radius }: ImageSlot,
+) => {
+  if (typeof context.roundRect === "function") {
+    context.roundRect(x, y, width, height, radius);
+    return;
+  }
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+  context.moveTo(x + r, y);
+  context.arcTo(x + width, y, x + width, y + height, r);
+  context.arcTo(x + width, y + height, x, y + height, r);
+  context.arcTo(x, y + height, x, y, r);
+  context.arcTo(x, y, x + width, y, r);
+  context.closePath();
+};
+
+/** 把原图画回截图画布，返回读取失败的远程图片地址（去重） */
+const drawImages = async (
+  canvas: HTMLCanvasElement,
+  slots: ImageSlot[],
+): Promise<string[]> => {
+  if (slots.length === 0) return [];
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("浏览器不支持画布");
+  const [placeholder, ...loaded] = await Promise.all([
+    loadImage(IMAGE_PLACEHOLDER),
+    ...slots.map((slot) => loadImage(slot.src)),
+  ]);
+  context.scale(canvas.width / EXPORT_WIDTH, canvas.width / EXPORT_WIDTH);
+  slots.forEach((slot, index) => {
+    const image = loaded[index]?.image ?? placeholder?.image;
+    if (!image) return;
+    let { x, y, width, height } = slot;
+    if (slot.contain && loaded[index]) {
+      const scale = Math.min(
+        width / image.naturalWidth,
+        height / image.naturalHeight,
+      );
+      x += (width - image.naturalWidth * scale) / 2;
+      y += (height - image.naturalHeight * scale) / 2;
+      width = image.naturalWidth * scale;
+      height = image.naturalHeight * scale;
+    }
+    context.save();
+    context.beginPath();
+    roundedRect(context, slot);
+    context.clip();
+    context.drawImage(image, x, y, width, height);
+    context.restore();
+  });
+  [placeholder, ...loaded].forEach((item) => item?.release());
+  return Array.from(
+    new Set(
+      slots
+        .filter((slot, index) => !loaded[index] && /^https?:/i.test(slot.src))
+        .map((slot) => slot.src),
+    ),
   );
-  const blocked = await Promise.all(
-    Array.from(sources).map(async (src) => {
-      try {
-        const response = await fetch(src, { mode: "cors" });
-        return response.ok ? null : src;
-      } catch {
-        return src;
-      }
-    }),
-  );
-  return blocked.filter((src): src is string => src !== null);
 };
 
 const downloadBlob = (blob: Blob, fileName: string) => {
@@ -114,7 +235,7 @@ export async function exportLongImage(
         img.complete ? undefined : img.decode().catch(() => undefined),
       ),
     );
-    const blockedImages = await findBlockedImages(container);
+    const slots = takeOutImages(container);
     // 滑动图组等仍可滚动的区域只截可见部分，隐藏滚动条避免它被画进图里
     container.querySelectorAll<HTMLElement>("*").forEach((el) => {
       const { overflowX, overflowY } = getComputedStyle(el);
@@ -124,15 +245,20 @@ export async function exportLongImage(
     });
 
     const height = container.scrollHeight;
-    const blob = await toBlob(container, {
+    const canvas = await toCanvas(container, {
       width: EXPORT_WIDTH,
       height,
       pixelRatio: computeExportPixelRatio(EXPORT_WIDTH, height),
       backgroundColor: "#ffffff",
+      // 主题里的背景图仍由截图库内联，读不到时用占位
       imagePlaceholder: IMAGE_PLACEHOLDER,
       // 离屏容器本身透明且固定定位，截图副本要恢复为可见的普通流
       style: { opacity: "1", position: "static", zIndex: "auto" },
     });
+    const blockedImages = await drawImages(canvas, slots);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/png"),
+    );
     if (!blob) throw new Error("浏览器未生成图片");
 
     downloadBlob(blob, buildFileName(markdown));
