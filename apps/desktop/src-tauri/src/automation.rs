@@ -28,7 +28,9 @@ pub fn start(app: AppHandle) {
         let listener = TcpListener::bind("127.0.0.1:9333").expect("automation 端口被占用");
         let mut next = 0u64;
         for stream in listener.incoming().flatten() {
-            let Ok(read_half) = stream.try_clone() else { continue };
+            let Ok(read_half) = stream.try_clone() else {
+                continue;
+            };
             let mut writer = stream;
             for line in BufReader::new(read_half).lines().map_while(Result::ok) {
                 next += 1;
@@ -38,7 +40,9 @@ pub fn start(app: AppHandle) {
                     "(async () => {{ let v; try {{ v = {{ ok: await (0, eval)({line}) }}; }} catch (e) {{ v = {{ err: String(e) }}; }} \
                      window.__TAURI__.event.emit('automation-reply', {{ id: {next}, value: JSON.stringify(v) }}); }})()"
                 );
-                let evaluated = app.get_webview_window("main").map(|w| w.eval(&script).is_ok());
+                let evaluated = app
+                    .get_webview_window("main")
+                    .map(|w| w.eval(&script).is_ok());
                 let reply = match evaluated {
                     Some(true) => rx
                         .recv_timeout(Duration::from_secs(90))

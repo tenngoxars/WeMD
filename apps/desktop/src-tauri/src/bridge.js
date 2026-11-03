@@ -132,6 +132,10 @@
     net: {
       fetch: (...args) => window.__TAURI__.http.fetch(...args),
     },
+    // 跳过 v1.6.1 直接升级时提示一次迁移方法（migration.rs）
+    migration: {
+      takeHint: () => invoke("migration_take_hint"),
+    },
     shell: {
       openExternal: (url) => invoke("open_external", { url }),
     },

@@ -118,6 +118,10 @@ export interface DesktopBridge {
   net?: {
     fetch: typeof fetch;
   };
+  /** 跳过 v1.6.1 直接升级时要不要提示迁移方法；只会返回一次 true（仅 Tauri） */
+  migration?: {
+    takeHint: () => Promise<boolean>;
+  };
 }
 
 declare global {

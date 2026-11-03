@@ -78,6 +78,7 @@ fn main() {
             open_external,
             updater_supported,
             migration::migration_delete,
+            migration::migration_take_hint,
         ])
         .setup(|app| {
             let builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())

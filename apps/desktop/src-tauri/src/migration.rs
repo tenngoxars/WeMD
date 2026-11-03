@@ -1,5 +1,6 @@
 // Electron 版设置迁移：读取 Electron userData 下的 wemd-migration.json（由 apps/electron/src/migration/exportSettings.ts 导出），
 // 启动时在 Rust 侧读取，生成初始化脚本在页面脚本之前同步写入 localStorage，再调用 migration_delete 删除。
+// 没有备份但有旧版数据（多半跳过了 v1.6.1）时，页面通过 migration_take_hint 得知并提示一次如何迁移。
 // 任何日志都不得输出文件内容（含 API Key）
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -8,6 +9,9 @@ use tauri::{AppHandle, Manager};
 
 // 导入标记：不在白名单内，导出端不会碰它；初始化脚本每次页面加载都会执行，靠它保证只导入一次
 const MIGRATION_MARK: &str = "wemd-electron-migrated-at";
+
+// 已处理标记（在 Tauri 自己的配置目录）：导入过或提示过就不再提示，导入后旧版目录仍在也不会误报
+const HANDLED_MARK: &str = "electron-migration-handled";
 
 // 白名单需与 apps/electron/src/migration/exportSettings.ts 的 MIGRATION_KEYS 保持同步
 const MIGRATION_KEYS: &[&str] = &[
@@ -110,7 +114,38 @@ fn script(entries: &BTreeMap<String, String>) -> String {
 
 /// 有可导入的设置时返回初始化脚本（在页面脚本之前同步写入 localStorage）
 pub fn init_script(app: &AppHandle) -> Option<String> {
-    read(&migration_file(&app.path().config_dir().ok()?)).map(|entries| script(&entries))
+    let js =
+        read(&migration_file(&app.path().config_dir().ok()?)).map(|entries| script(&entries))?;
+    mark_handled(app);
+    Some(js)
+}
+
+fn mark_handled(app: &AppHandle) {
+    if let Ok(dir) = app.path().app_config_dir() {
+        let _ =
+            std::fs::create_dir_all(&dir).and_then(|_| std::fs::write(dir.join(HANDLED_MARK), ""));
+    }
+}
+
+/// Electron 的 localStorage 目录在、标记不在：用户用过旧版，却没有经 v1.6.1 导出备份
+fn needs_hint(config_dir: &Path, app_config_dir: &Path) -> bool {
+    config_dir.join("WeMD").join("Local Storage").is_dir()
+        && !app_config_dir.join(HANDLED_MARK).exists()
+}
+
+/// 页面启动时调用一次；返回 true 后写入标记，之后都返回 false。
+/// init_script 在页面加载前执行，本次已导入时标记已写，不会提示
+#[tauri::command]
+pub fn migration_take_hint(app: AppHandle) -> bool {
+    let (Ok(config), Ok(app_config)) = (app.path().config_dir(), app.path().app_config_dir())
+    else {
+        return false;
+    };
+    let hint = needs_hint(&config, &app_config);
+    if hint {
+        mark_handled(&app);
+    }
+    hint
 }
 
 fn delete(config_dir: &Path) {
@@ -143,7 +178,10 @@ mod tests {
             br#"{"version":1,"exportedAt":"x","entries":{"wemd-ai-config":"k","wemd-skipped-version":"1","wemd-table-wrap":1}}"#,
         )
         .unwrap();
-        assert_eq!(entries.into_iter().collect::<Vec<_>>(), vec![("wemd-ai-config".into(), "k".into())]);
+        assert_eq!(
+            entries.into_iter().collect::<Vec<_>>(),
+            vec![("wemd-ai-config".into(), "k".into())]
+        );
         assert!(parse(br#"{"version":2,"entries":{}}"#).is_none());
         assert!(parse(b"garbage").is_none());
     }
@@ -160,7 +198,11 @@ mod tests {
         std::fs::write(&file, br#"{"version":2,"entries":{}}"#).unwrap();
         assert!(read(&file).is_none());
         assert!(!file.exists());
-        std::fs::write(&file, br#"{"version":1,"entries":{"wemd-ui-theme":"dark"}}"#).unwrap();
+        std::fs::write(
+            &file,
+            br#"{"version":1,"entries":{"wemd-ui-theme":"dark"}}"#,
+        )
+        .unwrap();
         assert_eq!(read(&file).unwrap()["wemd-ui-theme"], "dark");
         assert!(file.exists());
         std::fs::remove_dir_all(&dir).unwrap();
@@ -183,13 +225,37 @@ mod tests {
         let file = migration_file(&dir);
         let parent = file.parent().unwrap();
         std::fs::create_dir_all(parent).unwrap();
-        for name in ["wemd-migration.json", "wemd-migration.json.42.tmp", "wemd-migration.json.x.tmp", "wemd-migration.json..tmp"] {
+        for name in [
+            "wemd-migration.json",
+            "wemd-migration.json.42.tmp",
+            "wemd-migration.json.x.tmp",
+            "wemd-migration.json..tmp",
+        ] {
             std::fs::write(parent.join(name), "").unwrap();
         }
         delete(&dir);
-        let mut left: Vec<_> = std::fs::read_dir(parent).unwrap().map(|e| e.unwrap().file_name()).collect();
+        let mut left: Vec<_> = std::fs::read_dir(parent)
+            .unwrap()
+            .map(|e| e.unwrap().file_name())
+            .collect();
         left.sort();
-        assert_eq!(left, ["wemd-migration.json..tmp", "wemd-migration.json.x.tmp"]);
+        assert_eq!(
+            left,
+            ["wemd-migration.json..tmp", "wemd-migration.json.x.tmp"]
+        );
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn hint_only_with_old_data_and_no_mark() {
+        let root = std::env::temp_dir().join(format!("wemd-mig-hint-{}", std::process::id()));
+        let (config, app_config) = (root.join("config"), root.join("app"));
+        assert!(!needs_hint(&config, &app_config));
+        std::fs::create_dir_all(config.join("WeMD").join("Local Storage")).unwrap();
+        assert!(needs_hint(&config, &app_config));
+        std::fs::create_dir_all(&app_config).unwrap();
+        std::fs::write(app_config.join(HANDLED_MARK), "").unwrap();
+        assert!(!needs_hint(&config, &app_config));
+        std::fs::remove_dir_all(&root).unwrap();
     }
 }

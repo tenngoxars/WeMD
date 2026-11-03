@@ -58,7 +58,10 @@ fn event_needs_refresh(roots: &[PathBuf], event: &Event) -> bool {
 /// 开始监听；返回的 Watcher 被丢弃即停止监听，去抖线程随之退出，未发出的刷新一并取消
 pub fn watch(app: AppHandle, root: PathBuf) -> notify::Result<Watcher> {
     let (tx, rx) = mpsc::channel::<()>();
-    let roots: Vec<PathBuf> = [Some(root.clone()), root.canonicalize().ok()].into_iter().flatten().collect();
+    let roots: Vec<PathBuf> = [Some(root.clone()), root.canonicalize().ok()]
+        .into_iter()
+        .flatten()
+        .collect();
     let mut watcher = notify::recommended_watcher(move |result: notify::Result<Event>| {
         if result.is_ok_and(|event| event_needs_refresh(&roots, &event)) {
             let _ = tx.send(());
@@ -105,22 +108,46 @@ mod tests {
         let roots = [PathBuf::from("/home/u/.cache/ws")];
         let event = |kind, path: &str| Event::new(kind).add_path(PathBuf::from(path));
         let modify = EventKind::Modify(ModifyKind::Any);
-        assert!(event_needs_refresh(&roots, &event(modify, "/home/u/.cache/ws/a.md")));
-        assert!(!event_needs_refresh(&roots, &event(modify, "/home/u/.cache/other/a.md")));
-        assert!(!event_needs_refresh(&roots, &event(EventKind::Access(AccessKind::Any), "/home/u/.cache/ws/a.md")));
+        assert!(event_needs_refresh(
+            &roots,
+            &event(modify, "/home/u/.cache/ws/a.md")
+        ));
+        assert!(!event_needs_refresh(
+            &roots,
+            &event(modify, "/home/u/.cache/other/a.md")
+        ));
+        assert!(!event_needs_refresh(
+            &roots,
+            &event(EventKind::Access(AccessKind::Any), "/home/u/.cache/ws/a.md")
+        ));
     }
 
     #[test]
     fn rename_of_dotted_dir_refreshes() {
         let roots = [PathBuf::from("/ws")];
         let rename = |mode, paths: &[&str]| {
-            paths.iter().fold(Event::new(EventKind::Modify(ModifyKind::Name(mode))), |e, p| e.add_path(PathBuf::from(p)))
+            paths.iter().fold(
+                Event::new(EventKind::Modify(ModifyKind::Name(mode))),
+                |e, p| e.add_path(PathBuf::from(p)),
+            )
         };
         // 移出工作区：只有不存在的旧路径
-        assert!(event_needs_refresh(&roots, &rename(RenameMode::From, &["/ws/notes.v1"])));
+        assert!(event_needs_refresh(
+            &roots,
+            &rename(RenameMode::From, &["/ws/notes.v1"])
+        ));
         // 改成隐藏名：旧路径可见即刷新
-        assert!(event_needs_refresh(&roots, &rename(RenameMode::Both, &["/ws/notes.v1", "/ws/.notes.v1"])));
-        assert!(!event_needs_refresh(&roots, &rename(RenameMode::Both, &["/ws/.a", "/ws/.b"])));
-        assert!(!event_needs_refresh(&roots, &rename(RenameMode::To, &["/other/x"])));
+        assert!(event_needs_refresh(
+            &roots,
+            &rename(RenameMode::Both, &["/ws/notes.v1", "/ws/.notes.v1"])
+        ));
+        assert!(!event_needs_refresh(
+            &roots,
+            &rename(RenameMode::Both, &["/ws/.a", "/ws/.b"])
+        ));
+        assert!(!event_needs_refresh(
+            &roots,
+            &rename(RenameMode::To, &["/other/x"])
+        ));
     }
 }

@@ -20,7 +20,9 @@ fn create_folder(root: &Path, name: &str) -> Value {
         return fail("文件夹已存在");
     }
     match fs::create_dir_all(&target) {
-        Ok(()) => json!({ "success": true, "path": target, "name": target.file_name().map(|n| n.to_string_lossy()) }),
+        Ok(()) => {
+            json!({ "success": true, "path": target, "name": target.file_name().map(|n| n.to_string_lossy()) })
+        }
         Err(e) => fail(e),
     }
 }
@@ -77,12 +79,18 @@ pub struct FolderRenamePayload {
 
 #[tauri::command]
 pub fn folder_rename(payload: FolderRenamePayload, state: State<Workspace>) -> Value {
-    with_root(&state, |root| rename_folder(root, Path::new(&payload.folder_path), &payload.new_name))
+    with_root(&state, |root| {
+        rename_folder(root, Path::new(&payload.folder_path), &payload.new_name)
+    })
 }
 
 /// 目标文件夹为空时表示工作区根目录
 fn target_dir(root: &Path, target_folder: &str) -> PathBuf {
-    if target_folder.is_empty() { root.to_path_buf() } else { PathBuf::from(target_folder) }
+    if target_folder.is_empty() {
+        root.to_path_buf()
+    } else {
+        PathBuf::from(target_folder)
+    }
 }
 
 fn move_folder(root: &Path, folder: &Path, target_folder: &str) -> Value {
@@ -125,7 +133,9 @@ pub struct MoveFolderPayload {
 #[tauri::command]
 pub fn folder_move_folder(payload: MoveFolderPayload, state: State<Workspace>) -> Value {
     let target = payload.target_folder.unwrap_or_default();
-    with_root(&state, |root| move_folder(root, Path::new(&payload.folder_path), &target))
+    with_root(&state, |root| {
+        move_folder(root, Path::new(&payload.folder_path), &target)
+    })
 }
 
 fn move_file(root: &Path, file: &Path, target_folder: &str) -> Value {
@@ -159,7 +169,9 @@ pub struct MoveFilePayload {
 #[tauri::command]
 pub fn folder_move(payload: MoveFilePayload, state: State<Workspace>) -> Value {
     let target = payload.target_folder.unwrap_or_default();
-    with_root(&state, |root| move_file(root, Path::new(&payload.file_path), &target))
+    with_root(&state, |root| {
+        move_file(root, Path::new(&payload.file_path), &target)
+    })
 }
 
 /// 列出文件夹里文件列表看不到的内容（隐藏项与非 Markdown 文件），供前端删除前确认
@@ -223,9 +235,14 @@ pub struct DeleteFolderPayload {
 }
 
 #[tauri::command]
-pub async fn folder_delete(payload: DeleteFolderPayload, state: State<'_, Workspace>) -> Result<Value, ()> {
+pub async fn folder_delete(
+    payload: DeleteFolderPayload,
+    state: State<'_, Workspace>,
+) -> Result<Value, ()> {
     let recursive = payload.recursive == Some(true);
-    Ok(with_root(&state, |root| delete_folder(root, Path::new(&payload.folder_path), recursive)))
+    Ok(with_root(&state, |root| {
+        delete_folder(root, Path::new(&payload.folder_path), recursive)
+    }))
 }
 
 #[cfg(test)]
@@ -239,16 +256,29 @@ mod tests {
         let sub = root.join("sub");
         fs::create_dir_all(sub.join("child")).unwrap();
 
-        assert_eq!(error(&move_folder(&root, &sub, sub.join("child").to_str().unwrap())), "不能移动到子文件夹");
+        assert_eq!(
+            error(&move_folder(
+                &root,
+                &sub,
+                sub.join("child").to_str().unwrap()
+            )),
+            "不能移动到子文件夹"
+        );
         assert_eq!(error(&move_folder(&root, &sub, "/tmp")), "非法路径");
-        assert_eq!(error(&rename_folder(&root, &sub, "..")), "文件夹名称不能为空");
+        assert_eq!(
+            error(&rename_folder(&root, &sub, "..")),
+            "文件夹名称不能为空"
+        );
         assert_eq!(error(&create_folder(&root, "../outside")), "非法路径");
 
         fs::write(root.join("a.md"), "").unwrap();
         let moved = move_file(&root, &root.join("a.md"), sub.to_str().unwrap());
         assert_eq!(moved["newPath"], json!(sub.join("a.md")));
         fs::write(root.join("a.md"), "").unwrap();
-        assert_eq!(error(&move_file(&root, &root.join("a.md"), sub.to_str().unwrap())), "目标位置已存在同名文件");
+        assert_eq!(
+            error(&move_file(&root, &root.join("a.md"), sub.to_str().unwrap())),
+            "目标位置已存在同名文件"
+        );
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -260,11 +290,18 @@ mod tests {
         fs::write(sub.join("note.txt"), "").unwrap();
         fs::write(sub.join("a.md"), "").unwrap();
 
-        let mut entries: Vec<String> = serde_json::from_value(inspect_folder(&root, &sub)["entries"].clone()).unwrap();
+        let mut entries: Vec<String> =
+            serde_json::from_value(inspect_folder(&root, &sub)["entries"].clone()).unwrap();
         entries.sort();
         assert_eq!(entries, [".hidden", "note.txt"]);
-        assert_eq!(error(&delete_folder(&root, &sub, false)), "文件夹不为空，请先移出或删除其中的文件");
-        assert_eq!(error(&delete_folder(&root, Path::new("/tmp"), true)), "非法路径");
+        assert_eq!(
+            error(&delete_folder(&root, &sub, false)),
+            "文件夹不为空，请先移出或删除其中的文件"
+        );
+        assert_eq!(
+            error(&delete_folder(&root, Path::new("/tmp"), true)),
+            "非法路径"
+        );
         fs::remove_dir_all(root).unwrap();
     }
 }

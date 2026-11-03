@@ -6,11 +6,18 @@ use tauri::{AppHandle, Emitter, Runtime};
 use tauri_plugin_opener::OpenerExt;
 
 /// 前端经 bridge.js 监听这些事件；检查更新由 bridge.js 发请求
-const EMITTED: [&str; 4] = ["menu:new-file", "menu:save", "menu:switch-workspace", "menu:check-update"];
+const EMITTED: [&str; 4] = [
+    "menu:new-file",
+    "menu:save",
+    "menu:switch-workspace",
+    "menu:check-update",
+];
 
 pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let separator = || PredefinedMenuItem::separator(app);
-    let item = |id: &str, text: &str, accelerator: Option<&str>| MenuItem::with_id(app, id, text, true, accelerator);
+    let item = |id: &str, text: &str, accelerator: Option<&str>| {
+        MenuItem::with_id(app, id, text, true, accelerator)
+    };
     let app_menu = Submenu::with_items(
         app,
         "WeMD",
@@ -51,7 +58,12 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
             &PredefinedMenuItem::select_all(app, Some("全选"))?,
         ],
     )?;
-    let view = Submenu::with_items(app, "查看", true, &[&PredefinedMenuItem::fullscreen(app, Some("全屏"))?])?;
+    let view = Submenu::with_items(
+        app,
+        "查看",
+        true,
+        &[&PredefinedMenuItem::fullscreen(app, Some("全屏"))?],
+    )?;
     let window = Submenu::with_items(
         app,
         "窗口",
@@ -71,7 +83,11 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
             &item("menu:check-update", "检查更新...", None)?,
             &separator()?,
             &item("open:https://wemd.app", "访问官网", None)?,
-            &item("open:https://github.com/tenngoxars/WeMD", "GitHub 仓库", None)?,
+            &item(
+                "open:https://github.com/tenngoxars/WeMD",
+                "GitHub 仓库",
+                None,
+            )?,
         ],
     )?;
     Menu::with_items(app, &[&app_menu, &file, &edit, &view, &window, &help])

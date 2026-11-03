@@ -15,9 +15,11 @@ static PENDING: Mutex<Option<HashMap<String, PathBuf>>> = Mutex::new(None);
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 fn temp_dir() -> PathBuf {
-    std::env::temp_dir()
-        .join("wemd-downloads")
-        .join(format!("{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)))
+    std::env::temp_dir().join("wemd-downloads").join(format!(
+        "{}-{}",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    ))
 }
 
 fn discard(temp: &Path) {
@@ -34,18 +36,30 @@ fn move_to(temp: &Path, target: &Path) -> std::io::Result<()> {
 pub fn handle<R: Runtime>(webview: Webview<R>, event: DownloadEvent<'_>) -> bool {
     match event {
         DownloadEvent::Requested { url, destination } => {
-            let name = destination.file_name().map(|n| n.to_os_string()).unwrap_or_else(|| "download".into());
+            let name = destination
+                .file_name()
+                .map(|n| n.to_os_string())
+                .unwrap_or_else(|| "download".into());
             let temp = temp_dir().join(name);
             if let Err(e) = fs::create_dir_all(temp.parent().unwrap()) {
                 eprintln!("[WeMD] 无法创建下载临时目录：{e}");
                 return false;
             }
             *destination = temp.clone();
-            PENDING.lock().unwrap().get_or_insert_default().insert(url.to_string(), temp);
+            PENDING
+                .lock()
+                .unwrap()
+                .get_or_insert_default()
+                .insert(url.to_string(), temp);
             true
         }
         DownloadEvent::Finished { url, success, .. } => {
-            let Some(temp) = PENDING.lock().unwrap().get_or_insert_default().remove(url.as_str()) else {
+            let Some(temp) = PENDING
+                .lock()
+                .unwrap()
+                .get_or_insert_default()
+                .remove(url.as_str())
+            else {
                 return true;
             };
             if !success {

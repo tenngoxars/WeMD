@@ -66,7 +66,11 @@ pub(crate) fn base_name(name: &str) -> Option<&std::ffi::OsStr> {
 
 #[tauri::command]
 pub async fn workspace_select(app: AppHandle, state: State<'_, Workspace>) -> Result<Value, ()> {
-    let picked = app.dialog().file().set_title("选择 WeMD 工作区文件夹").blocking_pick_folder();
+    let picked = app
+        .dialog()
+        .file()
+        .set_title("选择 WeMD 工作区文件夹")
+        .blocking_pick_folder();
     let Some(dir) = picked.and_then(|p| p.into_path().ok()) else {
         return Ok(json!({ "success": false, "canceled": true }));
     };
@@ -170,14 +174,20 @@ fn rename_file(root: &Path, old: &Path, new_name: &str) -> Value {
     }
     let dir = old.parent().unwrap_or(Path::new(""));
     let trimmed = new_name.trim();
-    let safe_name = if trimmed.ends_with(".md") { trimmed.to_string() } else { format!("{trimmed}.md") };
+    let safe_name = if trimmed.ends_with(".md") {
+        trimmed.to_string()
+    } else {
+        format!("{trimmed}.md")
+    };
     let joined = dir.join(&safe_name);
     if same_path(old, &joined) {
         return json!({ "success": true, "filePath": workspace::normalize(&joined) });
     }
     let differs = |target: &Path| {
         workspace::normalize(old).to_string_lossy().to_lowercase()
-            != workspace::normalize(target).to_string_lossy().to_lowercase()
+            != workspace::normalize(target)
+                .to_string_lossy()
+                .to_lowercase()
     };
     if workspace::normalize(&joined).exists() && differs(&joined) {
         return fail("文件名已存在");
@@ -204,7 +214,9 @@ pub struct RenamePayload {
 
 #[tauri::command]
 pub fn file_rename(payload: RenamePayload, state: State<Workspace>) -> Value {
-    with_root(&state, |root| rename_file(root, Path::new(&payload.old_path), &payload.new_name))
+    with_root(&state, |root| {
+        rename_file(root, Path::new(&payload.old_path), &payload.new_name)
+    })
 }
 
 /// 移到回收站；回收站不可用时按 Electron 的做法直接删除
@@ -228,19 +240,34 @@ fn delete_file(root: &Path, path: &Path) -> Value {
     if !path.exists() {
         return ok();
     }
-    trash_or(path, |p| if p.exists() { fs::remove_file(p) } else { Ok(()) })
+    trash_or(path, |p| {
+        if p.exists() {
+            fs::remove_file(p)
+        } else {
+            Ok(())
+        }
+    })
 }
 
 #[tauri::command]
 pub async fn file_delete(file_path: String, state: State<'_, Workspace>) -> Result<Value, ()> {
-    Ok(with_root(&state, |root| delete_file(root, Path::new(&file_path))))
+    Ok(with_root(&state, |root| {
+        delete_file(root, Path::new(&file_path))
+    }))
 }
 
 #[tauri::command]
-pub async fn file_reveal(file_path: String, app: AppHandle, state: State<'_, Workspace>) -> Result<(), ()> {
+pub async fn file_reveal(
+    file_path: String,
+    app: AppHandle,
+    state: State<'_, Workspace>,
+) -> Result<(), ()> {
     let path = PathBuf::from(file_path);
     if !path.as_os_str().is_empty() && guard(&state, &path).is_ok() {
-        let _ = app.opener().reveal_item_in_dir(path).inspect_err(|e| eprintln!("[WeMD] 显示文件失败：{e}"));
+        let _ = app
+            .opener()
+            .reveal_item_in_dir(path)
+            .inspect_err(|e| eprintln!("[WeMD] 显示文件失败：{e}"));
     }
     Ok(())
 }
@@ -263,7 +290,10 @@ pub fn theme_write(content: String, state: State<Workspace>) -> Value {
         return fail("No workspace selected");
     };
     let file = workspace::theme_file(&root);
-    let written = file.parent().map_or(Ok(()), fs::create_dir_all).and_then(|_| fs::write(&file, content));
+    let written = file
+        .parent()
+        .map_or(Ok(()), fs::create_dir_all)
+        .and_then(|_| fs::write(&file, content));
     match written {
         Ok(()) => ok(),
         Err(e) => fail(e),
@@ -300,7 +330,10 @@ pub(crate) mod tests {
         let cased = rename_file(&root, &root.join("escape.md"), "ESCAPE.md");
         assert_eq!(cased["success"], json!(true));
         assert!(root.join("ESCAPE.md").exists());
-        assert_eq!(error(&rename_file(&root, Path::new("/etc/passwd"), "x")), "非法路径");
+        assert_eq!(
+            error(&rename_file(&root, Path::new("/etc/passwd"), "x")),
+            "非法路径"
+        );
         fs::remove_dir_all(root).unwrap();
     }
 }

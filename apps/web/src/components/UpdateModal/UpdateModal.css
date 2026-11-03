@@ -67,6 +67,8 @@
 .update-modal-actions-main {
   display: flex;
   gap: 8px;
+  /* 没有「跳过此版本」时也靠右 */
+  margin-left: auto;
 }
 
 .update-modal-btn {
@@ -118,6 +120,13 @@
   margin: 0;
   color: var(--error);
   font-size: 12px;
+}
+
+.update-modal-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
 }
 
 .update-modal-skip {

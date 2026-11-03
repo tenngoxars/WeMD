@@ -39,6 +39,11 @@ const UpdateModal = lazy(() =>
     default: m.UpdateModal,
   })),
 );
+const MigrationHintModal = lazy(() =>
+  import("./components/UpdateModal/MigrationHintModal").then((m) => ({
+    default: m.MigrationHintModal,
+  })),
+);
 import { MobileThemeSelector } from "./components/Theme/MobileThemeSelector";
 import { WorkspaceThemeMergePrompt } from "./components/Theme/WorkspaceThemeMergePrompt";
 import { useThemeStore } from "./store/themeStore";
@@ -189,6 +194,13 @@ function App() {
     [historyWidth],
   );
 
+  // 跳版升级的用户没有导入工作区路径，会停在欢迎页，所以两个分支都要挂载
+  const migrationHint = isDesktop && (
+    <Suspense fallback={null}>
+      <MigrationHintModal />
+    </Suspense>
+  );
+
   // 桌面端：强制选择工作区
   if (isDesktop && !workspacePath) {
     return (
@@ -203,6 +215,7 @@ function App() {
         >
           <Welcome />
         </Suspense>
+        {migrationHint}
       </>
     );
   }
@@ -235,6 +248,7 @@ function App() {
           />
         </Suspense>
       )}
+      {migrationHint}
       <WorkspaceThemeMergePrompt />
 
       {/* 只在存储上下文完全就绪且确认为 IndexedDB 模式时才渲染 HistoryManager */}

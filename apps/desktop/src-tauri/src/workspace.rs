@@ -75,7 +75,10 @@ fn frontmatter_meta(head: &str) -> (String, Option<String>) {
     let mut theme_name = "默认主题".to_string();
     let mut title = None;
     let body = head.trim_start_matches('\u{feff}');
-    let Some(rest) = body.strip_prefix("---\n").or_else(|| body.strip_prefix("---\r\n")) else {
+    let Some(rest) = body
+        .strip_prefix("---\n")
+        .or_else(|| body.strip_prefix("---\r\n"))
+    else {
         return (theme_name, title);
     };
     for line in rest.lines() {
@@ -160,8 +163,14 @@ pub fn scan(dir: &Path) -> Vec<FileEntry> {
 /// 同名文件存在时追加「 (1)」「 (2)」
 pub fn unique_path(target: &Path) -> PathBuf {
     let dir = target.parent().unwrap_or(Path::new(""));
-    let stem = target.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
-    let ext = target.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
+    let stem = target
+        .file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let ext = target
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
     let mut candidate = target.to_path_buf();
     let mut counter = 1;
     while candidate.exists() {
@@ -192,7 +201,13 @@ mod tests {
     #[test]
     fn reads_frontmatter_meta() {
         let head = "---\ntheme: x\nthemeName: \"学术论文\"\ntitle: 'It\\'s'\n---\n# 正文";
-        assert_eq!(frontmatter_meta(head), ("学术论文".into(), Some("It's".into())));
-        assert_eq!(frontmatter_meta("# 无 frontmatter"), ("默认主题".into(), None));
+        assert_eq!(
+            frontmatter_meta(head),
+            ("学术论文".into(), Some("It's".into()))
+        );
+        assert_eq!(
+            frontmatter_meta("# 无 frontmatter"),
+            ("默认主题".into(), None)
+        );
     }
 }
