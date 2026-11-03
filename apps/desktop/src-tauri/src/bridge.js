@@ -4,10 +4,56 @@
   const currentWindow = () => window.__TAURI__.window.getCurrentWindow();
   const ua = navigator.userAgent;
   const platform = /Mac/.test(ua) ? "darwin" : /Win/.test(ua) ? "win32" : "linux";
-  // 原型未覆盖的能力：返回失败结果，前端按现有错误分支提示
-  const unsupported = () => Promise.resolve({ success: false, error: "原型暂不支持" });
-  // 菜单、文件监听、更新事件在原型里没有来源，返回占位句柄供前端解绑
-  const noEvents = () => () => {};
+
+  // 事件频道，对应 Electron 的 ipcRenderer.on/removeListener：on 返回的句柄用于解绑
+  const listeners = {};
+  const on = (channel, callback) => {
+    const handler = (data) => callback(data);
+    (listeners[channel] ??= new Set()).add(handler);
+    return handler;
+  };
+  const emit = (channel, data) => listeners[channel]?.forEach((handler) => handler(data));
+  const FS_CHANNELS = ["file:refresh", "menu:new-file", "menu:save", "menu:switch-workspace"];
+  const UPDATE_CHANNELS = ["update:available", "update:upToDate", "update:error"];
+  // 文件监听（watcher.rs）与 macOS 菜单（menu.rs）由 Rust 发出
+  FS_CHANNELS.forEach((channel) => window.__TAURI__.event.listen(channel, () => emit(channel)));
+
+  // 检查更新，对齐 apps/electron/src/updater.ts；请求经 Rust 发出，地址在 capabilities/default.json 放行
+  const RELEASES_URL = "https://github.com/tenngoxars/WeMD/releases";
+  const LATEST_RELEASE_API = "https://api.github.com/repos/tenngoxars/WeMD/releases/latest";
+  const isNewerVersion = (latest, current) => {
+    const latestParts = latest.split(".").map(Number);
+    const currentParts = current.split(".").map(Number);
+    for (let i = 0; i < 3; i++) {
+      if ((latestParts[i] || 0) > (currentParts[i] || 0)) return true;
+      if ((latestParts[i] || 0) < (currentParts[i] || 0)) return false;
+    }
+    return false;
+  };
+  // force：菜单「检查更新」触发，已是最新或失败时也要告诉用户
+  const checkForUpdates = async (force) => {
+    try {
+      const response = await window.__TAURI__.http.fetch(LATEST_RELEASE_API, { headers: { "User-Agent": "WeMD-Tauri" } });
+      if (!response.ok) return;
+      const data = await response.json();
+      const latestVersion = data.tag_name?.replace(/^v/, "");
+      const currentVersion = await window.__TAURI__.app.getVersion();
+      if (latestVersion && isNewerVersion(latestVersion, currentVersion)) {
+        emit("update:available", { latestVersion, currentVersion, releaseUrl: RELEASES_URL, releaseNotes: data.body || "", force });
+      } else if (force) {
+        emit("update:upToDate", { currentVersion });
+      }
+    } catch (error) {
+      console.error("[WeMD] 检查更新失败", error);
+      if (force) emit("update:error");
+    }
+  };
+  window.__TAURI__.event.listen("menu:check-update", () => checkForUpdates(true));
+  // 与 Electron 一样启动 3 秒后自动检查一次；页面重新加载不重复检查
+  if (!sessionStorage.getItem("wemd-update-checked")) {
+    sessionStorage.setItem("wemd-update-checked", "1");
+    setTimeout(() => checkForUpdates(false), 3000);
+  }
 
   window.wemdDesktop = {
     platform,
@@ -18,23 +64,24 @@
       readFile: (filePath) => invoke("file_read", { filePath }),
       createFile: (payload) => invoke("file_create", { payload: payload ?? {} }),
       saveFile: (payload) => invoke("file_save", { payload }),
-      renameFile: unsupported,
-      deleteFile: unsupported,
-      revealInFinder: unsupported,
-      createFolder: unsupported,
-      moveFile: unsupported,
-      inspectFolder: unsupported,
-      deleteFolder: unsupported,
-      renameFolder: unsupported,
-      moveFolder: unsupported,
-      onRefresh: noEvents,
-      removeRefreshListener: () => {},
-      onMenuNewFile: noEvents,
-      onMenuSave: noEvents,
-      onMenuSwitchWorkspace: noEvents,
+      renameFile: (payload) => invoke("file_rename", { payload: payload ?? {} }),
+      deleteFile: (filePath) => invoke("file_delete", { filePath: filePath ?? "" }),
+      revealInFinder: (filePath) => invoke("file_reveal", { filePath: filePath ?? "" }),
+      createFolder: (folderPath) => invoke("folder_create", { folderPath: folderPath ?? "" }),
+      moveFile: (payload) => invoke("folder_move", { payload: payload ?? {} }),
+      inspectFolder: (folderPath) => invoke("folder_inspect", { folderPath: folderPath ?? "" }),
+      deleteFolder: (payload) =>
+        invoke("folder_delete", { payload: typeof payload === "string" ? { folderPath: payload } : (payload ?? {}) }),
+      renameFolder: (payload) => invoke("folder_rename", { payload: payload ?? {} }),
+      moveFolder: (payload) => invoke("folder_move_folder", { payload: payload ?? {} }),
+      onRefresh: (callback) => on("file:refresh", callback),
+      removeRefreshListener: (handler) => listeners["file:refresh"]?.delete(handler),
+      onMenuNewFile: (callback) => on("menu:new-file", callback),
+      onMenuSave: (callback) => on("menu:save", callback),
+      onMenuSwitchWorkspace: (callback) => on("menu:switch-workspace", callback),
       readThemes: () => invoke("theme_read"),
       writeThemes: (content) => invoke("theme_write", { content }),
-      removeAllListeners: () => {},
+      removeAllListeners: () => FS_CHANNELS.forEach((channel) => listeners[channel]?.clear()),
     },
     window: {
       minimize: () => currentWindow().minimize(),
@@ -43,11 +90,11 @@
       isMaximized: () => currentWindow().isMaximized(),
     },
     update: {
-      onUpdateAvailable: noEvents,
-      onUpToDate: noEvents,
-      onUpdateError: noEvents,
-      removeUpdateListener: () => {},
-      openReleases: () => invoke("open_external", { url: "https://github.com/tenngoxars/WeMD/releases" }),
+      onUpdateAvailable: (callback) => on("update:available", callback),
+      onUpToDate: (callback) => on("update:upToDate", callback),
+      onUpdateError: (callback) => on("update:error", callback),
+      removeUpdateListener: (handler) => UPDATE_CHANNELS.forEach((channel) => listeners[channel]?.delete(handler)),
+      openReleases: () => invoke("open_external", { url: RELEASES_URL }),
     },
     // 由 Rust 发出请求，不受跨域限制；可访问的地址由 capabilities/default.json 限定
     net: {
@@ -61,6 +108,19 @@
       writeText: (text) => invoke("clipboard_write_text", { text }),
     },
   };
+
+  // Linux、Windows 没有菜单栏，新建、保存快捷键在这里转成菜单事件。
+  // 与 Electron 一致，页面自己处理过（preventDefault）的按键不再触发菜单，例如 App.tsx 的 Ctrl+S
+  if (platform !== "darwin") {
+    const SHORTCUTS = { n: "menu:new-file", s: "menu:save" };
+    window.addEventListener("keydown", (event) => {
+      if (event.defaultPrevented || !event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) return;
+      const channel = SHORTCUTS[event.key.toLowerCase()];
+      if (!channel) return;
+      event.preventDefault();
+      emit(channel);
+    });
+  }
 
   // 与 Electron 一致，不显示 WebView 自带的右键菜单（其中的「粘贴」在 Linux 上同样会走崩溃路径）
   document.addEventListener("contextmenu", (event) => event.preventDefault());

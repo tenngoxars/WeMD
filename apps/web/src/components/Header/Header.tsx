@@ -147,10 +147,15 @@ export function Header() {
         </div>
       )}
 
-      {/* 隐藏标题栏由拖拽区与 Windows 窗控共同布局，避免两个命中区域重叠 */}
+      {/* 隐藏标题栏由拖拽区与 Windows 窗控共同布局，避免两个命中区域重叠。
+          data-tauri-drag-region 给 Tauri 的 macOS、Linux 用（WebKit 不认 -webkit-app-region），只作用于元素本身，与 CSS 的 no-drag 范围一致 */}
       {isDesktop && (
         <div className={`hidden-titlebar ${autoHide ? "is-active" : ""}`}>
-          <div className="hidden-titlebar-drag-region" aria-hidden="true" />
+          <div
+            className="hidden-titlebar-drag-region"
+            aria-hidden="true"
+            data-tauri-drag-region
+          />
           {autoHide && isWindows && <WindowControls variant="compact" />}
         </div>
       )}
@@ -158,6 +163,7 @@ export function Header() {
       <header
         className={`app-header ${autoHide ? "header-auto-hide" : ""}`}
         style={headerStyle}
+        data-tauri-drag-region
       >
         <div className="header-left">
           <div className="logo" aria-label="WeMD 编辑器">
@@ -195,7 +201,7 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="header-actions">
+        <div className="header-actions" data-tauri-drag-region>
           <div className="header-right">
             <button
               className="btn-icon-only header-theme-toggle"

@@ -1,253 +1,20 @@
-// WeMD 桌面端（Tauri 2 原型）：命令返回值与 Electron IPC 保持同形，供 bridge.js 直接转交前端
+// WeMD 桌面端（Tauri 2）：只负责组装插件、命令与主窗口。命令返回值与 Electron IPC 保持同形，供 bridge.js 直接转交前端
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 #[cfg(feature = "automation")]
 mod automation;
+mod clipboard;
+mod download;
+mod files;
+mod folders;
+// 菜单只在 macOS 安装，其余平台仍参与编译检查
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+mod menu;
+mod watcher;
 mod workspace;
 
-use serde::Deserialize;
-use serde_json::{json, Value};
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::Mutex;
-use tauri::{AppHandle, State, WebviewUrl, WebviewWindowBuilder};
-use tauri_plugin_clipboard_manager::ClipboardExt;
-use tauri_plugin_dialog::DialogExt;
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
-
-#[derive(Default)]
-struct Workspace(Mutex<Option<PathBuf>>);
-
-impl Workspace {
-    fn get(&self) -> Option<PathBuf> {
-        self.0.lock().unwrap().clone()
-    }
-}
-
-fn fail(error: impl ToString) -> Value {
-    json!({ "success": false, "error": error.to_string() })
-}
-
-/// 取工作区并校验目标路径在其内部
-fn guard(state: &Workspace, target: &Path) -> Result<PathBuf, Value> {
-    let root = state.get().ok_or_else(|| fail("No workspace selected"))?;
-    if workspace::is_inside(&root, target) {
-        Ok(root)
-    } else {
-        Err(fail("非法路径"))
-    }
-}
-
-#[tauri::command]
-async fn workspace_select(app: AppHandle, state: State<'_, Workspace>) -> Result<Value, ()> {
-    let picked = app.dialog().file().set_title("选择 WeMD 工作区文件夹").blocking_pick_folder();
-    let Some(dir) = picked.and_then(|p| p.into_path().ok()) else {
-        return Ok(json!({ "success": false, "canceled": true }));
-    };
-    *state.0.lock().unwrap() = Some(dir.clone());
-    Ok(json!({ "success": true, "path": dir }))
-}
-
-#[tauri::command]
-fn workspace_set(dir: String, state: State<Workspace>) -> Value {
-    let dir = PathBuf::from(dir);
-    if !dir.is_dir() {
-        return fail("Directory not found");
-    }
-    *state.0.lock().unwrap() = Some(dir.clone());
-    json!({ "success": true, "path": dir })
-}
-
-#[tauri::command]
-fn file_list(dir: Option<String>, state: State<Workspace>) -> Value {
-    let Some(target) = dir.map(PathBuf::from).or_else(|| state.get()) else {
-        return fail("No workspace selected");
-    };
-    if let Err(e) = guard(&state, &target) {
-        return e;
-    }
-    json!({ "success": true, "files": workspace::scan(&target) })
-}
-
-#[tauri::command]
-fn file_read(file_path: String, state: State<Workspace>) -> Value {
-    let path = PathBuf::from(&file_path);
-    if let Err(e) = guard(&state, &path) {
-        return e;
-    }
-    match fs::read_to_string(&path) {
-        Ok(content) => json!({ "success": true, "content": content, "filePath": file_path }),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => fail("File not found"),
-        Err(e) => fail(e),
-    }
-}
-
-#[derive(Deserialize)]
-struct CreatePayload {
-    filename: Option<String>,
-    content: Option<String>,
-}
-
-#[tauri::command]
-fn file_create(payload: CreatePayload, state: State<Workspace>) -> Value {
-    let Some(root) = state.get() else {
-        return fail("No workspace");
-    };
-    let name = payload.filename.unwrap_or_else(|| "未命名文章.md".into());
-    let target = root.join(name);
-    if !workspace::is_inside(&root, &target) {
-        return fail("非法路径");
-    }
-    let target = workspace::unique_path(&target);
-    let written = target
-        .parent()
-        .map_or(Ok(()), fs::create_dir_all)
-        .and_then(|_| fs::write(&target, payload.content.unwrap_or_default()));
-    match written {
-        Ok(()) => json!({
-            "success": true,
-            "filePath": target,
-            "filename": target.file_name().map(|n| n.to_string_lossy()),
-        }),
-        Err(e) => fail(e),
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct SavePayload {
-    file_path: String,
-    content: String,
-}
-
-#[tauri::command]
-fn file_save(payload: SavePayload, state: State<Workspace>) -> Value {
-    let path = PathBuf::from(&payload.file_path);
-    if let Err(e) = guard(&state, &path) {
-        return e;
-    }
-    // 内容未变时不写盘，避免触发外部监听
-    if fs::read_to_string(&path).is_ok_and(|old| old == payload.content) {
-        return json!({ "success": true, "filePath": payload.file_path });
-    }
-    match fs::write(&path, &payload.content) {
-        Ok(()) => json!({ "success": true, "filePath": payload.file_path }),
-        Err(e) => fail(e),
-    }
-}
-
-#[tauri::command]
-fn theme_read(state: State<Workspace>) -> Value {
-    let Some(root) = state.get() else {
-        return fail("No workspace selected");
-    };
-    match fs::read_to_string(workspace::theme_file(&root)) {
-        Ok(content) => json!({ "success": true, "content": content }),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => json!({ "success": true, "content": null }),
-        Err(e) => fail(e),
-    }
-}
-
-#[tauri::command]
-fn theme_write(content: String, state: State<Workspace>) -> Value {
-    let Some(root) = state.get() else {
-        return fail("No workspace selected");
-    };
-    let file = workspace::theme_file(&root);
-    let written = file.parent().map_or(Ok(()), fs::create_dir_all).and_then(|_| fs::write(&file, content));
-    match written {
-        Ok(()) => json!({ "success": true }),
-        Err(e) => fail(e),
-    }
-}
-
-#[tauri::command]
-fn clipboard_write_html(html: String, text: String, app: AppHandle) -> Value {
-    if html.trim().is_empty() {
-        return fail("HTML 不能为空");
-    }
-    match app.clipboard().write_html(html, Some(text)) {
-        Ok(()) => json!({ "success": true }),
-        Err(e) => fail(e),
-    }
-}
-
-#[tauri::command]
-fn clipboard_write_text(text: String, app: AppHandle) -> Value {
-    if text.trim().is_empty() {
-        return fail("文本不能为空");
-    }
-    match app.clipboard().write_text(text) {
-        Ok(()) => json!({ "success": true }),
-        Err(e) => fail(e),
-    }
-}
-
-/// 剪贴板里的图片编码成 PNG 返回，没有图片时返回空内容。
-/// Linux 的 WebKitGTK 自己处理图片粘贴会崩溃（≥2.52）或拿不到图片（<2.52），粘贴由 bridge.js 拦下后走这里。
-#[tauri::command]
-async fn clipboard_read_image(app: AppHandle) -> tauri::ipc::Response {
-    let Ok(image) = app.clipboard().read_image() else {
-        return tauri::ipc::Response::new(Vec::new());
-    };
-    let mut png_bytes = Vec::new();
-    let mut encoder = png::Encoder::new(&mut png_bytes, image.width(), image.height());
-    encoder.set_color(png::ColorType::Rgba);
-    encoder.set_depth(png::BitDepth::Eight);
-    let encoded = encoder
-        .write_header()
-        .and_then(|mut writer| writer.write_image_data(image.rgba()));
-    if encoded.is_err() {
-        png_bytes.clear();
-    }
-    tauri::ipc::Response::new(png_bytes)
-}
-
-#[tauri::command]
-async fn clipboard_read_text(app: AppHandle) -> Option<String> {
-    app.clipboard().read_text().ok()
-}
-
-const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "gif", "webp", "bmp"];
-const MAX_PASTE_FILE_BYTES: u64 = 50 * 1024 * 1024;
-
-/// 文件管理器复制图片时剪贴板里只有文件路径，这里列出其中的图片文件
-fn clipboard_image_paths() -> Vec<PathBuf> {
-    let files = arboard::Clipboard::new().and_then(|mut c| c.get().file_list());
-    files
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|p| {
-            p.extension()
-                .and_then(|e| e.to_str())
-                .is_some_and(|e| IMAGE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
-        })
-        .collect()
-}
-
-#[tauri::command]
-async fn clipboard_image_files() -> Vec<String> {
-    clipboard_image_paths()
-        .iter()
-        .filter_map(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
-        .collect()
-}
-
-/// 按序号读取剪贴板里的图片文件原始字节。只接受序号、不接受路径，网页不能借此读取任意文件
-#[tauri::command]
-async fn clipboard_read_image_file(index: usize) -> Result<tauri::ipc::Response, String> {
-    let path = clipboard_image_paths()
-        .into_iter()
-        .nth(index)
-        .ok_or("剪贴板内容已变化")?;
-    let size = fs::metadata(&path).map_err(|e| e.to_string())?.len();
-    if size > MAX_PASTE_FILE_BYTES {
-        return Err("图片超过 50 MB".into());
-    }
-    fs::read(&path)
-        .map(tauri::ipc::Response::new)
-        .map_err(|e| e.to_string())
-}
 
 /// 只放行 http/https，与 Electron 版一致
 #[tauri::command]
@@ -258,27 +25,47 @@ fn open_external(url: String, app: AppHandle) {
 }
 
 fn main() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
+        // 必须最先注册：第二次启动时聚焦已有窗口后直接退出
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
-        .manage(Workspace::default())
+        .manage(files::Workspace::default());
+    #[cfg(target_os = "macos")]
+    let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
+    builder
         .invoke_handler(tauri::generate_handler![
-            workspace_select,
-            workspace_set,
-            file_list,
-            file_read,
-            file_create,
-            file_save,
-            theme_read,
-            theme_write,
-            clipboard_write_html,
-            clipboard_write_text,
-            clipboard_read_image,
-            clipboard_read_text,
-            clipboard_image_files,
-            clipboard_read_image_file,
+            files::workspace_select,
+            files::workspace_set,
+            files::file_list,
+            files::file_read,
+            files::file_create,
+            files::file_save,
+            files::file_rename,
+            files::file_delete,
+            files::file_reveal,
+            folders::folder_create,
+            folders::folder_rename,
+            folders::folder_move,
+            folders::folder_move_folder,
+            folders::folder_inspect,
+            folders::folder_delete,
+            files::theme_read,
+            files::theme_write,
+            clipboard::clipboard_write_html,
+            clipboard::clipboard_write_text,
+            clipboard::clipboard_read_image,
+            clipboard::clipboard_read_text,
+            clipboard::clipboard_image_files,
+            clipboard::clipboard_read_image_file,
             open_external,
         ])
         .setup(|app| {
@@ -289,6 +76,7 @@ fn main() {
                 .maximized(true)
                 // 侧边栏拖放走 HTML5 drop，关闭原生拖放接管
                 .disable_drag_drop_handler()
+                .on_download(download::handle)
                 .initialization_script(include_str!("bridge.js"));
             // 标题栏与 Electron 版一致：macOS 隐藏标题栏保留红绿灯，Windows 无边框由前端画按钮
             #[cfg(target_os = "macos")]

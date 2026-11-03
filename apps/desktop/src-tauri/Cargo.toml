@@ -19,6 +19,11 @@ png = "0.18"
 arboard = { version = "3", default-features = false, features = ["wayland-data-control"] }
 # 官方图床只对网页版域名放行跨域，桌面端上传由 Rust 发出；只开 TLS 与系统代理，控制体积
 tauri-plugin-http = { version = "2", default-features = false, features = ["rustls-tls", "system-proxy"] }
+# 工作区文件监听（对应 Electron 的 fs.watch）
+notify = "8"
+# 删除文件与文件夹移到系统回收站（对应 Electron 的 shell.trashItem）
+trash = "5"
+tauri-plugin-single-instance = "2"
 
 [features]
 # 测试构建专用，正式包不启用
