@@ -75,4 +75,47 @@ describe("exportLongImage", () => {
     expect(mocked.renderWechatContainer).toHaveBeenCalledTimes(3);
     expect(download).toHaveBeenCalledTimes(2);
   });
+
+  it("2D 上下文没有 roundRect 时用 arcTo 画圆角，含图导出不抛错", async () => {
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:long-image");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    const download = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    // jsdom 没有实现 decode
+    Object.defineProperty(HTMLImageElement.prototype, "decode", {
+      configurable: true,
+      value: () => Promise.resolve(),
+    });
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(0, 0, 100, 50),
+    );
+    mocked.renderWechatContainer.mockImplementation(async () => {
+      const container = document.createElement("div");
+      container.innerHTML = '<img src="data:image/png;base64,AA==">';
+      document.body.appendChild(container);
+      return { container };
+    });
+    const context = {
+      scale: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      arcTo: vi.fn(),
+      closePath: vi.fn(),
+      clip: vi.fn(),
+      drawImage: vi.fn(),
+    };
+    mocked.toCanvas.mockResolvedValue({
+      ...fakeCanvas,
+      getContext: () => context,
+    });
+
+    await exportLongImage("![](x.png)", "");
+    expect(context.arcTo).toHaveBeenCalledTimes(4);
+    expect(context.drawImage).toHaveBeenCalled();
+    expect(download).toHaveBeenCalledTimes(1);
+    Reflect.deleteProperty(HTMLImageElement.prototype, "decode");
+  });
 });

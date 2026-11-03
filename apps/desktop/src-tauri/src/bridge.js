@@ -21,15 +21,31 @@
   // 检查更新，对齐 apps/electron/src/updater.ts；请求经 Rust 发出，地址在 capabilities/default.json 放行
   const RELEASES_URL = "https://github.com/tenngoxars/WeMD/releases";
   const LATEST_RELEASE_API = "https://api.github.com/repos/tenngoxars/WeMD/releases/latest";
-  const isNewerVersion = (latest, current) => {
-    const latestParts = latest.split(".").map(Number);
-    const currentParts = current.split(".").map(Number);
+  // 按 SemVer 比较（忽略 build 元数据）：核心三段相同时，无 prerelease 的更新；都有时逐个标识符比较
+  const compareSemver = (a, b) => {
+    const parse = (v) => {
+      const [core, ...pre] = v.replace(/^v/, "").split("+")[0].split("-");
+      return { core: core.split(".").map(Number), pre: pre.length ? pre.join("-").split(".") : [] };
+    };
+    const x = parse(a);
+    const y = parse(b);
     for (let i = 0; i < 3; i++) {
-      if ((latestParts[i] || 0) > (currentParts[i] || 0)) return true;
-      if ((latestParts[i] || 0) < (currentParts[i] || 0)) return false;
+      const d = (x.core[i] || 0) - (y.core[i] || 0);
+      if (d) return Math.sign(d);
     }
-    return false;
+    if (!x.pre.length || !y.pre.length) return Math.sign(y.pre.length - x.pre.length);
+    for (let i = 0; i < Math.min(x.pre.length, y.pre.length); i++) {
+      const p = x.pre[i];
+      const q = y.pre[i];
+      const pn = /^\d+$/.test(p);
+      const qn = /^\d+$/.test(q);
+      if (pn && qn && Number(p) !== Number(q)) return Number(p) > Number(q) ? 1 : -1;
+      if (pn !== qn) return pn ? -1 : 1;
+      if (!pn && p !== q) return p > q ? 1 : -1;
+    }
+    return Math.sign(x.pre.length - y.pre.length);
   };
+  const isNewerVersion = (latest, current) => compareSemver(latest, current) > 0;
   // force：菜单「检查更新」触发，已是最新或失败时也要告诉用户
   const checkForUpdates = async (force) => {
     try {
@@ -54,23 +70,6 @@
     sessionStorage.setItem("wemd-update-checked", "1");
     setTimeout(() => checkForUpdates(false), 3000);
   }
-
-  // Electron 版设置迁移（见 migration.rs）。初始化脚本拿不到同步结果，页面此时已用当前设置启动，
-  // 所以写入后 reload 一次，让应用以导入的设置重新启动。已有标记则不再导入，只删除残留文件。
-  // 标记键不在白名单内，导出端不会碰它
-  const MIGRATION_MARK = "wemd-electron-migrated-at";
-  invoke("migration_read")
-    .then(async (entries) => {
-      if (!entries) return;
-      const fresh = !localStorage.getItem(MIGRATION_MARK);
-      if (fresh) {
-        Object.entries(entries).forEach(([key, value]) => localStorage.setItem(key, value));
-        localStorage.setItem(MIGRATION_MARK, new Date().toISOString());
-      }
-      await invoke("migration_delete");
-      if (fresh) location.reload();
-    })
-    .catch((error) => console.error("[WeMD] 导入 Electron 设置失败", error?.name ?? ""));
 
   window.wemdDesktop = {
     platform,
@@ -185,11 +184,18 @@
 
   const IMAGE_TYPES = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", bmp: "image/bmp" };
 
-  const pasteFromRust = async (target) => {
+  const pasteFromRust = async (target, textOnly) => {
+    const pasteClipboardText = async () => {
+      const text = await invoke("clipboard_read_text");
+      if (text) pasteText(target, text);
+    };
+    // 输入框与 Shift+Ctrl+V 只粘贴文本
+    if (textOnly) return pasteClipboardText();
     // 截图、浏览器「复制图片」：剪贴板里是图片数据
     const image = new Uint8Array(await invoke("clipboard_read_image"));
     if (image.byteLength > 0) {
-      dispatchPaste(target, { files: [new File([image], "image.png", { type: "image/png" })] });
+      // 页面没处理图片（如目标不接收图片）时退回文本
+      if (!dispatchPaste(target, { files: [new File([image], "image.png", { type: "image/png" })] })) await pasteClipboardText();
       return;
     }
     // 文件管理器复制图片：剪贴板里只有文件路径，由 Rust 读取原文件
@@ -202,11 +208,10 @@
           return new File([new Uint8Array(bytes)], name, { type });
         }),
       );
-      dispatchPaste(target, { files });
+      if (!dispatchPaste(target, { files })) await pasteClipboardText();
       return;
     }
-    const text = await invoke("clipboard_read_text");
-    if (text) pasteText(target, text);
+    await pasteClipboardText();
   };
 
   document.addEventListener(
@@ -217,7 +222,8 @@
       // 阻止默认行为，WebKitGTK 就不会执行自带的粘贴命令去读剪贴板
       event.preventDefault();
       const target = document.activeElement ?? document.body;
-      pasteFromRust(target).catch((error) => console.error("[WeMD] 粘贴失败", error));
+      const textOnly = event.shiftKey || target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+      pasteFromRust(target, textOnly).catch((error) => console.error("[WeMD] 粘贴失败", error));
     },
     true,
   );

@@ -26,6 +26,8 @@ export const MIGRATION_KEYS = [
 
 export const MIGRATION_FILE = "wemd-migration.json";
 export const MIGRATION_VERSION = 1;
+// 临时文件命名需与 migration.rs 的 is_temp_file 一致
+const TEMP_FILE = /^wemd-migration\.json\.\d+\.tmp$/;
 
 /** 只保留白名单内、值为字符串的键 */
 export function buildPayload(raw: unknown, now = new Date()) {
@@ -47,9 +49,19 @@ export function buildPayload(raw: unknown, now = new Date()) {
 export function writeMigrationFile(dir: string, payload: unknown): string {
   const target = path.join(dir, MIGRATION_FILE);
   const tmp = `${target}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(payload), { mode: 0o600 });
-  fs.chmodSync(tmp, 0o600);
-  fs.renameSync(tmp, target);
+  // 清理以往中断留下的临时文件（可能含 API Key）
+  for (const name of fs.readdirSync(dir)) {
+    if (TEMP_FILE.test(name)) fs.rmSync(path.join(dir, name), { force: true });
+  }
+  let done = false;
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(payload), { mode: 0o600 });
+    fs.chmodSync(tmp, 0o600);
+    fs.renameSync(tmp, target);
+    done = true;
+  } finally {
+    if (!done) fs.rmSync(tmp, { force: true });
+  }
   return target;
 }
 

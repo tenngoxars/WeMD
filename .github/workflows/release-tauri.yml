@@ -42,17 +42,36 @@ jobs:
           open(dst, "w", encoding="utf-8").write(text[start:end].strip() + "\n")
           PY
 
-      - name: Create draft release
+      # 重跑时同 tag 可能已有草稿：复用并更新；已公开的不覆盖
+      - name: Create or update draft release
         id: create
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          prerelease=""
-          [[ "$TAG" == *-* ]] && prerelease="--prerelease"
-          gh release create "$TAG" -R "$GITHUB_REPOSITORY" --draft $prerelease --verify-tag \
-            --title "WeMD $TAG" --notes-file /tmp/wemd-release-notes.md
-          echo "release-id=$(gh api "repos/$GITHUB_REPOSITORY/releases" -q ".[] | select(.tag_name == \"$TAG\") | .id")" >> "$GITHUB_OUTPUT"
+          prerelease=false
+          [[ "$TAG" == *-* ]] && prerelease=true
+          existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
+            --jq ".[] | select(.tag_name == \"$TAG\") | [.id, .draft] | @tsv")
+          if [[ $(grep -c . <<<"$existing") -gt 1 ]]; then
+            echo "::error::tag $TAG 对应多个 Release，请在 GitHub 上手动删除多余的再重跑"
+            exit 1
+          fi
+          if [[ -z "$existing" ]]; then
+            gh release create "$TAG" -R "$GITHUB_REPOSITORY" --draft --prerelease="$prerelease" --verify-tag \
+              --title "WeMD $TAG" --notes-file /tmp/wemd-release-notes.md
+            id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$TAG\") | .id")
+          else
+            read -r id draft <<<"$existing"
+            if [[ "$draft" != "true" ]]; then
+              echo "::error::$TAG 的 Release 已公开，不能覆盖。如需重发请换新 tag"
+              exit 1
+            fi
+            jq -n --rawfile body /tmp/wemd-release-notes.md --arg name "WeMD $TAG" --argjson pre "$prerelease" \
+              '{name: $name, body: $body, prerelease: $pre}' \
+              | gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$id" --input - > /dev/null
+          fi
+          echo "release-id=$id" >> "$GITHUB_OUTPUT"
 
   build:
     needs: release-notes
@@ -98,7 +117,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 发版：签名更新包并生成 latest.json，上传到草稿 Release
+      # 发版：签名更新包，安装包与 .sig 上传到草稿 Release；latest.json 由 updater-json 统一生成，避免并发读改写丢平台
       - name: Build and upload release assets
         if: startsWith(github.ref, 'refs/tags/')
         uses: tauri-apps/tauri-action@v1
@@ -111,7 +130,7 @@ jobs:
           tauriScript: pnpm tauri
           args: --bundles ${{ matrix.bundles }} --config src-tauri/tauri.release.conf.json
           releaseId: ${{ needs.release-notes.outputs.release-id }}
-          uploadUpdaterJson: true
+          uploadUpdaterJson: false
 
       # 验证：只构建，不签名、不发布
       - name: Build only
@@ -131,8 +150,50 @@ jobs:
             apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
 
-  publish:
+  updater-json:
     needs: [release-notes, build]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate and upload latest.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          RELEASE_ID: ${{ needs.release-notes.outputs.release-id }}
+        run: |
+          set -euo pipefail
+          api="repos/$GITHUB_REPOSITORY/releases"
+          gh api "$api/$RELEASE_ID" > /tmp/release.json
+          assets=$(jq -c '[.assets[] | {id, name}]' /tmp/release.json)
+          # 按后缀找唯一资产，0 个或多个都失败
+          pick() {
+            local matched
+            matched=$(jq -c --arg suffix "$1" '[.[] | select(.name | endswith($suffix))]' <<<"$assets")
+            if [[ $(jq length <<<"$matched") -ne 1 ]]; then
+              echo "::error::后缀 $1 的资产应恰好 1 个，实际：$(jq -r 'map(.name) | join(", ")' <<<"$matched")" >&2
+              exit 1
+            fi
+            jq -c '.[0]' <<<"$matched"
+          }
+          platforms='{}'
+          for entry in "darwin-aarch64 .app.tar.gz" "windows-x86_64 -setup.exe" "linux-x86_64 .AppImage"; do
+            read -r platform suffix <<<"$entry"
+            asset=$(pick "$suffix")
+            sig=$(pick "$suffix.sig")
+            name=$(jq -r .name <<<"$asset")
+            # 草稿资产只能经 API 下载；草稿的 browser_download_url 是 untagged 地址，公开后失效，所以按 tag 拼正式地址
+            signature=$(gh api -H "Accept: application/octet-stream" "repos/$GITHUB_REPOSITORY/releases/assets/$(jq -r .id <<<"$sig")")
+            url="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$(jq -rn --arg n "$name" '$n | @uri')"
+            platforms=$(jq -c --arg p "$platform" --arg s "$signature" --arg u "$url" '.[$p] = {signature: $s, url: $u}' <<<"$platforms")
+          done
+          jq -n --arg version "${TAG#v}" --arg pub_date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson platforms "$platforms" --slurpfile release /tmp/release.json \
+            '{version: $version, notes: ($release[0].body // ""), pub_date: $pub_date, platforms: $platforms}' > latest.json
+          # --clobber 覆盖重跑时留下的旧 latest.json；gh release upload 支持草稿 Release
+          gh release upload "$TAG" latest.json --clobber -R "$GITHUB_REPOSITORY"
+
+  publish:
+    needs: [release-notes, build, updater-json]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:

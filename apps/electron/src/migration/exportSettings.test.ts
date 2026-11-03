@@ -37,6 +37,20 @@ test("writeMigrationFile 原子写入且权限为 600", () => {
   }
 });
 
+test("writeMigrationFile 清理旧临时文件，失败时不残留本次临时文件", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "wemd-mig-"));
+  try {
+    fs.writeFileSync(path.join(dir, `${MIGRATION_FILE}.123.tmp`), "old");
+    fs.writeFileSync(path.join(dir, `${MIGRATION_FILE}.abc.tmp`), "keep");
+    // 目标是非空目录，rename 必然失败
+    fs.mkdirSync(path.join(dir, MIGRATION_FILE, "x"), { recursive: true });
+    assert.throws(() => writeMigrationFile(dir, { a: 1 }));
+    assert.deepEqual(fs.readdirSync(dir).sort(), [MIGRATION_FILE, `${MIGRATION_FILE}.abc.tmp`]);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 function fakeWindow() {
   let listener: (event: { preventDefault(): void }) => void = () => {};
   const win = {

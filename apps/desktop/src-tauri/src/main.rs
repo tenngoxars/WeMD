@@ -77,7 +77,6 @@ fn main() {
             clipboard::clipboard_read_image_file,
             open_external,
             updater_supported,
-            migration::migration_read,
             migration::migration_delete,
         ])
         .setup(|app| {
@@ -90,6 +89,11 @@ fn main() {
                 .disable_drag_drop_handler()
                 .on_download(download::handle)
                 .initialization_script(include_str!("bridge.js"));
+            // Electron 设置迁移：必须在页面脚本之前写入 localStorage，挂载时才不会把旧值写回
+            let builder = match migration::init_script(app.handle()) {
+                Some(script) => builder.initialization_script(script),
+                None => builder,
+            };
             // 标题栏与 Electron 版一致：macOS 隐藏标题栏保留红绿灯，Windows 无边框由前端画按钮
             #[cfg(target_os = "macos")]
             let builder = builder

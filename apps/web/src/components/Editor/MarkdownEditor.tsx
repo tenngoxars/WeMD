@@ -28,6 +28,7 @@ import { SearchPanel } from "./SearchPanel";
 import { SaveIndicator } from "./SaveIndicator";
 import toast from "react-hot-toast";
 import "./MarkdownEditor.css";
+import { isWebKitGtk as detectWebKitGtk } from "../../utils/isWebKitGtk";
 import { customKeymap } from "./editorShortcuts";
 import { paragraphSelectionStyle } from "./mouseSelectionStyle";
 import { docSyncChanges } from "./docSync";
@@ -52,9 +53,7 @@ const clamp = (value: number, min: number, max: number): number =>
 // Linux 的 WebKitGTK（Tauri 桌面版）把输入法正在转换的那段同步成选区，编辑器据此画出底色并把光标停在该段末尾；
 // 其他引擎组词时选区与光标正常，不需要处理
 const isWebKitGtk =
-  typeof navigator !== "undefined" &&
-  /Linux/.test(navigator.userAgent) &&
-  !/Chrom|Android/.test(navigator.userAgent);
+  typeof navigator !== "undefined" && detectWebKitGtk(navigator.userAgent);
 
 export function MarkdownEditor({ onScrollSyncReady }: MarkdownEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);

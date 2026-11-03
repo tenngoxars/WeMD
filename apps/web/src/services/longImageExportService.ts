@@ -116,6 +116,24 @@ const loadImage = async (
   }
 };
 
+/** roundRect 在 Safari 15.x、Firefox ≤111、Chrome ≤98 不存在，缺失时用 arcTo 画同样的圆角路径 */
+const roundedRect = (
+  context: CanvasRenderingContext2D,
+  { x, y, width, height, radius }: ImageSlot,
+) => {
+  if (typeof context.roundRect === "function") {
+    context.roundRect(x, y, width, height, radius);
+    return;
+  }
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+  context.moveTo(x + r, y);
+  context.arcTo(x + width, y, x + width, y + height, r);
+  context.arcTo(x + width, y + height, x, y + height, r);
+  context.arcTo(x, y + height, x, y, r);
+  context.arcTo(x, y, x + width, y, r);
+  context.closePath();
+};
+
 /** 把原图画回截图画布，返回读取失败的远程图片地址（去重） */
 const drawImages = async (
   canvas: HTMLCanvasElement,
@@ -145,7 +163,7 @@ const drawImages = async (
     }
     context.save();
     context.beginPath();
-    context.roundRect(slot.x, slot.y, slot.width, slot.height, slot.radius);
+    roundedRect(context, slot);
     context.clip();
     context.drawImage(image, x, y, width, height);
     context.restore();

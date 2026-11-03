@@ -1,9 +1,13 @@
 // Electron 版设置迁移：读取 Electron userData 下的 wemd-migration.json（由 apps/electron/src/migration/exportSettings.ts 导出），
-// 由 bridge.js 写入 localStorage 后再调用 migration_delete 删除。任何日志都不得输出文件内容（含 API Key）
+// 启动时在 Rust 侧读取，生成初始化脚本在页面脚本之前同步写入 localStorage，再调用 migration_delete 删除。
+// 任何日志都不得输出文件内容（含 API Key）
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
+
+// 导入标记：不在白名单内，导出端不会碰它；初始化脚本每次页面加载都会执行，靠它保证只导入一次
+const MIGRATION_MARK: &str = "wemd-electron-migrated-at";
 
 // 白名单需与 apps/electron/src/migration/exportSettings.ts 的 MIGRATION_KEYS 保持同步
 const MIGRATION_KEYS: &[&str] = &[
@@ -78,16 +82,54 @@ fn read(path: &Path) -> Option<BTreeMap<String, String>> {
     entries
 }
 
-/// 没有文件或无法识别时返回 null
-#[tauri::command]
-pub fn migration_read(app: AppHandle) -> Option<BTreeMap<String, String>> {
-    read(&migration_file(&app.path().config_dir().ok()?))
+/// Electron 写入中断留下的临时文件，命名需与 exportSettings.ts 的 TEMP_FILE 一致
+fn is_temp_file(name: &str) -> bool {
+    name.strip_prefix("wemd-migration.json.")
+        .and_then(|rest| rest.strip_suffix(".tmp"))
+        .is_some_and(|pid| !pid.is_empty() && pid.bytes().all(|b| b.is_ascii_digit()))
+}
+
+fn script(entries: &BTreeMap<String, String>) -> String {
+    // serde_json 的输出是合法的 JS 字面量，值中的引号、换行等都已转义，不会被当作代码执行
+    let entries = serde_json::to_string(entries).expect("字符串表可序列化");
+    let mark = serde_json::to_string(MIGRATION_MARK).expect("字符串可序列化");
+    format!(
+        r#"(() => {{
+  try {{
+    if (!localStorage.getItem({mark})) {{
+      for (const [key, value] of Object.entries({entries})) localStorage.setItem(key, value);
+      localStorage.setItem({mark}, new Date().toISOString());
+    }}
+  }} catch (error) {{
+    console.error("[WeMD] 导入 Electron 设置失败", error?.name ?? "");
+  }}
+  window.__TAURI__.core.invoke("migration_delete").catch(() => {{}});
+}})();"#
+    )
+}
+
+/// 有可导入的设置时返回初始化脚本（在页面脚本之前同步写入 localStorage）
+pub fn init_script(app: &AppHandle) -> Option<String> {
+    read(&migration_file(&app.path().config_dir().ok()?)).map(|entries| script(&entries))
+}
+
+fn delete(config_dir: &Path) {
+    let file = migration_file(config_dir);
+    let _ = std::fs::remove_file(&file);
+    let Ok(dir) = std::fs::read_dir(file.parent().expect("迁移文件有上级目录")) else {
+        return;
+    };
+    for entry in dir.flatten() {
+        if entry.file_name().to_str().is_some_and(is_temp_file) {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
 }
 
 #[tauri::command]
 pub fn migration_delete(app: AppHandle) {
     if let Ok(dir) = app.path().config_dir() {
-        let _ = std::fs::remove_file(migration_file(&dir));
+        delete(&dir);
     }
 }
 
@@ -121,6 +163,33 @@ mod tests {
         std::fs::write(&file, br#"{"version":1,"entries":{"wemd-ui-theme":"dark"}}"#).unwrap();
         assert_eq!(read(&file).unwrap()["wemd-ui-theme"], "dark");
         assert!(file.exists());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn script_embeds_values_as_literals() {
+        let tricky = "a\"b'c</script>\n\\d\u{2028}e\u{2029}`${x}`";
+        let entries = BTreeMap::from([("wemd-ai-config".to_string(), tricky.to_string())]);
+        let js = script(&entries);
+        let start = js.find("Object.entries(").unwrap() + "Object.entries(".len();
+        let end = js[start..].find(")) localStorage").unwrap() + start;
+        let back: BTreeMap<String, String> = serde_json::from_str(&js[start..end]).unwrap();
+        assert_eq!(back, entries);
+    }
+
+    #[test]
+    fn delete_removes_file_and_strict_temp_files() {
+        let dir = std::env::temp_dir().join(format!("wemd-mig-del-{}", std::process::id()));
+        let file = migration_file(&dir);
+        let parent = file.parent().unwrap();
+        std::fs::create_dir_all(parent).unwrap();
+        for name in ["wemd-migration.json", "wemd-migration.json.42.tmp", "wemd-migration.json.x.tmp", "wemd-migration.json..tmp"] {
+            std::fs::write(parent.join(name), "").unwrap();
+        }
+        delete(&dir);
+        let mut left: Vec<_> = std::fs::read_dir(parent).unwrap().map(|e| e.unwrap().file_name()).collect();
+        left.sort();
+        assert_eq!(left, ["wemd-migration.json..tmp", "wemd-migration.json.x.tmp"]);
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }
