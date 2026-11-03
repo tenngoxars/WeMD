@@ -159,7 +159,8 @@
 
 .editor-container .cm-content {
   padding: 32px clamp(28px, 6vw, 56px) 72px !important;
-  max-width: 760px;
+  /* 居中的正文栏：常见宽度下铺满编辑区，拉得很宽时封顶，避免一行过长 */
+  max-width: 1000px;
   margin: 0 auto;
   line-height: 1.85;
   color: var(--text-primary);
