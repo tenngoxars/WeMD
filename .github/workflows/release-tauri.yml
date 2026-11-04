@@ -2,14 +2,11 @@ name: desktop-release-tauri
 
 # 桌面端 v2（Tauri）发版。v1.x 仍由 release.yml（Electron）发布，两条流水线按 tag 主版本号分流。
 # 打 tag：先建草稿 Release 写入官网 changelog，三平台构建并上传，全部成功后才公开；tag 含「-」时为 pre-release。
-# 非 tag 触发（手动或推送迁移分支）：只构建并上传工作流产物，不签名、不发布。
+# 非 tag 触发（手动 workflow_dispatch）：只构建并上传工作流产物，不签名、不发布。
 on:
   push:
     tags:
       - "v2.*"
-    # ponytail: 合并到 main 前验证用，合并时删除这一项，之后改用 workflow_dispatch
-    branches:
-      - "feat/tauri-*"
   workflow_dispatch:
 
 permissions:
