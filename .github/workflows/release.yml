@@ -11,7 +11,46 @@ permissions:
   contents: write
 
 jobs:
+  # 先建草稿 Release 并写入简介，等三个平台都传完再公开。
+  # 之前由 macOS 任务写简介，它最后跑完，Release 会先以空简介公开一到几分钟。
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      # 非 tag 触发时整段跳过，构建任务照常跑，只上传工作流产物
+      - name: Fetch changelog for release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/tenngoxars/WeMD-homepage/main/vp-docs/about/changelog.md -o /tmp/wemd-changelog.md
+
+      - name: Extract release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python3 - "${{ github.ref_name }}" /tmp/wemd-changelog.md /tmp/wemd-release-notes.md <<'PY'
+          import re, sys
+          tag, src, dst = sys.argv[1], sys.argv[2], sys.argv[3]
+          text = open(src, encoding="utf-8").read()
+          # 匹配 "## vX.Y.Z ..." 整行标题，避免前缀误匹配（如 v1.4.3 不会命中 v1.4.30）
+          m = re.search(rf"^## {re.escape(tag)}(?: |$)[^\n]*\n", text, re.M)
+          if not m:
+              sys.exit(f"changelog 中未找到 {tag} 条目，请先在官网仓库更新 changelog 再重跑")
+          start = m.end()
+          nxt = re.search(r"^## v\d", text[start:], re.M)
+          end = start + nxt.start() if nxt else len(text)
+          open(dst, "w", encoding="utf-8").write(text[start:end].strip() + "\n")
+          PY
+
+      - name: Create draft release with notes
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3
+        with:
+          name: WeMD ${{ github.ref_name }}
+          # Release 简介与官网更新日志保持同步，由 changelog 提取生成
+          body_path: /tmp/wemd-release-notes.md
+          draft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
   build-macos:
+    needs: [release-notes]
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -50,40 +89,15 @@ jobs:
           name: wemd-macos
           path: apps/electron/release/WeMD-*-arm64-mac.zip
 
-      # 发布说明只在 tag 构建时需要；手动触发时跳过，避免因找不到对应版本条目而失败
-      - name: Fetch changelog for release notes
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/tenngoxars/WeMD-homepage/main/vp-docs/about/changelog.md -o /tmp/wemd-changelog.md
-
-      - name: Extract release notes
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          python3 - "${{ github.ref_name }}" /tmp/wemd-changelog.md /tmp/wemd-release-notes.md <<'PY'
-          import re, sys
-          tag, src, dst = sys.argv[1], sys.argv[2], sys.argv[3]
-          text = open(src, encoding="utf-8").read()
-          # 匹配 "## vX.Y.Z ..." 整行标题，避免前缀误匹配（如 v1.4.3 不会命中 v1.4.30）
-          m = re.search(rf"^## {re.escape(tag)}(?: |$)[^\n]*\n", text, re.M)
-          if not m:
-              sys.exit(f"changelog 中未找到 {tag} 条目，请先在官网仓库更新 changelog 再重跑")
-          start = m.end()
-          nxt = re.search(r"^## v\d", text[start:], re.M)
-          end = start + nxt.start() if nxt else len(text)
-          open(dst, "w", encoding="utf-8").write(text[start:end].strip() + "\n")
-          PY
-
-      - name: Publish GitHub Release
+      # tag 构建时把安装包传到 release-notes 建好的草稿 Release；手动触发只留工作流产物
+      - name: Upload asset to draft release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
-          name: WeMD ${{ github.ref_name }}
-          # Release 简介与官网更新日志保持同步，由 changelog 提取生成
-          body_path: /tmp/wemd-release-notes.md
-          update_release_body: true
           files: apps/electron/release/WeMD-*-arm64-mac.zip
 
   build-windows:
+    needs: [release-notes]
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -113,13 +127,14 @@ jobs:
           name: wemd-windows
           path: apps/electron/release/*.exe
 
-      - name: Publish GitHub Release
+      - name: Upload asset to draft release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
           files: apps/electron/release/*.exe
 
   build-linux:
+    needs: [release-notes]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -151,8 +166,19 @@ jobs:
           name: wemd-linux
           path: apps/electron/release/*.AppImage
 
-      - name: Publish GitHub Release
+      - name: Upload asset to draft release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
           files: apps/electron/release/*.AppImage
+
+  # 三个平台都传完才公开，读者不会看到缺安装包或空简介的 Release
+  publish:
+    needs: [build-macos, build-windows, build-linux]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ github.ref_name }}" -R "$GITHUB_REPOSITORY" --draft=false
