@@ -19,7 +19,7 @@ import { useStorageContext } from "./storage/StorageContext";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useHistoryStore } from "./store/historyStore";
 import { useFileStore } from "./store/fileStore";
-import { platform } from "./lib/platformAdapter";
+import { getDesktop, platform } from "./lib/platformAdapter";
 
 const HistoryPanel = lazy(() =>
   import("./components/History/HistoryPanel").then((m) => ({
@@ -39,27 +39,15 @@ const UpdateModal = lazy(() =>
     default: m.UpdateModal,
   })),
 );
+const MigrationHintModal = lazy(() =>
+  import("./components/UpdateModal/MigrationHintModal").then((m) => ({
+    default: m.MigrationHintModal,
+  })),
+);
 import { MobileThemeSelector } from "./components/Theme/MobileThemeSelector";
 import { WorkspaceThemeMergePrompt } from "./components/Theme/WorkspaceThemeMergePrompt";
 import { useThemeStore } from "./store/themeStore";
 import { createWorkspaceThemeBackend } from "./services/theme/themeStorageBackend";
-
-interface UpdateEventData {
-  latestVersion: string;
-  currentVersion: string;
-  releaseNotes?: string;
-  force?: boolean;
-}
-
-interface ElectronUpdateAPI {
-  onUpdateAvailable?: (callback: (data: UpdateEventData) => void) => () => void;
-  onUpToDate?: (
-    callback: (data: { currentVersion: string }) => void,
-  ) => () => void;
-  onUpdateError?: (callback: () => void) => () => void;
-  removeUpdateListener?: (handler: (() => void) | undefined) => void;
-  openReleases?: () => void;
-}
 
 function App() {
   const { workspacePath, saveFile } = useFileSystem({ enableEffects: true });
@@ -72,7 +60,7 @@ function App() {
     activeView,
     setActiveView,
   } = useMobileView();
-  const isMobile = isMobileScreen && !platform.isElectron;
+  const isMobile = isMobileScreen && !platform.isDesktop;
   const copyToWechat = useEditorStore((state) => state.copyToWechat);
   const copyAsHtml = useEditorStore((state) => state.copyAsHtml);
   const exportLongImage = useEditorStore((state) => state.exportLongImage);
@@ -103,9 +91,9 @@ function App() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [saveFile]);
 
-  const isElectron = platform.isElectron;
-  // 桌面版文件走主进程，不依赖浏览器存储；不能等它就绪，否则 IndexedDB 打不开时界面永远停在加载中
-  const storageSettled = isElectron || ready;
+  const isDesktop = platform.isDesktop;
+  // 桌面版文件走原生层，不依赖浏览器存储；不能等它就绪，否则 IndexedDB 打不开时界面永远停在加载中
+  const storageSettled = isDesktop || ready;
 
   // 更新提示状态
   const [updateInfo, setUpdateInfo] = useState<{
@@ -114,29 +102,27 @@ function App() {
     releaseNotes: string;
   } | null>(null);
 
-  // 监听 Electron 更新事件
+  // 监听桌面端更新事件
   useEffect(() => {
-    if (!isElectron) return;
-    const electron = window.electron as { update?: ElectronUpdateAPI };
-    if (!electron?.update?.onUpdateAvailable) return;
+    if (!isDesktop) return;
+    const update = getDesktop()?.update;
+    if (!update?.onUpdateAvailable) return;
 
-    const availableHandler = electron.update.onUpdateAvailable(
-      (data: UpdateEventData) => {
-        // 检查是否跳过了此版本（除非是强制检查）
-        const skippedVersion = localStorage.getItem("wemd-skipped-version");
-        if (!data.force && skippedVersion === data.latestVersion) {
-          return; // 用户之前选择跳过此版本
-        }
+    const availableHandler = update.onUpdateAvailable((data) => {
+      // 检查是否跳过了此版本（除非是强制检查）
+      const skippedVersion = localStorage.getItem("wemd-skipped-version");
+      if (!data.force && skippedVersion === data.latestVersion) {
+        return; // 用户之前选择跳过此版本
+      }
 
-        setUpdateInfo({
-          latestVersion: data.latestVersion,
-          currentVersion: data.currentVersion,
-          releaseNotes: data.releaseNotes || "",
-        });
-      },
-    );
+      setUpdateInfo({
+        latestVersion: data.latestVersion,
+        currentVersion: data.currentVersion,
+        releaseNotes: data.releaseNotes || "",
+      });
+    });
 
-    const upToDateHandler = electron.update.onUpToDate?.(
+    const upToDateHandler = update.onUpToDate?.(
       (data: { currentVersion: string }) => {
         // 使用 react-hot-toast 显示已是最新版本
         import("react-hot-toast").then(({ default: toast }) => {
@@ -145,19 +131,18 @@ function App() {
       },
     );
 
-    const errorHandler = electron.update.onUpdateError?.(() => {
+    const errorHandler = update.onUpdateError?.(() => {
       import("react-hot-toast").then(({ default: toast }) => {
         toast.error("检查更新失败，请稍后重试");
       });
     });
 
     return () => {
-      electron.update?.removeUpdateListener?.(availableHandler);
-      if (upToDateHandler)
-        electron.update?.removeUpdateListener?.(upToDateHandler);
-      if (errorHandler) electron.update?.removeUpdateListener?.(errorHandler);
+      update.removeUpdateListener?.(availableHandler);
+      if (upToDateHandler) update.removeUpdateListener?.(upToDateHandler);
+      if (errorHandler) update.removeUpdateListener?.(errorHandler);
     };
-  }, [isElectron]);
+  }, [isDesktop]);
 
   const [showHistory, setShowHistory] = useState(() => {
     if (typeof window === "undefined") return true;
@@ -209,8 +194,15 @@ function App() {
     [historyWidth],
   );
 
-  // Electron 模式：强制选择工作区
-  if (isElectron && !workspacePath) {
+  // 跳版升级的用户没有导入工作区路径，会停在欢迎页，所以两个分支都要挂载
+  const migrationHint = isDesktop && (
+    <Suspense fallback={null}>
+      <MigrationHintModal />
+    </Suspense>
+  );
+
+  // 桌面端：强制选择工作区
+  if (isDesktop && !workspacePath) {
     return (
       <>
         <Toaster position="top-center" />
@@ -223,6 +215,7 @@ function App() {
         >
           <Welcome />
         </Suspense>
+        {migrationHint}
       </>
     );
   }
@@ -242,9 +235,7 @@ function App() {
             releaseNotes={updateInfo.releaseNotes}
             onClose={() => setUpdateInfo(null)}
             onDownload={() => {
-              (
-                window.electron as { update?: ElectronUpdateAPI }
-              )?.update?.openReleases?.();
+              getDesktop()?.update?.openReleases?.();
               setUpdateInfo(null);
             }}
             onSkipVersion={() => {
@@ -257,10 +248,11 @@ function App() {
           />
         </Suspense>
       )}
+      {migrationHint}
       <WorkspaceThemeMergePrompt />
 
       {/* 只在存储上下文完全就绪且确认为 IndexedDB 模式时才渲染 HistoryManager */}
-      {!isElectron && ready && storageType === "indexeddb" && (
+      {!isDesktop && ready && storageType === "indexeddb" && (
         <Suspense fallback={null}>
           <HistoryManager />
         </Suspense>
@@ -325,7 +317,7 @@ function App() {
             <div className="history-pane__content">
               {/* 存储就绪后渲染，防止闪烁 */}
               {storageSettled &&
-                (isElectron || storageType === "filesystem" ? (
+                (isDesktop || storageType === "filesystem" ? (
                   <FileSidebar />
                 ) : (
                   <Suspense
@@ -344,7 +336,7 @@ function App() {
             loading={
               !storageSettled ||
               fileLoading ||
-              (historyLoading && !isElectron && storageType === "indexeddb")
+              (historyLoading && !isDesktop && storageType === "indexeddb")
             }
             mobileView={isMobile ? activeView : undefined}
             onPreviewMinimumWidthChange={setDesktopPreviewMinWidth}

@@ -1,0 +1,14 @@
+{
+  "name": "@wemd/desktop",
+  "version": "1.6.0",
+  "private": true,
+  "description": "WeMD 桌面端（Tauri 2 原型）",
+  "scripts": {
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4"
+  }
+}

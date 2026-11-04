@@ -6,7 +6,7 @@ const mocked = vi.hoisted(() => ({
   loadMathJax: vi.fn(),
   parserRender: vi.fn(),
   processHtml: vi.fn(),
-  electronClipboardWrite: vi.fn(),
+  desktopClipboardWrite: vi.fn(),
 }));
 
 vi.mock("react-hot-toast", () => ({
@@ -90,13 +90,12 @@ describe("wechat copy math compatibility", () => {
       '<section id="wemd"><p><span class="inline-equation" data-latex="\\boldsymbol{x}"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">\\boldsymbol{x}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base" style="width:min-content;"><span class="mord boldsymbol">x</span></span></span></span></span></p></section>',
     );
 
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: {
-        isElectron: true,
         platform: "darwin",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: true,
           }),
         },
@@ -109,7 +108,7 @@ describe("wechat copy math compatibility", () => {
 
     await copyToWechat("$\\boldsymbol{x}$", "#wemd p { margin: 18px 0; }");
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(tex2svg).toHaveBeenNthCalledWith(1, "\\boldsymbol{x}", {
@@ -140,7 +139,7 @@ describe("wechat copy math compatibility", () => {
       "#wemd p { margin: 18px 0; }",
     );
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(mocked.loadMathJax).toHaveBeenCalledTimes(1);
@@ -174,7 +173,7 @@ describe("wechat copy math compatibility", () => {
       "#wemd p { margin: 18px 0; }",
     );
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(tex2svg).toHaveBeenCalledWith("\\frac{\\Delta W}{\\Delta t}", {
@@ -201,7 +200,7 @@ describe("wechat copy math compatibility", () => {
       "#wemd p { margin: 18px 0; }",
     );
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html.match(/<svg/g)?.length).toBe(2);
@@ -216,7 +215,7 @@ describe("wechat copy math compatibility", () => {
 
     await copyToWechat("$W'(t)$", "#wemd p { margin: 18px 0; }");
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(tex2svg).toHaveBeenCalledWith("W'(t)", { display: false });
@@ -258,7 +257,7 @@ describe("wechat copy math compatibility", () => {
 
     await copyToWechat("$x^2$", "#wemd p { margin: 18px 0; }");
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(tex2svg).toHaveBeenCalledTimes(2);
@@ -285,7 +284,7 @@ describe("wechat copy math compatibility", () => {
       "#wemd p { margin: 18px 0; }",
     );
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain("$\\notAWeMDCommand{x}$");
@@ -311,7 +310,7 @@ describe("wechat copy math compatibility", () => {
 
     await copyToWechat("前文 $\\ce{H2O}$ 后文", "#wemd p { margin: 18px 0; }");
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain("$\\ce{H2O}$");
@@ -342,7 +341,7 @@ describe("wechat copy math compatibility", () => {
       vi.useRealTimers();
     }
 
-    expect(mocked.electronClipboardWrite).not.toHaveBeenCalled();
+    expect(mocked.desktopClipboardWrite).not.toHaveBeenCalled();
     expect(mocked.toastError).toHaveBeenCalled();
     expect(mocked.toastSuccess).not.toHaveBeenCalled();
   });

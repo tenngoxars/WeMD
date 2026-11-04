@@ -49,13 +49,15 @@
   gap: 2px;
 }
 
-.footer-links a:hover {
+.footer-links a:hover,
+.footer-links button:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
   text-decoration: none;
 }
 
-.footer-links a {
+.footer-links a,
+.footer-links button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,8 +70,47 @@
   text-decoration: none;
 }
 
+/* 「检查更新」是按钮，去掉默认外观，与链接图标一致 */
+.footer-links button {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.footer-links button:disabled {
+  cursor: default;
+}
+
+/* 检查更新期间图标持续旋转 */
+.footer-links button.is-checking svg {
+  animation: footer-spin 0.9s linear infinite;
+}
+
+@keyframes footer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-links button.is-checking svg {
+    animation: none;
+  }
+
+  .footer-links button.is-checking {
+    opacity: 0.5;
+  }
+}
+
+.footer-links button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
 /* Footer Tooltips */
-.footer-links a::after {
+.footer-links a::after,
+.footer-links button::after {
   content: attr(data-tooltip);
   position: absolute;
   bottom: 100%;
@@ -92,8 +133,20 @@
   z-index: 9999;
 }
 
-.footer-links a:hover::after {
+.footer-links a:hover::after,
+.footer-links button:hover::after {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(-4px);
+}
+
+/* 最右侧图标的提示框居中会超出侧边栏被裁掉，改为右对齐、向左展开 */
+.footer-links > :last-child::after {
+  left: auto;
+  right: 0;
+  transform: translateY(-8px);
+}
+
+.footer-links > :last-child:hover::after {
+  transform: translateY(-4px);
 }

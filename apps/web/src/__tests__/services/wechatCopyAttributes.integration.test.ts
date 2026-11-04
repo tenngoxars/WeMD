@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocked = vi.hoisted(() => ({
-  electronClipboardWrite: vi.fn(),
+  desktopClipboardWrite: vi.fn(),
 }));
 
 vi.mock("react-hot-toast", () => ({
@@ -26,13 +26,12 @@ describe("公众号复制属性语法", () => {
       getItem: vi.fn(() => null),
       setItem: vi.fn(),
     });
-    mocked.electronClipboardWrite.mockResolvedValue({ success: true });
-    Object.defineProperty(window, "electron", {
+    mocked.desktopClipboardWrite.mockResolvedValue({ success: true });
+    Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: {
-        isElectron: true,
         platform: "darwin",
-        clipboard: { writeHTML: mocked.electronClipboardWrite },
+        clipboard: { writeHTML: mocked.desktopClipboardWrite },
       },
     });
   });
@@ -47,7 +46,7 @@ describe("公众号复制属性语法", () => {
       '#wemd .summary[data-kind="abstract"] { color: rgb(180, 0, 0); }',
     );
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain('class="summary"');
@@ -67,7 +66,7 @@ describe("公众号复制属性语法", () => {
       `,
     );
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain('class="hero-image"');
@@ -96,7 +95,7 @@ describe("公众号复制属性语法", () => {
       `,
     );
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain("text-align: left");

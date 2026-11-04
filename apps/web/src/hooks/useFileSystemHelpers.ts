@@ -1,7 +1,8 @@
 import type { FileItem, TreeItem } from "../store/fileTypes";
 import type { FileItem as AdapterFileItem } from "../storage/types";
+import { getDesktop } from "../lib/platformAdapter";
 
-export interface ElectronFileItem {
+export interface DesktopFileItem {
   name: string;
   path: string;
   createdAt: string;
@@ -10,10 +11,10 @@ export interface ElectronFileItem {
   title?: string;
   themeName?: string;
   isDirectory?: boolean;
-  children?: ElectronFileItem[];
+  children?: DesktopFileItem[];
 }
 
-export interface ElectronAPI {
+export interface DesktopFsBridge {
   fs: {
     selectWorkspace: () => Promise<{
       success: boolean;
@@ -23,7 +24,7 @@ export interface ElectronAPI {
     setWorkspace: (dir: string) => Promise<{ success: boolean; path?: string }>;
     listFiles: (
       dir?: string,
-    ) => Promise<{ success: boolean; files?: ElectronFileItem[] }>;
+    ) => Promise<{ success: boolean; files?: DesktopFileItem[] }>;
     readFile: (
       path: string,
     ) => Promise<{ success: boolean; content?: string; error?: string }>;
@@ -77,11 +78,10 @@ export interface ElectronAPI {
 export const WORKSPACE_KEY = "wemd-workspace-path";
 export const LAST_FILE_KEY = "wemd-last-file-path";
 
-export const getElectron = (): ElectronAPI | null => {
-  return window.electron as unknown as ElectronAPI | null;
-};
+export const getDesktopFs = (): DesktopFsBridge | null =>
+  (getDesktop() as unknown as DesktopFsBridge | undefined) ?? null;
 
-export function convertToTreeItems(items: ElectronFileItem[]): TreeItem[] {
+export function convertToTreeItems(items: DesktopFileItem[]): TreeItem[] {
   return items.map((entry) => {
     if (entry.isDirectory && entry.children) {
       return {

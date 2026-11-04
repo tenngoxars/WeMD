@@ -1,4 +1,5 @@
 import type { ImageUploader } from "../ImageUploader";
+import { getDesktop } from "../../../lib/platformAdapter";
 
 interface OfficialConfig {
   serverUrl?: string;
@@ -26,7 +27,9 @@ export class OfficialUploader implements ImageUploader {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${this.serverUrl}/upload`, {
+    // 官方图床只对网页版域名放行跨域，桌面端改由原生层发请求
+    const request = getDesktop()?.net?.fetch ?? fetch;
+    const response = await request(`${this.serverUrl}/upload`, {
       method: "POST",
       body: formData,
     });

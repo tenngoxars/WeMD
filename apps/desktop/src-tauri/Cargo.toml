@@ -1,0 +1,40 @@
+[package]
+name = "wemd-desktop"
+version = "1.6.0"
+edition = "2021"
+publish = false
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+png = "0.18"
+# 与 tauri-plugin-clipboard-manager 同一个 arboard，只为读取剪贴板文件列表（文件管理器复制的图片）
+arboard = { version = "3", default-features = false, features = ["wayland-data-control"] }
+# 官方图床只对网页版域名放行跨域，桌面端上传由 Rust 发出；只开 TLS 与系统代理，控制体积
+tauri-plugin-http = { version = "2", default-features = false, features = ["rustls-tls", "system-proxy"] }
+# 工作区文件监听（对应 Electron 的 fs.watch）
+notify = "8"
+# 删除文件与文件夹移到系统回收站（对应 Electron 的 shell.trashItem）
+trash = "5"
+tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2.14.1"
+tauri-plugin-process = "2.4.0"
+
+[features]
+# 测试构建专用，正式包不启用
+automation = []
+
+# 体积优先：安装包大小是原型的验收项之一
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

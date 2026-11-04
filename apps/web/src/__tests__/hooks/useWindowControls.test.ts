@@ -3,37 +3,36 @@ import { renderHook } from "@testing-library/react";
 import { useWindowControls } from "../../hooks/useWindowControls";
 
 describe("useWindowControls", () => {
-  const originalWindowElectron = window.electron;
+  const originalDesktop = window.wemdDesktop;
 
   beforeEach(() => {
-    // Reset window.electron before each test
-    Object.defineProperty(window, "electron", {
+    // Reset window.wemdDesktop before each test
+    Object.defineProperty(window, "wemdDesktop", {
       value: undefined,
       writable: true,
     });
   });
 
   afterEach(() => {
-    // Restore original window.electron
-    Object.defineProperty(window, "electron", {
-      value: originalWindowElectron,
+    // Restore original window.wemdDesktop
+    Object.defineProperty(window, "wemdDesktop", {
+      value: originalDesktop,
       writable: true,
     });
   });
 
-  it("should return default values when not in Electron", () => {
+  it("should return default values when not in desktop", () => {
     const { result } = renderHook(() => useWindowControls());
 
-    expect(result.current.isElectron).toBe(false);
+    expect(result.current.isDesktop).toBe(false);
     expect(result.current.isWindows).toBe(false);
     expect(result.current.isMac).toBe(false);
     expect(result.current.platform).toBeUndefined();
   });
 
-  it("should identify Electron environment", () => {
-    Object.defineProperty(window, "electron", {
+  it("should identify desktop environment", () => {
+    Object.defineProperty(window, "wemdDesktop", {
       value: {
-        isElectron: true,
         platform: "darwin",
       },
       writable: true,
@@ -41,15 +40,14 @@ describe("useWindowControls", () => {
 
     const { result } = renderHook(() => useWindowControls());
 
-    expect(result.current.isElectron).toBe(true);
+    expect(result.current.isDesktop).toBe(true);
     expect(result.current.isMac).toBe(true);
     expect(result.current.isWindows).toBe(false);
   });
 
   it("should identify Windows platform", () => {
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       value: {
-        isElectron: true,
         platform: "win32",
       },
       writable: true,
@@ -65,9 +63,8 @@ describe("useWindowControls", () => {
     const maximizeMock = vi.fn();
     const closeMock = vi.fn();
 
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       value: {
-        isElectron: true,
         window: {
           minimize: minimizeMock,
           maximize: maximizeMock,

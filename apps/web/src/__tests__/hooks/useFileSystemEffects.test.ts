@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import type { ElectronAPI } from "../../hooks/useFileSystemHelpers";
+import type { DesktopFsBridge } from "../../hooks/useFileSystemHelpers";
 import { useFileSystemEffects } from "../../hooks/useFileSystemEffects";
 import type { StorageAdapter } from "../../storage/StorageAdapter";
 
-const buildElectronMock = () => {
+const buildDesktopMock = () => {
   let refreshCallback: (() => void) | undefined;
   let menuNewFileCallback: (() => void) | undefined;
 
@@ -43,7 +43,7 @@ const buildElectronMock = () => {
   };
 
   return {
-    electron: { fs },
+    desktop: { fs },
     fs,
     getRefreshCallback: () => refreshCallback,
     getMenuNewFileCallback: () => menuNewFileCallback,
@@ -54,7 +54,7 @@ const buildParams = (
   overrides: Partial<Parameters<typeof useFileSystemEffects>[0]> = {},
 ) => ({
   enabled: true,
-  electron: null,
+  desktop: null,
   adapter: null,
   storageReady: false,
   storageType: "indexeddb" as const,
@@ -109,15 +109,15 @@ describe("useFileSystemEffects", () => {
     }
   });
 
-  it("单实例下正确注册并清理 Electron 监听器", async () => {
-    const { electron, fs, getRefreshCallback, getMenuNewFileCallback } =
-      buildElectronMock();
+  it("单实例下正确注册并清理 桌面端监听器", async () => {
+    const { desktop, fs, getRefreshCallback, getMenuNewFileCallback } =
+      buildDesktopMock();
 
     const refreshFiles = vi.fn(async () => {});
     const createFile = vi.fn(async () => {});
 
     const params = buildParams({
-      electron: electron as ElectronAPI,
+      desktop: desktop as DesktopFsBridge,
       refreshFiles,
       createFile,
     });
@@ -247,14 +247,14 @@ describe("useFileSystemEffects", () => {
     expect(refreshFiles).not.toHaveBeenCalled();
   });
 
-  it("Electron 模式下不会注册浏览器聚焦刷新", async () => {
+  it("桌面端模式下不会注册浏览器聚焦刷新", async () => {
     vi.useFakeTimers();
-    const { electron } = buildElectronMock();
+    const { desktop } = buildDesktopMock();
     const refreshFiles = vi.fn(async () => {});
     renderHook(() =>
       useFileSystemEffects(
         buildParams({
-          electron: electron as ElectronAPI,
+          desktop: desktop as DesktopFsBridge,
           adapter: buildAdapterMock(),
           storageReady: true,
           storageType: "filesystem",

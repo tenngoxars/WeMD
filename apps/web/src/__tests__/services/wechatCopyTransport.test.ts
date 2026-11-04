@@ -126,7 +126,7 @@ describe("wechatCopyService 原生剪贴板传输", () => {
         constructor(readonly data: Record<string, Blob>) {}
       },
     });
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: undefined,
     });

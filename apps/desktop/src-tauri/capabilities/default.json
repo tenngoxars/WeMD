@@ -1,0 +1,28 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "主窗口：自定义标题栏所需的窗口控制；官方图床上传；检查更新与应用内更新",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-is-maximized",
+    "core:window:allow-start-dragging",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://api.wemd.app/*"
+        },
+        {
+          "url": "https://api.github.com/repos/tenngoxars/WeMD/releases/latest"
+        }
+      ]
+    },
+    "updater:allow-check",
+    "updater:allow-download-and-install",
+    "process:allow-restart"
+  ]
+}

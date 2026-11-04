@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocked = vi.hoisted(() => ({
   parserRender: vi.fn(),
   processHtml: vi.fn(),
-  electronClipboardWrite: vi.fn(),
+  desktopClipboardWrite: vi.fn(),
   tableWrapEnabled: false,
 }));
 
@@ -54,14 +54,13 @@ describe("微信复制表格布局", () => {
     mocked.processHtml.mockReturnValue(
       '<section id="wemd"><div class="table-container" style="overflow-x:auto"><table style="min-width:100%;white-space:nowrap"><tbody><tr><td style="min-width:100px;white-space:nowrap">很长的内容</td></tr></tbody></table></div></section>',
     );
-    mocked.electronClipboardWrite.mockResolvedValue({ success: true });
+    mocked.desktopClipboardWrite.mockResolvedValue({ success: true });
 
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: {
-        isElectron: true,
         platform: "darwin",
-        clipboard: { writeHTML: mocked.electronClipboardWrite },
+        clipboard: { writeHTML: mocked.desktopClipboardWrite },
       },
     });
   });
@@ -69,7 +68,7 @@ describe("微信复制表格布局", () => {
   it("将当前自动换行偏好应用到最终复制 HTML", async () => {
     await copyToWechat("| 表头 |", "#wemd td { min-width: 100px; }");
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain("overflow-x: visible");
@@ -84,7 +83,7 @@ describe("微信复制表格布局", () => {
 
     await copyToWechat("| 表头 |", "#wemd td { min-width: 100px; }");
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain('data-ignore-width=""');

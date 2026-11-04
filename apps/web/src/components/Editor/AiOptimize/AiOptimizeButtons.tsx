@@ -32,7 +32,7 @@ export function AiOptimizeButtons() {
   const saveSnapshot = useHistoryStore((state) => state.saveSnapshot);
   // 文件模式下侧栏是 FileSidebar，标题存在文件的 frontmatter 里，与 historyStore 无关
   const { type: storageType } = useStorageContext();
-  const isFileMode = platform.isElectron || storageType === "filesystem";
+  const isFileMode = platform.isDesktop || storageType === "filesystem";
   const { currentFile, files, flattenFiles, updateFileTitle } = useFileSystem();
   const articleKey = useActiveArticleKey();
   const currentTitle = isFileMode

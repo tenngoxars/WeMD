@@ -136,9 +136,9 @@ const markdownContent = [
   "",
 ].join("\n");
 
-const setElectronMock = (electron: unknown) => {
-  Object.defineProperty(window, "electron", {
-    value: electron,
+const setDesktopMock = (desktop: unknown) => {
+  Object.defineProperty(window, "wemdDesktop", {
+    value: desktop,
     configurable: true,
   });
 };
@@ -159,10 +159,10 @@ describe("useFileSystem renameFile", () => {
     mocks.storageContext.adapter = null;
     mocks.storageContext.ready = false;
     mocks.storageContext.type = "indexeddb";
-    delete (window as unknown as { electron?: unknown }).electron;
+    delete (window as unknown as { wemdDesktop?: unknown }).wemdDesktop;
   });
 
-  it("Electron 模式下重命名会同步物理文件名并保留原始标题", async () => {
+  it("桌面端模式下重命名会同步物理文件名并保留原始标题", async () => {
     const readFile = vi.fn(async () => ({
       success: true,
       content: markdownContent,
@@ -174,7 +174,7 @@ describe("useFileSystem renameFile", () => {
     const saveFile = vi.fn(async () => ({ success: true }));
     const listFiles = vi.fn(async () => ({ success: true, files: [] }));
 
-    setElectronMock({
+    setDesktopMock({
       fs: {
         readFile,
         renameFile,

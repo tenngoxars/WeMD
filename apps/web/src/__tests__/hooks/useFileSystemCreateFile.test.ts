@@ -131,9 +131,9 @@ vi.mock("react-hot-toast", () => ({
   },
 }));
 
-const setElectronMock = (electron: unknown) => {
-  Object.defineProperty(window, "electron", {
-    value: electron,
+const setDesktopMock = (desktop: unknown) => {
+  Object.defineProperty(window, "wemdDesktop", {
+    value: desktop,
     configurable: true,
   });
 };
@@ -160,15 +160,15 @@ describe("useFileSystem 文件操作", () => {
     mocks.fileStoreSnapshot.isRestoring = false;
     mocks.editorStoreSnapshot.markdown = "";
     vi.stubGlobal("localStorage", mocks.localStorage);
-    delete (window as unknown as { electron?: unknown }).electron;
+    delete (window as unknown as { wemdDesktop?: unknown }).wemdDesktop;
   });
 
   afterEach(() => {
-    delete (window as unknown as { electron?: unknown }).electron;
+    delete (window as unknown as { wemdDesktop?: unknown }).wemdDesktop;
     vi.unstubAllGlobals();
   });
 
-  it("Electron 模式下使用文章标题生成默认文件名", async () => {
+  it("桌面端模式下使用文章标题生成默认文件名", async () => {
     const createFile = vi.fn(
       async (_payload: { filename?: string; content?: string }) => ({
         success: true,
@@ -183,7 +183,7 @@ describe("useFileSystem 文件操作", () => {
         '---\ntheme: default\nthemeName: "默认主题"\ntitle: "新文章"\n---\n\n# 新文章\n\n',
     }));
 
-    setElectronMock({
+    setDesktopMock({
       fs: {
         listFiles,
         readFile,
@@ -465,7 +465,7 @@ describe("useFileSystem 文件操作", () => {
     consoleError.mockRestore();
   });
 
-  it("Electron 切换工作区前先保存尚未自动保存的文章", async () => {
+  it("桌面端切换工作区前先保存尚未自动保存的文章", async () => {
     const savedContent = [
       "---",
       "theme: default",
@@ -494,7 +494,7 @@ describe("useFileSystem 文件操作", () => {
     mocks.fileStoreSnapshot.isDirty = true;
     mocks.fileStoreSnapshot.lastSavedContent = savedContent;
     mocks.editorStoreSnapshot.markdown = "# 尚未自动保存的内容\n";
-    setElectronMock({
+    setDesktopMock({
       fs: {
         saveFile,
         selectWorkspace,
@@ -523,7 +523,7 @@ describe("useFileSystem 文件操作", () => {
     expect(mocks.fileStoreState.bumpWorkspaceRevision).toHaveBeenCalledTimes(1);
   });
 
-  it("Electron 切换工作区时保存期间继续输入的最新内容", async () => {
+  it("桌面端切换工作区时保存期间继续输入的最新内容", async () => {
     const savedContent = [
       "---",
       "theme: default",
@@ -558,7 +558,7 @@ describe("useFileSystem 文件操作", () => {
     mocks.fileStoreSnapshot.isDirty = true;
     mocks.fileStoreSnapshot.lastSavedContent = savedContent;
     mocks.editorStoreSnapshot.markdown = "# 开始切换时的内容\n";
-    setElectronMock({
+    setDesktopMock({
       fs: {
         saveFile,
         selectWorkspace,

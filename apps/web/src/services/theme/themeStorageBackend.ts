@@ -1,6 +1,8 @@
-// 工作区自定义主题的读写后端：Electron IPC 与 File System Access 两条实现
+// 工作区自定义主题的读写后端：桌面桥与 File System Access 两条实现
 import type { StorageAdapter } from "../../storage/StorageAdapter";
 import type { CustomTheme } from "../../store/themes/builtInThemes";
+import type { DesktopBridge } from "../../types/desktop";
+import { getDesktop } from "../../lib/platformAdapter";
 
 /** 隐藏目录，避免主题文件进入文章列表与 watcher */
 export const WORKSPACE_THEME_PATH = ".wemd/themes.json";
@@ -56,8 +58,8 @@ export const parseWorkspaceThemeFile = (raw: string): WorkspaceThemeFile => {
   };
 };
 
-class ElectronWorkspaceThemeBackend implements WorkspaceThemeBackend {
-  constructor(private readonly fs: NonNullable<Window["electron"]>["fs"]) {}
+class DesktopWorkspaceThemeBackend implements WorkspaceThemeBackend {
+  constructor(private readonly fs: DesktopBridge["fs"]) {}
 
   async read(): Promise<WorkspaceThemeFile | null> {
     const result = await this.fs.readThemes();
@@ -124,15 +126,15 @@ interface BackendOptions {
 export const createWorkspaceThemeBackend = (
   options: BackendOptions,
 ): WorkspaceThemeBackend | null => {
-  const electron = typeof window !== "undefined" ? window.electron : undefined;
-  if (electron?.isElectron) {
+  const desktop = getDesktop();
+  if (desktop) {
     if (
       !options.workspacePath ||
-      typeof electron.fs?.readThemes !== "function"
+      typeof desktop.fs?.readThemes !== "function"
     ) {
       return null;
     }
-    return withSerialWrites(new ElectronWorkspaceThemeBackend(electron.fs));
+    return withSerialWrites(new DesktopWorkspaceThemeBackend(desktop.fs));
   }
 
   if (

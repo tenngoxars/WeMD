@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-contextBridge.exposeInMainWorld('electron', {
-    isElectron: true,
+contextBridge.exposeInMainWorld('wemdDesktop', {
     platform: process.platform,
 
     fs: {
@@ -98,6 +97,7 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.removeListener('update:error', handler);
         },
         openReleases: () => ipcRenderer.invoke('update:openReleases'),
+        check: () => ipcRenderer.invoke('update:check'),
     },
 
     shell: {

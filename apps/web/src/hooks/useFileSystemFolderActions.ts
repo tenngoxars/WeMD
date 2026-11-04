@@ -9,11 +9,11 @@ import {
   LAST_FILE_KEY,
   replacePathPrefix,
   splitPath,
-  type ElectronAPI,
+  type DesktopFsBridge,
 } from "./useFileSystemHelpers";
 
 interface UseFileSystemFolderActionsParams {
-  electron: ElectronAPI | null;
+  desktop: DesktopFsBridge | null;
   adapter: StorageAdapter | null;
   refreshFiles: () => Promise<void>;
   currentFile: FileItem | null;
@@ -24,7 +24,7 @@ interface UseFileSystemFolderActionsParams {
 }
 
 export function useFileSystemFolderActions({
-  electron,
+  desktop,
   adapter,
   refreshFiles,
   currentFile,
@@ -51,8 +51,8 @@ export function useFileSystemFolderActions({
     async (folderName: string, parentFolder?: string) => {
       const fullPath = joinPath(parentFolder, folderName);
 
-      if (electron) {
-        const res = await electron.fs.createFolder(fullPath);
+      if (desktop) {
+        const res = await desktop.fs.createFolder(fullPath);
         if (res.success) {
           toast.success("文件夹已创建");
           await refreshFiles();
@@ -76,13 +76,13 @@ export function useFileSystemFolderActions({
       toast.error("当前存储模式不支持文件夹操作");
       return null;
     },
-    [electron, adapter, refreshFiles],
+    [desktop, adapter, refreshFiles],
   );
 
   const moveToFolder = useCallback(
     async (file: FileItem, targetFolder: string) => {
-      if (electron) {
-        const res = await electron.fs.moveFile({
+      if (desktop) {
+        const res = await desktop.fs.moveFile({
           filePath: file.path,
           targetFolder,
         });
@@ -117,7 +117,7 @@ export function useFileSystemFolderActions({
       toast.error("当前存储模式不支持文件夹操作");
       return false;
     },
-    [electron, adapter, refreshFiles, currentFile, setCurrentFile],
+    [desktop, adapter, refreshFiles, currentFile, setCurrentFile],
   );
 
   const renameFolder = useCallback(
@@ -132,8 +132,8 @@ export function useFileSystemFolderActions({
       const { dir, sep } = splitPath(folder.path);
       const targetPath = dir ? `${dir}${sep}${safeBaseName}` : safeBaseName;
 
-      if (electron) {
-        const res = await electron.fs.renameFolder({
+      if (desktop) {
+        const res = await desktop.fs.renameFolder({
           folderPath: folder.path,
           newName: safeBaseName,
         });
@@ -162,13 +162,13 @@ export function useFileSystemFolderActions({
       toast.error("当前存储模式不支持文件夹操作");
       return { success: false as const };
     },
-    [electron, adapter, refreshFiles, updateCurrentFilePathForFolder],
+    [desktop, adapter, refreshFiles, updateCurrentFilePathForFolder],
   );
 
   const moveFolder = useCallback(
     async (folder: { path: string }, targetFolder: string) => {
-      if (electron) {
-        const res = await electron.fs.moveFolder({
+      if (desktop) {
+        const res = await desktop.fs.moveFolder({
           folderPath: folder.path,
           targetFolder,
         });
@@ -197,13 +197,13 @@ export function useFileSystemFolderActions({
       toast.error("当前存储模式不支持文件夹操作");
       return { success: false as const };
     },
-    [electron, adapter, refreshFiles, updateCurrentFilePathForFolder],
+    [desktop, adapter, refreshFiles, updateCurrentFilePathForFolder],
   );
 
   const deleteFolder = useCallback(
     async (folderPath: string, options?: { recursive?: boolean }) => {
-      if (electron) {
-        const res = await electron.fs.deleteFolder({
+      if (desktop) {
+        const res = await desktop.fs.deleteFolder({
           folderPath,
           recursive: options?.recursive,
         });
@@ -243,7 +243,7 @@ export function useFileSystemFolderActions({
       return false;
     },
     [
-      electron,
+      desktop,
       adapter,
       refreshFiles,
       currentFile,
@@ -256,8 +256,8 @@ export function useFileSystemFolderActions({
 
   const inspectFolder = useCallback(
     async (folderPath: string) => {
-      if (electron) {
-        const res = await electron.fs.inspectFolder(folderPath);
+      if (desktop) {
+        const res = await desktop.fs.inspectFolder(folderPath);
         if (res.success && res.entries) return res.entries;
         return [];
       }
@@ -268,7 +268,7 @@ export function useFileSystemFolderActions({
       }
       return [];
     },
-    [electron, adapter],
+    [desktop, adapter],
   );
 
   return {

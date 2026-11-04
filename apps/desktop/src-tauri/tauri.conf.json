@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "WeMD",
+  "version": "../../web/package.json",
+  "identifier": "app.wemd.desktop",
+  "build": {
+    "frontendDist": "../../web/dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "pnpm --filter @wemd/web dev",
+    "beforeBuildCommand": "pnpm --filter @wemd/web build"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "nsis", "appimage", "deb"],
+    "category": "Productivity",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI0OTg5OTRDREJFRDlERTAKUldUZ25lM2JUSm1ZdEJwY21TRjZkOUNMVTFROTR5SE9ONmxYVmFkTWJQaUdQRW1DYjRhUHJQRkgK",
+      "endpoints": [
+        "https://github.com/tenngoxars/WeMD/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}

@@ -1,9 +1,10 @@
 name: desktop-release
 
+# 桌面端 v1.x（Electron）发版；v2 起由 release-tauri.yml（Tauri）发布
 on:
   push:
     tags:
-      - "v*"
+      - "v1.*"
   workflow_dispatch:
 
 permissions:
