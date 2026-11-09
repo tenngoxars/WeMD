@@ -172,16 +172,13 @@ export function AiOptimizeButtons() {
 
     // 新文章还没落盘就没有条目，直接带标题存一份——给新文章起名正是主要用法
     const themeStore = useThemeStore.getState();
-    const saved = await saveSnapshot(
-      {
-        markdown,
-        title,
-        theme: themeStore.themeId,
-        themeName: themeStore.themeName,
-        customCSS: themeStore.customCSS,
-      },
-      { force: true },
-    );
+    const saved = await saveSnapshot({
+      markdown,
+      title,
+      theme: themeStore.themeId,
+      themeName: themeStore.themeName,
+      customCSS: themeStore.customCSS,
+    });
     toast[saved ? "success" : "error"](
       saved ? "已设置文章标题" : "标题设置失败，请先写点内容再试",
     );

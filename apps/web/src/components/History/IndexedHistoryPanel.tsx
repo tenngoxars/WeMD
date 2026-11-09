@@ -13,7 +13,7 @@ import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
 import { useHistoryStore } from "../../store/historyStore";
 import { SidebarFooter } from "../Sidebar/SidebarFooter";
-import type { HistorySnapshot } from "../../store/historyStore";
+import type { HistoryMeta } from "../../store/historyStore";
 import { resolveNewArticleThemeSnapshot } from "../../utils/newArticleTheme";
 import { handleConfirmKeydown } from "../../utils/confirmKeydown";
 
@@ -30,7 +30,7 @@ export function IndexedHistoryPanel() {
   const updateTitle = useHistoryStore((state) => state.updateTitle);
   const persistActive = useHistoryStore((state) => state.persistActiveSnapshot);
   const activeId = useHistoryStore((state) => state.activeId);
-  const setActiveId = useHistoryStore((state) => state.setActiveId);
+  const openEntry = useHistoryStore((state) => state.openEntry);
   const loadHistory = useHistoryStore((state) => state.loadHistory);
 
   const setMarkdown = useEditorStore((state) => state.setMarkdown);
@@ -47,19 +47,17 @@ export function IndexedHistoryPanel() {
     top: number;
     left: number;
   }>({ top: 0, left: 0 });
-  const [menuEntry, setMenuEntry] = useState<HistorySnapshot | null>(null);
+  const [menuEntry, setMenuEntry] = useState<HistoryMeta | null>(null);
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<HistorySnapshot | null>(
-    null,
-  );
+  const [deleteTarget, setDeleteTarget] = useState<HistoryMeta | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const handleRestore = async (entry?: HistorySnapshot) => {
-    if (!entry) return;
+  // 当前文章保存失败会抛出，切换随之中止，避免丢弃未落盘的正文
+  const handleRestore = async (meta: HistoryMeta) => {
     const editorState = useEditorStore.getState();
     const themeState = useThemeStore.getState();
     await persistActive({
@@ -68,10 +66,11 @@ export function IndexedHistoryPanel() {
       customCSS: themeState.customCSS,
       themeName,
     });
+    const entry = await openEntry(meta.id);
+    if (!entry) return;
     setMarkdown(entry.markdown);
     selectTheme(entry.theme);
     setCustomCSS(entry.customCSS);
-    setActiveId(entry.id);
     setRenamingId(null);
     setActionMenuId(null);
   };
@@ -82,15 +81,11 @@ export function IndexedHistoryPanel() {
       setRenamingId(null);
     }
     if (activeId === id) {
-      const { history: updatedHistory, activeId: nextActive } =
-        useHistoryStore.getState();
-      if (nextActive) {
-        const nextEntry = updatedHistory.find((item) => item.id === nextActive);
-        if (nextEntry) {
-          setMarkdown(nextEntry.markdown);
-          selectTheme(nextEntry.theme);
-          setCustomCSS(nextEntry.customCSS);
-        }
+      const nextEntry = useHistoryStore.getState().active;
+      if (nextEntry) {
+        setMarkdown(nextEntry.markdown);
+        selectTheme(nextEntry.theme);
+        setCustomCSS(nextEntry.customCSS);
       } else {
         resetDocument();
       }
@@ -111,42 +106,37 @@ export function IndexedHistoryPanel() {
       customCSS: themeState.customCSS,
       themeName,
     });
+    // 先落盘新文章再清空编辑器：落盘失败时编辑器保持原文
+    await saveSnapshot({
+      markdown: initial,
+      theme: targetTheme.themeId,
+      customCSS: targetTheme.customCSS,
+      title: "新文章",
+      themeName: targetTheme.themeName,
+    });
     resetDocument({
       markdown: initial,
       theme: targetTheme.themeId,
       customCSS: targetTheme.customCSS,
       themeName: targetTheme.themeName,
     });
-    const newEntry = await saveSnapshot(
-      {
-        markdown: initial,
-        theme: targetTheme.themeId,
-        customCSS: targetTheme.customCSS,
-        title: "新文章",
-        themeName: targetTheme.themeName,
-      },
-      { force: true },
-    );
-    if (newEntry) {
-      setActiveId(newEntry.id);
-    }
     toast.success("已创建新文章");
   };
 
-  const startRename = (entry: HistorySnapshot) => {
+  const startRename = (entry: HistoryMeta) => {
     setRenamingId(entry.id);
     setTempTitle(entry.title || "未命名文章");
     setActionMenuId(null);
     setMenuEntry(null);
   };
 
-  const confirmRename = async (entry: HistorySnapshot) => {
+  const confirmRename = async (entry: HistoryMeta) => {
     await updateTitle(entry.id, tempTitle);
     toast.success("标题已更新");
     setRenamingId(null);
   };
 
-  const copyTitle = async (entry: HistorySnapshot) => {
+  const copyTitle = async (entry: HistoryMeta) => {
     try {
       await navigator.clipboard.writeText(entry.title || "未命名文章");
       toast.success("标题已复制");
@@ -156,10 +146,7 @@ export function IndexedHistoryPanel() {
     }
   };
 
-  const handleMenuToggle = (
-    event: React.MouseEvent,
-    entry: HistorySnapshot,
-  ) => {
+  const handleMenuToggle = (event: React.MouseEvent, entry: HistoryMeta) => {
     event.stopPropagation();
     const button = event.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();

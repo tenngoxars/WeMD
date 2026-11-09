@@ -57,9 +57,19 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
       : workspaceFileBroken
         ? "本地文件夹中的主题文件无法读取，本次保存仅留在本机"
         : "保存在当前浏览器，启用本地文件夹后会随文件夹一起保存";
-  const persistActiveSnapshot = useHistoryStore(
+  const persistSnapshot = useHistoryStore(
     (state) => state.persistActiveSnapshot,
   );
+  // 快照写入失败已由 historyDb 提示；主题本身已生效，弹窗流程照常走完，避免重复创建主题
+  const persistActiveSnapshot = async (
+    data: Parameters<typeof persistSnapshot>[0],
+  ) => {
+    try {
+      await persistSnapshot(data);
+    } catch {
+      // 已提示
+    }
+  };
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const exportMenuRef = useRef<HTMLDivElement | null>(null);

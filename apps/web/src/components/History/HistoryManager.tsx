@@ -36,8 +36,7 @@ export function HistoryManager() {
   const saveSnapshot = useHistoryStore((state) => state.saveSnapshot);
   const loadHistory = useHistoryStore((state) => state.loadHistory);
   const history = useHistoryStore((state) => state.history);
-  const activeId = useHistoryStore((state) => state.activeId);
-  const setActiveId = useHistoryStore((state) => state.setActiveId);
+  const active = useHistoryStore((state) => state.active);
   const loading = useHistoryStore((state) => state.loading);
 
   const latestRef = useRef({ markdown, theme, customCSS, themeName });
@@ -109,18 +108,18 @@ export function HistoryManager() {
 
     if (!currentActiveId && currentHistory.length === 0 && markdown.trim()) {
       creatingInitialSnapshotRef.current = true;
-      void saveSnapshot(
-        {
-          markdown,
-          theme,
-          customCSS,
-          title: deriveTitle(markdown),
-          themeName,
-        },
-        { force: true },
-      ).finally(() => {
-        creatingInitialSnapshotRef.current = false;
-      });
+      saveSnapshot({
+        markdown,
+        theme,
+        customCSS,
+        title: deriveTitle(markdown),
+        themeName,
+      })
+        // 失败已由 historyDb 提示，下次自动保存会重试
+        .catch(() => {})
+        .finally(() => {
+          creatingInitialSnapshotRef.current = false;
+        });
     }
   }, [markdown, theme, customCSS, themeName, saveSnapshot, loading]);
 
@@ -142,16 +141,13 @@ export function HistoryManager() {
 
     if (!currentActiveId) {
       if (currentHistory.length === 0) {
-        await saveSnapshot(
-          {
-            markdown: snapshot.markdown,
-            theme: snapshot.theme,
-            customCSS: snapshot.customCSS,
-            title: deriveTitle(snapshot.markdown),
-            themeName: snapshot.themeName,
-          },
-          { force: true },
-        );
+        await saveSnapshot({
+          markdown: snapshot.markdown,
+          theme: snapshot.theme,
+          customCSS: snapshot.customCSS,
+          title: deriveTitle(snapshot.markdown),
+          themeName: snapshot.themeName,
+        });
       }
       return;
     }
@@ -166,14 +162,15 @@ export function HistoryManager() {
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      void persistLatestSnapshot();
+      // 失败已由 historyDb 提示，正文仍在编辑器里，下次自动保存重试
+      persistLatestSnapshot().catch(() => {});
     }, AUTO_SAVE_INTERVAL);
     return () => window.clearInterval(intervalId);
   }, [persistLatestSnapshot]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      void persistLatestSnapshot();
+      persistLatestSnapshot().catch(() => {});
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -193,8 +190,7 @@ export function HistoryManager() {
       }
       return;
     }
-    const candidateEntry =
-      history.find((entry) => entry.id === activeId) ?? history[0];
+    const candidateEntry = active;
     if (!candidateEntry) return;
 
     const latest = latestRef.current;
@@ -207,15 +203,8 @@ export function HistoryManager() {
     // 首次加载时，始终应用历史记录，确保刷新后恢复上次编辑的内容
 
     if (matchesLatest) {
-      if (candidateEntry.id !== activeId) {
-        setActiveId(candidateEntry.id);
-      }
       hasAppliedInitialHistoryRef.current = true;
       return;
-    }
-
-    if (candidateEntry.id !== activeId) {
-      setActiveId(candidateEntry.id);
     }
 
     isRestoringRef.current = true;
@@ -246,9 +235,8 @@ export function HistoryManager() {
     isRestoringRef.current = false;
     hasAppliedInitialHistoryRef.current = true;
   }, [
-    history,
-    activeId,
-    setActiveId,
+    history.length,
+    active,
     setMarkdown,
     selectTheme,
     setCustomCSS,
