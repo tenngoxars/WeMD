@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Toaster } from "react-hot-toast";
+import { AppToaster } from "./components/common/AppToaster";
 import { Header } from "./components/Header/Header";
 import { FileSidebar } from "./components/Sidebar/FileSidebar";
 import { EditorPreviewWorkspace } from "./components/Workspace/EditorPreviewWorkspace";
@@ -205,7 +205,7 @@ function App() {
   if (isDesktop && !workspacePath) {
     return (
       <>
-        <Toaster position="top-center" />
+        <AppToaster />
         <Suspense
           fallback={
             <div className="workspace-loading">
@@ -259,39 +259,7 @@ function App() {
       )}
 
       <>
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            className: "premium-toast",
-            style: {
-              background: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              color: "#1a1a1a",
-              boxShadow: "0 12px 30px -10px rgba(0, 0, 0, 0.12)",
-              borderRadius: "10px",
-              padding: "10px 20px",
-              fontSize: "14px",
-              fontWeight: 500,
-              border: "1px solid rgba(0, 0, 0, 0.05)",
-              maxWidth: "400px",
-            },
-            success: {
-              iconTheme: {
-                primary: "var(--accent-primary)",
-                secondary: "var(--on-accent)",
-              },
-              duration: 2000,
-            },
-            error: {
-              iconTheme: {
-                primary: "#ef4444",
-                secondary: "#fff",
-              },
-              duration: 3000,
-            },
-          }}
-        />
+        <AppToaster />
         <Header />
         <main
           className={mainClass}

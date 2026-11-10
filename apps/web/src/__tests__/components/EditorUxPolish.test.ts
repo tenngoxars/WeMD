@@ -6,6 +6,14 @@ import { describe, expect, it } from "vitest";
 const indexCss = readFileSync("src/index.css", "utf8");
 const appCss = readFileSync("src/App.css", "utf8");
 const appTsx = readFileSync("src/App.tsx", "utf8");
+const appToasterTsx = readFileSync(
+  "src/components/common/AppToaster.tsx",
+  "utf8",
+);
+const appToasterCss = readFileSync(
+  "src/components/common/AppToaster.css",
+  "utf8",
+);
 const fileSidebarCss = readFileSync(
   "src/components/Sidebar/FileSidebar.css",
   "utf8",
@@ -69,7 +77,7 @@ describe("编辑器 UX 视觉校准", () => {
     expect(contrastRatio("#0b1f16", "#13a072")).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio("#0b1f16", "#15966a")).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio("#949494", "#2d2d30")).toBeGreaterThanOrEqual(4.5);
-    expect(appTsx).toContain('secondary: "var(--on-accent)"');
+    expect(appToasterTsx).toContain('secondary: "var(--on-accent)"');
   });
 
   it("强调按钮始终使用主题定义的前景色", () => {
@@ -132,7 +140,8 @@ describe("编辑器 UX 视觉校准", () => {
   });
 
   it("全局反馈提示使用克制圆角而不是胶囊形", () => {
-    expect(appTsx).toContain('borderRadius: "10px"');
-    expect(appTsx).not.toContain('borderRadius: "50px"');
+    expect(appToasterCss).toMatch(
+      /\.premium-toast\s*\{[\s\S]*?border-radius:\s*10px;/,
+    );
   });
 });

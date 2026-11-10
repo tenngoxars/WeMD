@@ -1,0 +1,110 @@
+/* 两级选择器：压过 react-hot-toast 运行时注入的单类名样式 */
+.app-toaster .premium-toast {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #1a1a1a;
+  box-shadow:
+    0 12px 30px -10px rgba(0, 0, 0, 0.12),
+    0 2px 6px -2px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  max-width: 400px;
+  transform-origin: 50% 0;
+  will-change: transform, opacity;
+}
+
+[data-ui-theme="dark"] .app-toaster .premium-toast {
+  background: rgba(45, 45, 48, 0.88);
+  color: var(--ui-text-primary);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 14px 34px -10px rgba(0, 0, 0, 0.55),
+    0 2px 6px -2px rgba(0, 0, 0, 0.4);
+}
+
+.app-toast__message {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  animation: app-toast-swap 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 弹簧回弹写进关键帧：下落时略冲过头，再回弹两次落定；每段各用各的缓动 */
+@keyframes app-toast-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-110%) scale(0.88);
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  52% {
+    opacity: 1;
+    transform: translateY(7%) scale(1.02);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  76% {
+    transform: translateY(-2%) scale(0.995);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes app-toast-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-36%) scale(0.92);
+  }
+}
+
+@keyframes app-toast-swap {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 新通知到来时，下面已有的通知被弹性地推开 */
+@media (prefers-reduced-motion: no-preference) {
+  .app-toaster > div {
+    transition: transform 0.5s cubic-bezier(0.34, 1.45, 0.64, 1) !important;
+  }
+}
+
+/* 减弱动效：只保留淡入淡出，不位移 */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes app-toast-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes app-toast-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  .app-toast__message {
+    animation: none;
+  }
+}
