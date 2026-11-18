@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   appendMarkdownFileNameCounter,
+  isTitleCompatibleWithFileName,
   normalizeMarkdownFileName,
+  resolveFileTitle,
 } from "../../utils/fileName";
 
 describe("normalizeMarkdownFileName", () => {
@@ -31,5 +33,27 @@ describe("normalizeMarkdownFileName", () => {
 
   it("会为 Markdown 文件名追加编号", () => {
     expect(appendMarkdownFileNameCounter("新文章.md", 2)).toBe("新文章 (2).md");
+  });
+});
+
+describe("resolveFileTitle", () => {
+  it("保留含非法字符的原始标题", () => {
+    expect(isTitleCompatibleWithFileName("产品_需求.md", "产品/需求")).toBe(
+      true,
+    );
+    expect(resolveFileTitle("产品_需求.md", "产品/需求")).toBe("产品/需求");
+  });
+
+  it("同名文章自动编号时仍保留原标题", () => {
+    expect(resolveFileTitle("新文章 (2).md", "新文章")).toBe("新文章");
+  });
+
+  it("外部改名后以磁盘文件名为准", () => {
+    expect(isTitleCompatibleWithFileName("清晰指南.md", "新文章")).toBe(false);
+    expect(resolveFileTitle("清晰指南.md", "新文章")).toBe("清晰指南");
+  });
+
+  it("没有 frontmatter 标题时回退文件名", () => {
+    expect(resolveFileTitle("未命名.md")).toBe("未命名");
   });
 });

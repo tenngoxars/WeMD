@@ -1,6 +1,7 @@
 import type { FileItem, TreeItem } from "../store/fileTypes";
 import type { FileItem as AdapterFileItem } from "../storage/types";
 import { getDesktop } from "../lib/platformAdapter";
+import { resolveFileTitle } from "../utils/fileName";
 
 export interface DesktopFileItem {
   name: string;
@@ -99,7 +100,7 @@ export function convertToTreeItems(items: DesktopFileItem[]): TreeItem[] {
       createdAt: new Date(entry.createdAt),
       updatedAt: new Date(entry.updatedAt),
       size: entry.size ?? 0,
-      title: entry.title,
+      title: resolveFileTitle(entry.name, entry.title),
       themeName: entry.themeName,
       isDirectory: false as const,
     };
@@ -128,7 +129,7 @@ export function convertAdapterFilesToTreeItems(
       createdAt: entry.updatedAt ? new Date(entry.updatedAt) : new Date(),
       updatedAt: entry.updatedAt ? new Date(entry.updatedAt) : new Date(),
       size: entry.size ?? 0,
-      title: (entry.meta?.title as string) || undefined,
+      title: resolveFileTitle(entry.name, entry.meta?.title as string),
       themeName: (entry.meta?.themeName as string) || undefined,
       isDirectory: false as const,
     };

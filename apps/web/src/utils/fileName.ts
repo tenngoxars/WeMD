@@ -1,4 +1,7 @@
+import { stripMarkdownExtension } from "./markdownFileMeta";
+
 const INVALID_FILE_NAME_CHARS_RE = /[\\/:*?"<>|]/g;
+const COUNTER_SUFFIX_RE = /^(.*) \((\d+)\)$/;
 
 interface NormalizeMarkdownFileNameOptions {
   fallback?: string;
@@ -31,4 +34,31 @@ export function appendMarkdownFileNameCounter(
   const normalized = normalizeMarkdownFileName(fileName);
   const base = normalized.replace(/\.md$/i, "");
   return `${base} (${counter}).md`;
+}
+
+/**
+ * frontmatter 标题是否仍与磁盘文件名对应。
+ * 同名文章自动加 (n) 后缀时标题不变，仍视为对应。
+ */
+export function isTitleCompatibleWithFileName(
+  name: string,
+  title?: string | null,
+): boolean {
+  const trimmed = title?.trim();
+  if (!trimmed) return false;
+
+  const normalizedStem = stripMarkdownExtension(
+    normalizeMarkdownFileName(trimmed),
+  );
+  const fileStem = stripMarkdownExtension(name);
+  if (normalizedStem === fileStem) return true;
+
+  const counter = fileStem.match(COUNTER_SUFFIX_RE);
+  return Boolean(counter && counter[1] === normalizedStem);
+}
+
+/** 标题与文件名不一致时，以磁盘文件名为准 */
+export function resolveFileTitle(name: string, title?: string | null): string {
+  if (isTitleCompatibleWithFileName(name, title)) return title!.trim();
+  return stripMarkdownExtension(name);
 }

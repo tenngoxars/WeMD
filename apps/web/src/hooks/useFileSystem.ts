@@ -28,6 +28,7 @@ import { useActiveFilePersistence } from "./useActiveFilePersistence";
 import {
   appendMarkdownFileNameCounter,
   normalizeMarkdownFileName,
+  resolveFileTitle,
 } from "../utils/fileName";
 
 interface UseFileSystemOptions {
@@ -251,10 +252,10 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
 
       if (success) {
         const parsed = parseMarkdownFileContent(content);
-        const resolvedTitle =
-          parsed.title?.trim() ||
-          file.title?.trim() ||
-          stripMarkdownExtension(file.name);
+        const resolvedTitle = resolveFileTitle(
+          file.name,
+          parsed.title?.trim() || file.title?.trim(),
+        );
 
         setCurrentFile({ ...file, title: resolvedTitle });
         setMarkdown(parsed.body);
