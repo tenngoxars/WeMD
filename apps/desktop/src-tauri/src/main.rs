@@ -100,7 +100,9 @@ fn main() {
             let builder = builder
                 .title_bar_style(tauri::TitleBarStyle::Overlay)
                 .hidden_title(true)
-                .traffic_light_position(tauri::LogicalPosition::new(20.0, 28.0));
+                // 红绿灯组与 54px 高、上移 16px 的标题卡片垂直居中，
+                // 水平居中于卡片为红绿灯预留的 80px 左侧空间
+                .traffic_light_position(tauri::LogicalPosition::new(38.0, 45.0));
             #[cfg(target_os = "windows")]
             let builder = builder.decorations(false);
             builder.build()?;
