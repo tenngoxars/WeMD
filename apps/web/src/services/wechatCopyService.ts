@@ -42,6 +42,12 @@ export interface WechatContainerOptions extends CopyToWechatOptions {
   width?: string;
   /** 不传时沿用用户的表格换行偏好 */
   tableWrap?: boolean;
+  /** 长图导出时覆盖正文字体族 */
+  fontFamily?: string;
+  /** 覆盖字体的回退族，字体缺字时使用 */
+  fontFallback?: string;
+  /** 长图导出时以该字号为基准等比缩放整篇文字 */
+  fontSize?: number;
 }
 
 export interface RenderedWechatContainer {
@@ -49,6 +55,80 @@ export interface RenderedWechatContainer {
   requiresExactHtmlTransport: boolean;
   mathFallback: MathImageRenderResult;
 }
+
+const escapeCssFamily = (family: string): string =>
+  family.replace(/["\\]/g, "\\$&");
+
+const buildFontOverrideCss = (
+  family?: string,
+  fallback = "sans-serif",
+): string => {
+  if (!family) return "";
+  // 单个字体族名需要加引号；包含逗号的完整字体栈原样使用
+  const stack = family.includes(",")
+    ? family
+    : `"${escapeCssFamily(family)}", ${fallback}`;
+  const textSelectors = [
+    "#wemd",
+    "#wemd p",
+    "#wemd li",
+    "#wemd blockquote",
+    "#wemd h1",
+    "#wemd h2",
+    "#wemd h3",
+    "#wemd h4",
+    "#wemd h5",
+    "#wemd h6",
+    "#wemd td",
+    "#wemd th",
+    "#wemd figcaption",
+    "#wemd dt",
+    "#wemd dd",
+    "#wemd summary",
+  ].join(", ");
+  // 代码块保留主题等宽字体；公式只让中文回退到所选字体，数学字形仍用 KaTeX_Main
+  return `${textSelectors}{font-family:${stack} !important;}\n#wemd .katex{font-family:KaTeX_Main, ${stack} !important;}`;
+};
+
+/**
+ * 按目标字号缩放整篇文字。主题样式已经内联为 px，逐元素乘系数，
+ * 保留原有的字号层级、行高比例与 !important 优先级；SVG（Mermaid）不参与。
+ */
+const scaleContainerFontSize = (
+  container: HTMLElement,
+  fontSize?: number,
+): void => {
+  if (!fontSize) return;
+  const root = container.firstElementChild as HTMLElement | null;
+  if (!root) return;
+  const base = Number.parseFloat(getComputedStyle(root).fontSize);
+  if (!base) return;
+  const scale = fontSize / base;
+  const scaled = (value: string) =>
+    value.endsWith("px")
+      ? `${Math.round(Number.parseFloat(value) * scale * 100) / 100}px`
+      : value;
+
+  const scaleProperty = (element: HTMLElement, property: string) => {
+    const value = element.style.getPropertyValue(property);
+    if (!value) return;
+    const priority = element.style.getPropertyPriority(property);
+    element.style.setProperty(property, scaled(value), priority);
+  };
+
+  // 根节点直接落到目标字号，保证没有内联 font-size 的继承文本也参与缩放
+  root.style.setProperty("font-size", `${fontSize}px`, "important");
+  (["line-height", "letter-spacing", "word-spacing"] as const).forEach(
+    (property) => scaleProperty(root, property),
+  );
+
+  root.querySelectorAll<HTMLElement>("*").forEach((element) => {
+    if (element.closest("svg")) return;
+    (
+      ["font-size", "line-height", "letter-spacing", "word-spacing"] as const
+    ).forEach((property) => scaleProperty(element, property));
+  });
+};
 
 const buildCopyCss = (themeCss: string) => {
   if (!themeCss) return katexCss;
@@ -276,7 +356,16 @@ export async function renderWechatContainer(
       sourceHtml,
       themedCss,
     );
-    const styledHtml = processHtml(materializedHtml, sanitizedCss, true, true);
+    const fontCss = buildFontOverrideCss(
+      options.fontFamily,
+      options.fontFallback,
+    );
+    const styledHtml = processHtml(
+      materializedHtml,
+      fontCss ? `${sanitizedCss}\n${fontCss}` : sanitizedCss,
+      true,
+      true,
+    );
     const resolvedHtml = resolveInlineStyleVariablesForCopy(styledHtml);
     const finalHtml = convertCheckboxesToEmoji(resolvedHtml);
 
@@ -288,6 +377,7 @@ export async function renderWechatContainer(
       container,
       options.tableWrap ?? getPublishingPreference("tableWrap"),
     );
+    scaleContainerFontSize(container, options.fontSize);
     renderMacSignDotsToImages(container);
     const { requiresExactHtmlTransport } = normalizeCopyContainer(container);
     return { container, requiresExactHtmlTransport, mathFallback };

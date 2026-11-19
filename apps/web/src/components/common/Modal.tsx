@@ -10,6 +10,8 @@ interface ModalProps {
   children: ReactNode;
   className?: string;
   bodyClassName?: string;
+  /** 为 false 时禁用遮罩、Esc 与关闭按钮 */
+  dismissible?: boolean;
 }
 
 const FOCUSABLE_SELECTOR = [
@@ -40,16 +42,22 @@ export function Modal({
   children,
   className,
   bodyClassName,
+  dismissible = true,
 }: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
+  const dismissibleRef = useRef(dismissible);
 
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+
+  useEffect(() => {
+    dismissibleRef.current = dismissible;
+  }, [dismissible]);
 
   useEffect(() => {
     if (!open) return;
@@ -65,7 +73,7 @@ export function Modal({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onCloseRef.current();
+        if (dismissibleRef.current) onCloseRef.current();
         return;
       }
       if (event.key !== "Tab" || !panel) return;
@@ -101,7 +109,7 @@ export function Modal({
   if (!open) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={dismissible ? onClose : undefined}>
       <div
         ref={panelRef}
         className={`modal-panel ${className || ""}`}
@@ -117,7 +125,12 @@ export function Modal({
             <h3 id={titleId}>{title}</h3>
             {description && <p id={descriptionId}>{description}</p>}
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="关闭">
+          <button
+            className="modal-close"
+            onClick={dismissible ? onClose : undefined}
+            aria-label="关闭"
+            disabled={!dismissible}
+          >
             <X size={16} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>

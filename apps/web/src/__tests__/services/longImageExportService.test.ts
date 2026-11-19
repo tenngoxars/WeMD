@@ -57,6 +57,10 @@ describe("exportLongImage", () => {
       .mockImplementation(() => undefined);
     mocked.renderWechatContainer.mockImplementation(async () => {
       const container = document.createElement("div");
+      Object.defineProperty(container, "scrollHeight", {
+        configurable: true,
+        value: 1000,
+      });
       document.body.appendChild(container);
       return { container };
     });
@@ -93,6 +97,10 @@ describe("exportLongImage", () => {
     mocked.renderWechatContainer.mockImplementation(async () => {
       const container = document.createElement("div");
       container.innerHTML = '<img src="data:image/png;base64,AA==">';
+      Object.defineProperty(container, "scrollHeight", {
+        configurable: true,
+        value: 1000,
+      });
       document.body.appendChild(container);
       return { container };
     });

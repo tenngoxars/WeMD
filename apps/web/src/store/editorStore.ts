@@ -4,7 +4,6 @@ import { useThemeStore } from "./themeStore";
 import { copyToWechat as execCopyToWechat } from "../services/wechatCopyService";
 import { copyAsHtml as execCopyAsHtml } from "../services/htmlCopyService";
 import { downloadHtml as execDownloadHtml } from "../services/htmlExportService";
-import { exportLongImage as execExportLongImage } from "../services/longImageExportService";
 
 export interface ResetOptions {
   markdown?: string;
@@ -31,11 +30,10 @@ interface EditorStore {
   copyToWechat: () => void;
   copyAsHtml: () => void;
   downloadHtml: () => void;
-  exportLongImage: () => void;
 }
 
 // 复制与长图共用当前主题的 CSS 和 Mac 顶栏设置
-const getActiveThemeRenderOptions = () => {
+export const getActiveThemeRenderOptions = () => {
   const themeStore = useThemeStore.getState();
   const css = themeStore.getThemeCSS(themeStore.themeId);
   const currentTheme =
@@ -213,10 +211,5 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   downloadHtml: async () => {
     const { css, showMacBar } = getActiveThemeRenderOptions();
     await execDownloadHtml(get().markdown, css, { showMacBar });
-  },
-
-  exportLongImage: async () => {
-    const { css, showMacBar } = getActiveThemeRenderOptions();
-    await execExportLongImage(get().markdown, css, { showMacBar });
   },
 }));

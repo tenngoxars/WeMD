@@ -11,6 +11,7 @@ import {
 import { useFileSystem } from "./hooks/useFileSystem";
 import { useMobileView } from "./hooks/useMobileView";
 import { MobileToolbar } from "./components/common/MobileToolbar";
+import { ExportLongImageDialog } from "./components/Export/ExportLongImageDialog";
 import { useEditorStore } from "./store/editorStore";
 import "./styles/global.css";
 import "./App.css";
@@ -64,8 +65,8 @@ function App() {
   const copyToWechat = useEditorStore((state) => state.copyToWechat);
   const copyAsHtml = useEditorStore((state) => state.copyAsHtml);
   const downloadHtml = useEditorStore((state) => state.downloadHtml);
-  const exportLongImage = useEditorStore((state) => state.exportLongImage);
   const [showThemePanel, setShowThemePanel] = useState(false);
+  const [showExportImage, setShowExportImage] = useState(false);
 
   // 自定义主题真源在工作区文件夹，副作用单点启用
   useEffect(() => {
@@ -261,7 +262,7 @@ function App() {
 
       <>
         <AppToaster />
-        <Header />
+        <Header onExportLongImage={() => setShowExportImage(true)} />
         <main
           className={mainClass}
           style={mainStyle}
@@ -319,7 +320,7 @@ function App() {
               onCopyToWechat={copyToWechat}
               onCopyAsHtml={copyAsHtml}
               onDownloadHtml={downloadHtml}
-              onExportLongImage={exportLongImage}
+              onExportLongImage={() => setShowExportImage(true)}
               onOpenTheme={() => setShowThemePanel(true)}
             />
           )}
@@ -333,6 +334,11 @@ function App() {
           onClose={() => setShowThemePanel(false)}
         />
       )}
+
+      <ExportLongImageDialog
+        open={showExportImage}
+        onClose={() => setShowExportImage(false)}
+      />
     </div>
   );
 }

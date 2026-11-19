@@ -1,0 +1,141 @@
+.export-select-trigger {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px 0 11px;
+  box-sizing: border-box;
+  border: var(--border-width) solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.export-select-trigger svg {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: color 140ms ease;
+}
+
+.export-select-trigger:hover:not(:disabled) {
+  border-color: color-mix(
+    in srgb,
+    var(--border-color) 65%,
+    var(--text-tertiary)
+  );
+  background: color-mix(in srgb, var(--bg-hover) 55%, var(--bg-primary));
+}
+
+.export-select-trigger:hover:not(:disabled) svg {
+  color: var(--text-primary);
+}
+
+.export-select-trigger[aria-expanded="true"] {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--accent-primary) 14%, transparent);
+}
+
+.export-select-trigger[aria-expanded="true"] svg {
+  color: var(--accent-primary);
+}
+
+.export-select-trigger:focus-visible {
+  border-color: var(--accent-primary);
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+.export-select-trigger:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+}
+
+.export-select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.export-select-menu {
+  position: fixed;
+  z-index: 3000;
+  max-height: 360px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
+  border: var(--border-width) solid
+    color-mix(in srgb, var(--border-light) 90%, var(--text-primary) 10%);
+  border-radius: 10px;
+  background: var(--bg-primary);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px color-mix(in srgb, var(--border-color) 30%, transparent);
+}
+
+.export-select-option {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.export-select-option.is-active {
+  background: var(--bg-hover);
+}
+
+.export-select-option[aria-selected="true"] {
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  font-weight: 500;
+}
+
+.export-select-option[aria-selected="true"].is-active {
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+.export-select-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.export-select-option-image {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
+}
+
+.export-select-check {
+  flex-shrink: 0;
+  color: var(--accent-primary);
+}

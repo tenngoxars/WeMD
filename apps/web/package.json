@@ -30,6 +30,7 @@
     "codemirror": "^6.0.2",
     "cos-js-sdk-v5": "^1.10.1",
     "crypto-js": "^4.2.0",
+    "fflate": "^0.8.3",
     "html-to-image": "^1.11.13",
     "idb": "^8.0.3",
     "katex": "^0.16.27",

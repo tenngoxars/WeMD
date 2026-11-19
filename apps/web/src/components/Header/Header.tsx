@@ -39,9 +39,12 @@ import { resolveAppAssetPath } from "../../utils/assetPath";
 import { Modal, FloatingToolbarButton, WindowControls } from "../common";
 import { AI_SETTINGS_OPEN_EVENT } from "../../services/ai/aiConfig";
 
-export function Header() {
-  const { copyToWechat, copyAsHtml, downloadHtml, exportLongImage } =
-    useEditorStore();
+interface HeaderProps {
+  onExportLongImage: () => void;
+}
+
+export function Header({ onExportLongImage }: HeaderProps) {
+  const { copyToWechat, copyAsHtml, downloadHtml } = useEditorStore();
   const [showThemePanel, setShowThemePanel] = useState(false);
   const [showStorageModal, setShowStorageModal] = useState(false);
   const [showImageHostModal, setShowImageHostModal] = useState(false);
@@ -137,7 +140,7 @@ export function Header() {
           <FloatingToolbarButton
             icon={<ImageDown size={18} strokeWidth={2} />}
             label="导出长图"
-            onClick={exportLongImage}
+            onClick={onExportLongImage}
           />
           <FloatingToolbarButton
             icon={<Send size={18} strokeWidth={2} />}
@@ -230,7 +233,7 @@ export function Header() {
             </button>
             <HeaderExportMenu
               onDownloadHtml={downloadHtml}
-              onExportLongImage={exportLongImage}
+              onExportLongImage={onExportLongImage}
             />
 
             <button

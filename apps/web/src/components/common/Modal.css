@@ -78,6 +78,17 @@
   border-color: var(--border-light);
 }
 
+.modal-close:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.modal-close:disabled:hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
 .modal-close:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;

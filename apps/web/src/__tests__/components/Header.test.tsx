@@ -87,7 +87,6 @@ describe("Header", () => {
       copyToWechat: mockCopyToWechat,
       copyAsHtml: mockCopyAsHtml,
       downloadHtml: mockDownloadHtml,
-      exportLongImage: mockExportLongImage,
     });
 
     vi.mocked(useUITheme).mockImplementation(
@@ -113,7 +112,7 @@ describe("Header", () => {
   });
 
   it("renders logo and core elements", () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     expect(screen.getByRole("img", { name: "WeMD Logo" })).toHaveAttribute(
       "src",
@@ -124,7 +123,7 @@ describe("Header", () => {
   });
 
   it("toggles theme interaction", () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     const themeBtn = screen.getByLabelText("切换到暗色模式");
     fireEvent.click(themeBtn);
@@ -132,14 +131,14 @@ describe("Header", () => {
   });
 
   it("calls copyToWechat action", () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     fireEvent.click(screen.getByText("复制到公众号"));
     expect(mockCopyToWechat).toHaveBeenCalled();
   });
 
   it("triggers copy and export actions", () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
     const trigger = screen.getByRole("button", { name: "导出" });
 
     fireEvent.click(screen.getByRole("button", { name: "复制带样式 HTML" }));
@@ -157,7 +156,7 @@ describe("Header", () => {
   });
 
   it("closes the export menu on Escape and outside click", () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
     const trigger = screen.getByRole("button", { name: "导出" });
 
     fireEvent.click(trigger);
@@ -172,7 +171,7 @@ describe("Header", () => {
   });
 
   it("opens article theme panel from the compact navigation", async () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     fireEvent.click(screen.getByRole("button", { name: "文章主题" }));
 
@@ -190,7 +189,7 @@ describe("Header", () => {
       close: mockClose,
     });
 
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     expect(screen.queryByLabelText("最小化")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("关闭")).not.toBeInTheDocument();
@@ -207,7 +206,7 @@ describe("Header", () => {
       close: mockClose,
     });
 
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     expect(screen.getByLabelText("最小化")).toBeInTheDocument();
     expect(screen.getByLabelText("最大化")).toBeInTheDocument();
@@ -219,7 +218,7 @@ describe("Header", () => {
   });
 
   it("toggles header visibility (hide/show)", () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     const hideBtn = screen.getByLabelText("隐藏标题栏");
     fireEvent.click(hideBtn);
@@ -232,7 +231,7 @@ describe("Header", () => {
   });
 
   it("shows floating toolbar buttons when header is hidden", () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     fireEvent.click(screen.getByLabelText("隐藏标题栏"));
 
@@ -259,7 +258,7 @@ describe("Header", () => {
       close: mockClose,
     });
 
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     const hiddenTitlebar = document.querySelector(".hidden-titlebar");
     expect(hiddenTitlebar).not.toBeNull();
@@ -284,7 +283,7 @@ describe("Header", () => {
       close: mockClose,
     });
 
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
     fireEvent.click(screen.getByLabelText("隐藏标题栏"));
 
     const hiddenTitlebar = document.querySelector(".hidden-titlebar");
@@ -301,7 +300,7 @@ describe("Header", () => {
   });
 
   it("does not render the hidden titlebar outside desktop", () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     fireEvent.click(screen.getByLabelText("隐藏标题栏"));
 
@@ -309,7 +308,7 @@ describe("Header", () => {
   });
 
   it("persists header visibility to localStorage", async () => {
-    render(<Header />);
+    render(<Header onExportLongImage={mockExportLongImage} />);
 
     fireEvent.click(screen.getByLabelText("隐藏标题栏"));
 
