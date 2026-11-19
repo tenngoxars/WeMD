@@ -5,6 +5,7 @@ import {
   MoreHorizontal,
   Palette,
   Code,
+  FileDown,
   ImageDown,
   X,
 } from "lucide-react";
@@ -17,6 +18,7 @@ interface MobileToolbarProps {
   onViewChange: (view: MobileViewType) => void;
   onCopyToWechat: () => void;
   onCopyAsHtml: () => void;
+  onDownloadHtml: () => void;
   onExportLongImage: () => void;
   onOpenTheme: () => void;
 }
@@ -29,6 +31,7 @@ export function MobileToolbar({
   onViewChange,
   onCopyToWechat,
   onCopyAsHtml,
+  onDownloadHtml,
   onExportLongImage,
   onOpenTheme,
 }: MobileToolbarProps) {
@@ -61,7 +64,17 @@ export function MobileToolbar({
                 }}
               >
                 <Code size={20} />
-                <span>复制 HTML</span>
+                <span>复制带样式 HTML</span>
+              </button>
+              <button
+                className="mobile-menu-item"
+                onClick={() => {
+                  onDownloadHtml();
+                  setShowMenu(false);
+                }}
+              >
+                <FileDown size={20} />
+                <span>下载 HTML 文件</span>
               </button>
               <button
                 className="mobile-menu-item"

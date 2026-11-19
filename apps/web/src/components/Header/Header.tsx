@@ -40,7 +40,8 @@ import { Modal, FloatingToolbarButton, WindowControls } from "../common";
 import { AI_SETTINGS_OPEN_EVENT } from "../../services/ai/aiConfig";
 
 export function Header() {
-  const { copyToWechat, copyAsHtml, exportLongImage } = useEditorStore();
+  const { copyToWechat, copyAsHtml, downloadHtml, exportLongImage } =
+    useEditorStore();
   const [showThemePanel, setShowThemePanel] = useState(false);
   const [showStorageModal, setShowStorageModal] = useState(false);
   const [showImageHostModal, setShowImageHostModal] = useState(false);
@@ -130,7 +131,7 @@ export function Header() {
           />
           <FloatingToolbarButton
             icon={<Code size={18} strokeWidth={2} />}
-            label="复制 HTML"
+            label="复制带样式 HTML"
             onClick={copyAsHtml}
           />
           <FloatingToolbarButton
@@ -219,8 +220,16 @@ export function Header() {
                 <Moon size={18} strokeWidth={2} />
               )}
             </button>
+            <button
+              className="btn-icon-only header-copy-html"
+              onClick={copyAsHtml}
+              aria-label="复制带样式 HTML"
+              data-tooltip="复制带样式 HTML"
+            >
+              <Code size={18} strokeWidth={2} />
+            </button>
             <HeaderExportMenu
-              onCopyAsHtml={copyAsHtml}
+              onDownloadHtml={downloadHtml}
               onExportLongImage={exportLongImage}
             />
 

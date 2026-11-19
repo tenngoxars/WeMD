@@ -170,19 +170,22 @@
   color: var(--accent-primary);
 }
 
-.app-header .header-theme-toggle {
+.app-header .header-theme-toggle,
+.app-header .header-copy-html {
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-secondary);
 }
 
-.app-header .header-theme-toggle:hover {
+.app-header .header-theme-toggle:hover,
+.app-header .header-copy-html:hover {
   border-color: var(--border-light);
   background: var(--bg-hover);
   color: var(--accent-primary);
 }
 
-.app-header .header-theme-toggle:focus-visible {
+.app-header .header-theme-toggle:focus-visible,
+.app-header .header-copy-html:focus-visible {
   border-color: var(--border-light);
   background: transparent;
   color: var(--text-primary);

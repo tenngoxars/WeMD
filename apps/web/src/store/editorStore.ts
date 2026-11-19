@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { useThemeStore } from "./themeStore";
 import { copyToWechat as execCopyToWechat } from "../services/wechatCopyService";
 import { copyAsHtml as execCopyAsHtml } from "../services/htmlCopyService";
+import { downloadHtml as execDownloadHtml } from "../services/htmlExportService";
 import { exportLongImage as execExportLongImage } from "../services/longImageExportService";
 
 export interface ResetOptions {
@@ -29,6 +30,7 @@ interface EditorStore {
   resetDocument: (options?: ResetOptions) => void;
   copyToWechat: () => void;
   copyAsHtml: () => void;
+  downloadHtml: () => void;
   exportLongImage: () => void;
 }
 
@@ -204,8 +206,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   copyAsHtml: async () => {
-    const { markdown } = get();
-    await execCopyAsHtml(markdown);
+    const { css, showMacBar } = getActiveThemeRenderOptions();
+    await execCopyAsHtml(get().markdown, css, { showMacBar });
+  },
+
+  downloadHtml: async () => {
+    const { css, showMacBar } = getActiveThemeRenderOptions();
+    await execDownloadHtml(get().markdown, css, { showMacBar });
   },
 
   exportLongImage: async () => {

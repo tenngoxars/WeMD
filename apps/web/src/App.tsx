@@ -63,6 +63,7 @@ function App() {
   const isMobile = isMobileScreen && !platform.isDesktop;
   const copyToWechat = useEditorStore((state) => state.copyToWechat);
   const copyAsHtml = useEditorStore((state) => state.copyAsHtml);
+  const downloadHtml = useEditorStore((state) => state.downloadHtml);
   const exportLongImage = useEditorStore((state) => state.exportLongImage);
   const [showThemePanel, setShowThemePanel] = useState(false);
 
@@ -317,6 +318,7 @@ function App() {
               onViewChange={setActiveView}
               onCopyToWechat={copyToWechat}
               onCopyAsHtml={copyAsHtml}
+              onDownloadHtml={downloadHtml}
               onExportLongImage={exportLongImage}
               onOpenTheme={() => setShowThemePanel(true)}
             />

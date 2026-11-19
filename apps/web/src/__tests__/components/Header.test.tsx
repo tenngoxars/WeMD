@@ -36,6 +36,7 @@ describe("Header", () => {
   // Default mocks
   const mockCopyToWechat = vi.fn();
   const mockCopyAsHtml = vi.fn();
+  const mockDownloadHtml = vi.fn();
   const mockExportLongImage = vi.fn();
   const mockSetTheme = vi.fn();
   const mockMinimize = vi.fn();
@@ -85,6 +86,7 @@ describe("Header", () => {
     vi.mocked(useEditorStore).mockReturnValue({
       copyToWechat: mockCopyToWechat,
       copyAsHtml: mockCopyAsHtml,
+      downloadHtml: mockDownloadHtml,
       exportLongImage: mockExportLongImage,
     });
 
@@ -136,13 +138,16 @@ describe("Header", () => {
     expect(mockCopyToWechat).toHaveBeenCalled();
   });
 
-  it("triggers export actions from the export menu and closes it", () => {
+  it("triggers copy and export actions", () => {
     render(<Header />);
     const trigger = screen.getByRole("button", { name: "导出" });
 
-    fireEvent.click(trigger);
-    fireEvent.click(screen.getByRole("menuitem", { name: "复制 HTML" }));
+    fireEvent.click(screen.getByRole("button", { name: "复制带样式 HTML" }));
     expect(mockCopyAsHtml).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole("menuitem", { name: "下载 HTML 文件" }));
+    expect(mockDownloadHtml).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
 
     fireEvent.click(trigger);

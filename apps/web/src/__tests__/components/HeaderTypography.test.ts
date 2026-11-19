@@ -40,9 +40,12 @@ describe("Header 字标排版", () => {
     expect(headerSource).toContain(
       'className="btn-icon-only header-theme-toggle"',
     );
+    expect(headerSource).toContain(
+      'className="btn-icon-only header-copy-html"',
+    );
     expect(headerCss).toMatch(/\.header-right\s*\{[\s\S]*?gap:\s*6px;/);
     expect(headerCss).toMatch(
-      /\.app-header \.header-theme-toggle\s*\{[\s\S]*?border:\s*1px solid transparent;[\s\S]*?background:\s*transparent;[\s\S]*?color:\s*var\(--text-secondary\);/,
+      /\.app-header \.header-theme-toggle,[\s\S]*?\.app-header \.header-copy-html\s*\{[\s\S]*?border:\s*1px solid transparent;[\s\S]*?background:\s*transparent;[\s\S]*?color:\s*var\(--text-secondary\);/,
     );
     expect(headerCss).toMatch(
       /\.app-header \.header-action-secondary\s*\{[\s\S]*?background-color:\s*transparent;/,

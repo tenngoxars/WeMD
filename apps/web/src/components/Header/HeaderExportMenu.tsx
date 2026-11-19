@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Code, Download, ImageDown } from "lucide-react";
+import { ChevronDown, Download, FileDown, ImageDown } from "lucide-react";
 
 interface HeaderExportMenuProps {
-  onCopyAsHtml: () => void;
+  onDownloadHtml: () => void;
   onExportLongImage: () => void;
 }
 
-/** 顶栏「导出」下拉：点击展开，点击外部或按 Esc 关闭，触屏设备同样可用 */
+/** 顶栏「导出」下拉：只放文件导出，复制动作单独放顶栏按钮 */
 export function HeaderExportMenu({
-  onCopyAsHtml,
+  onDownloadHtml,
   onExportLongImage,
 }: HeaderExportMenuProps) {
   const [open, setOpen] = useState(false);
@@ -52,11 +52,11 @@ export function HeaderExportMenu({
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              onCopyAsHtml();
+              onDownloadHtml();
             }}
           >
-            <Code size={16} strokeWidth={2} />
-            复制 HTML
+            <FileDown size={16} strokeWidth={2} />
+            下载 HTML 文件
           </button>
           <button
             type="button"

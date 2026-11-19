@@ -1,40 +1,9 @@
 import toast from "react-hot-toast";
-import { createMarkdownParser } from "@wemd/core";
 import { getDesktop } from "../lib/platformAdapter";
-
-// 剥离 parser 为微信主题 CSS 注入的结构装饰（prefix/content/suffix span、<li><section>、空 <center>）。
-// 外部编辑器不认这些 class，留着只会变成语义噪音。
-export function sanitizeForExternalHtml(html: string): string {
-  const doc = new DOMParser().parseFromString(
-    `<body>${html}</body>`,
-    "text/html",
-  );
-  const body = doc.body;
-
-  body.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((h) => {
-    const prefix = h.querySelector(":scope > span.prefix");
-    const content = h.querySelector(":scope > span.content");
-    const suffix = h.querySelector(":scope > span.suffix");
-    if (prefix && content && suffix) {
-      h.innerHTML = content.innerHTML;
-    }
-  });
-
-  body.querySelectorAll("li").forEach((li) => {
-    if (li.children.length === 1 && li.children[0].tagName === "SECTION") {
-      const section = li.children[0] as HTMLElement;
-      li.innerHTML = section.innerHTML;
-    }
-  });
-
-  body.querySelectorAll("center").forEach((c) => {
-    if (!c.textContent?.trim() && c.children.length === 0) {
-      c.remove();
-    }
-  });
-
-  return body.innerHTML;
-}
+import {
+  renderWechatContainer,
+  type WechatContainerOptions,
+} from "./wechatCopyService";
 
 const copyViaDesktopClipboard = async (text: string): Promise<boolean> => {
   const writeText = getDesktop()?.clipboard?.writeText;
@@ -79,23 +48,31 @@ const copyViaExecCommand = (text: string): boolean => {
   }
 };
 
-export async function copyAsHtml(markdown: string): Promise<void> {
-  const parser = createMarkdownParser({
-    showMacBar: false,
-    mathRenderer: "katex",
-  });
-  const rawHtml = parser.render(markdown);
-  const html = sanitizeForExternalHtml(rawHtml);
+export async function copyAsHtml(
+  markdown: string,
+  css: string,
+  options: Pick<WechatContainerOptions, "showMacBar"> = {},
+): Promise<void> {
+  let container: HTMLDivElement | null = null;
+  try {
+    const rendered = await renderWechatContainer(markdown, css, options);
+    container = rendered.container;
+    const html = container.innerHTML;
 
-  const copied =
-    (await copyViaDesktopClipboard(html)) ||
-    (await copyViaNavigatorClipboard(html)) ||
-    copyViaExecCommand(html);
+    const copied =
+      (await copyViaDesktopClipboard(html)) ||
+      (await copyViaNavigatorClipboard(html)) ||
+      copyViaExecCommand(html);
 
-  if (copied) {
-    toast.success("已复制 HTML");
-    return;
+    if (copied) {
+      toast.success("已复制带样式 HTML");
+      return;
+    }
+    toast.error("复制 HTML 失败");
+  } catch (error) {
+    console.error("复制 HTML 失败:", error);
+    toast.error("复制 HTML 失败");
+  } finally {
+    container?.remove();
   }
-
-  toast.error("复制 HTML 失败");
 }
