@@ -215,7 +215,35 @@ describe("wechatCopyService clipboard strategy", () => {
     );
   });
 
-  it("prefers desktop clipboard bridge in desktop runtime", async () => {
+  it.each(["darwin", "win32", "linux"])(
+    "桌面端 %s 统一优先原生选区链路，避免继承样式被公众号清洗",
+    async (platformName) => {
+      Object.defineProperty(window, "wemdDesktop", {
+        configurable: true,
+        value: {
+          platform: platformName,
+          clipboard: {
+            writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
+              success: true,
+            }),
+          },
+        },
+      });
+      const execSpy = vi
+        .spyOn(document, "execCommand")
+        .mockImplementation(dispatchSuccessfulCopy);
+
+      await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+
+      expect(execSpy).toHaveBeenCalledWith("copy");
+      expect(mocked.desktopClipboardWrite).not.toHaveBeenCalled();
+      expect(mocked.clipboardWrite).not.toHaveBeenCalled();
+      expect(mocked.toastSuccess).toHaveBeenCalled();
+      expect(mocked.toastError).not.toHaveBeenCalled();
+    },
+  );
+
+  it("原生选区链路未生效时回退桌面桥", async () => {
     Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: {
@@ -227,65 +255,12 @@ describe("wechatCopyService clipboard strategy", () => {
         },
       },
     });
-    const execSpy = vi
-      .spyOn(document, "execCommand")
-      .mockImplementation(dispatchSuccessfulCopy);
-
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
-
-    expect(mocked.desktopClipboardWrite).toHaveBeenCalledTimes(1);
-    expect(execSpy).not.toHaveBeenCalled();
-    expect(mocked.clipboardWrite).not.toHaveBeenCalled();
-    expect(mocked.toastSuccess).toHaveBeenCalled();
-    expect(mocked.toastError).not.toHaveBeenCalled();
-  });
-
-  it("prefers native execCommand in desktop win32 runtime", async () => {
-    Object.defineProperty(window, "wemdDesktop", {
-      configurable: true,
-      value: {
-        platform: "win32",
-        clipboard: {
-          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
-            success: true,
-          }),
-        },
-      },
-    });
-    const execSpy = vi
-      .spyOn(document, "execCommand")
-      .mockImplementation(dispatchSuccessfulCopy);
+    const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(true);
 
     await copyToWechat("test", "#wemd p { margin: 18px 0; }");
 
     expect(execSpy).toHaveBeenCalledWith("copy");
-    expect(mocked.desktopClipboardWrite).not.toHaveBeenCalled();
-    expect(mocked.clipboardWrite).not.toHaveBeenCalled();
-    expect(mocked.toastSuccess).toHaveBeenCalled();
-    expect(mocked.toastError).not.toHaveBeenCalled();
-  });
-
-  it("falls back to native execCommand when desktop bridge returns failure", async () => {
-    Object.defineProperty(window, "wemdDesktop", {
-      configurable: true,
-      value: {
-        platform: "darwin",
-        clipboard: {
-          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
-            success: false,
-            error: "bridge failed",
-          }),
-        },
-      },
-    });
-    const execSpy = vi
-      .spyOn(document, "execCommand")
-      .mockImplementation(dispatchSuccessfulCopy);
-
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
-
     expect(mocked.desktopClipboardWrite).toHaveBeenCalledTimes(1);
-    expect(execSpy).toHaveBeenCalledWith("copy");
     expect(mocked.clipboardWrite).not.toHaveBeenCalled();
     expect(mocked.toastSuccess).toHaveBeenCalled();
     expect(mocked.toastError).not.toHaveBeenCalled();
@@ -315,7 +290,7 @@ describe("wechatCopyService clipboard strategy", () => {
     expect(mocked.toastError).not.toHaveBeenCalled();
   });
 
-  it("falls back to desktop bridge when win32 execCommand fails", async () => {
+  it("native execCommand 失败时回退桌面桥", async () => {
     Object.defineProperty(window, "wemdDesktop", {
       configurable: true,
       value: {
@@ -369,6 +344,7 @@ describe("wechatCopyService clipboard strategy", () => {
   });
 
   it("normalizes text color for nodes inserted by mermaid renderer", async () => {
+    vi.spyOn(document, "execCommand").mockReturnValue(false);
     mocked.renderMermaidBlocks.mockImplementationOnce(
       async (container?: Element) => {
         if (!container) return;
@@ -410,6 +386,7 @@ describe("wechatCopyService clipboard strategy", () => {
   });
 
   it("复制时将 Mac Bar 圆点转换为公众号可保留的清晰远程图片", async () => {
+    vi.spyOn(document, "execCommand").mockReturnValue(false);
     mocked.processHtmlMock.mockReturnValue(MAC_BAR_HTML);
 
     Object.defineProperty(window, "wemdDesktop", {
@@ -457,6 +434,7 @@ describe("wechatCopyService clipboard strategy", () => {
   });
 
   it("Mac Bar 圆点尺寸无法推导时保留 HTML 圆点并继续复制", async () => {
+    vi.spyOn(document, "execCommand").mockReturnValue(false);
     mocked.processHtmlMock.mockReturnValue(MAC_BAR_HTML_WITHOUT_METRICS);
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 

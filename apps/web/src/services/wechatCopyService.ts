@@ -235,17 +235,6 @@ const copyViaDesktopClipboard = async (
   });
 };
 
-const shouldPreferDesktopClipboard = (): boolean => {
-  const desktop = getDesktop();
-  if (!desktop) return false;
-
-  // Windows 下优先使用与手动复制一致的选区链路，降低公众号样式丢失概率
-  if (desktop.platform === "win32") return false;
-  if (desktop.platform === "darwin" || desktop.platform === "linux")
-    return true;
-  return false;
-};
-
 // ── 主编排流程 ──────────────────────────────────────
 
 /**
@@ -320,13 +309,13 @@ export async function copyToWechat(
     container = rendered.container;
     const { requiresExactHtmlTransport, mathFallback } = rendered;
 
-    let copied = false;
-
-    const preferDesktopClipboard = shouldPreferDesktopClipboard();
-
-    if (!preferDesktopClipboard) {
-      copied = copyViaNativeExecCommand(container, requiresExactHtmlTransport);
-    }
+    // 公众号会清洗最外层容器的样式。原生选区链路会把继承后的计算样式落到每个节点上，
+    // 桌面桥只写 innerHTML，字体、行距等继承样式仅存在于根节点，粘贴后易被清洗丢失。
+    // 因此所有桌面平台都优先走原生选区链路，桌面桥只作为回退。
+    let copied = copyViaNativeExecCommand(
+      container,
+      requiresExactHtmlTransport,
+    );
 
     if (!copied && getDesktop()) {
       try {
@@ -343,10 +332,6 @@ export async function copyToWechat(
       } catch (e) {
         console.error("桌面端剪贴板写入失败，降级为浏览器复制链路", e);
       }
-    }
-
-    if (!copied && preferDesktopClipboard) {
-      copied = copyViaNativeExecCommand(container, requiresExactHtmlTransport);
     }
 
     if (!copied && navigator.clipboard && window.ClipboardItem) {
