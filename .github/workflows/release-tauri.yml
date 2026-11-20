@@ -181,8 +181,17 @@ jobs:
           jq -n --arg version "${TAG#v}" --arg pub_date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --argjson platforms "$platforms" --slurpfile release /tmp/release.json \
             '{version: $version, notes: ($release[0].body // ""), pub_date: $pub_date, platforms: $platforms}' > latest.json
-          # --clobber 覆盖重跑时留下的旧 latest.json；gh release upload 支持草稿 Release
-          gh release upload "$TAG" latest.json --clobber -R "$GITHUB_REPOSITORY"
+          # 草稿 Release 用 tag 名查经常撞 untagged 报错，改按 release id 的 upload_url 直接上传；重跑时先删同名旧资产
+          old_id=$(jq -r '.[] | select(.name == "latest.json") | .id' <<<"$assets")
+          if [[ -n "$old_id" ]]; then
+            gh api -X DELETE "$api/assets/$old_id"
+          fi
+          upload_url=$(jq -r '.upload_url | split("{")[0]' /tmp/release.json)
+          curl -fsSL -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @latest.json \
+            "${upload_url}?name=latest.json" > /dev/null
 
   publish:
     needs: [release-notes, build-macos, build-windows, build-linux, updater-json]
@@ -192,4 +201,6 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release edit "${{ github.ref_name }}" -R "$GITHUB_REPOSITORY" --draft=false
+          TAG: ${{ github.ref_name }}
+          RELEASE_ID: ${{ needs.release-notes.outputs.release-id }}
+        run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" -f tag_name="$TAG" -F draft=false > /dev/null
