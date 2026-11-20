@@ -14,15 +14,26 @@ mod menu;
 mod watcher;
 mod workspace;
 
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::webview::NewWindowResponse;
+use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
 
-/// 只放行 http/https，与 Electron 版一致
+fn is_external_http_url(url: &str) -> bool {
+    let Ok(parsed) = Url::parse(url) else {
+        return false;
+    };
+    matches!(parsed.scheme(), "http" | "https") && parsed.host_str() != Some("tauri.localhost")
+}
+
+/// 只放行 http/https，与 Electron 版一致；失败时向前端返回错误，避免静默无响应
 #[tauri::command]
-fn open_external(url: String, app: AppHandle) {
-    if url.starts_with("http://") || url.starts_with("https://") {
-        let _ = app.opener().open_url(url, None::<&str>);
+fn open_external(url: String, app: AppHandle) -> Result<(), String> {
+    if !is_external_http_url(&url) {
+        return Ok(());
     }
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|error| error.to_string())
 }
 
 /// 能否应用内自更新：Linux 只有 AppImage 能替换自身，deb 等系统包交给包管理器
@@ -81,6 +92,7 @@ fn main() {
             migration::migration_take_hint,
         ])
         .setup(|app| {
+            let opener_handle = app.handle().clone();
             let builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
                 .title("WeMD")
                 .inner_size(1280.0, 800.0)
@@ -88,6 +100,13 @@ fn main() {
                 .maximized(true)
                 // 侧边栏拖放走 HTML5 drop，关闭原生拖放接管
                 .disable_drag_drop_handler()
+                // wry 默认拦截所有新窗口请求（target="_blank" / window.open），统一转交系统浏览器打开
+                .on_new_window(move |url, _features| {
+                    if is_external_http_url(url.as_str()) {
+                        let _ = opener_handle.opener().open_url(url.as_str(), None::<&str>);
+                    }
+                    NewWindowResponse::Deny
+                })
                 .on_download(download::handle)
                 .initialization_script(include_str!("bridge.js"));
             // Electron 设置迁移：必须在页面脚本之前写入 localStorage，挂载时才不会把旧值写回
@@ -104,7 +123,25 @@ fn main() {
                 // 水平居中于卡片为红绿灯预留的 80px 左侧空间
                 .traffic_light_position(tauri::LogicalPosition::new(38.0, 45.0));
             #[cfg(target_os = "windows")]
-            let builder = builder.decorations(false);
+            let builder = builder.decorations(false).on_web_resource_request(|request, response| {
+                use std::borrow::Cow;
+                use tauri::http::{header, HeaderValue, StatusCode};
+
+                // 桌面资源已打包；退出旧版 PWA 缓存，但不清理用户存储。
+                match request.uri().path() {
+                    "/sw.js" => {
+                        *response.body_mut() = Cow::Borrowed(include_bytes!("retire-pwa-worker.js"));
+                    }
+                    "/registerSW.js" => {
+                        *response.status_mut() = StatusCode::NO_CONTENT;
+                        *response.body_mut() = Cow::Borrowed(b"");
+                    }
+                    _ => return,
+                }
+                response
+                    .headers_mut()
+                    .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+            });
             builder.build()?;
             #[cfg(feature = "automation")]
             automation::start(app.handle().clone());
@@ -112,4 +149,22 @@ fn main() {
         })
         .run(tauri::generate_context!())
         .expect("WeMD 启动失败");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_external_http_url;
+
+    #[test]
+    fn allows_only_external_http_and_https_urls() {
+        assert!(is_external_http_url("https://img.wemd.app/fonts/wenkai/OFL.txt"));
+        assert!(is_external_http_url("http://example.com/license"));
+        assert!(is_external_http_url("HTTPS://wemd.app/docs"));
+        assert!(!is_external_http_url("http://tauri.localhost/index.html"));
+        assert!(!is_external_http_url("https://tauri.localhost/index.html"));
+        assert!(!is_external_http_url("tauri://localhost/index.html"));
+        assert!(!is_external_http_url("javascript:alert(1)"));
+        assert!(!is_external_http_url("file:///C:/Windows/System32/cmd.exe"));
+        assert!(!is_external_http_url(""));
+    }
 }

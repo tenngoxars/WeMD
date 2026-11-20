@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Modal } from "../common";
 import { ExportDropdown, type ExportDropdownOption } from "./ExportDropdown";
+import { getDesktop } from "../../lib/platformAdapter";
 import {
   getActiveThemeRenderOptions,
   useEditorStore,
@@ -456,6 +457,16 @@ export function ExportLongImageDialog({
                         href={`https://img.wemd.app/fonts/${selectedFont.licenseFiles[0]}`}
                         target="_blank"
                         rel="noreferrer"
+                        onClick={(event) => {
+                          const shell = getDesktop()?.shell;
+                          if (!shell) return;
+                          event.preventDefault();
+                          void shell
+                            .openExternal(event.currentTarget.href)
+                            .catch(() => {
+                              toast.error("无法打开字体许可链接");
+                            });
+                        }}
                       >
                         字体许可
                       </a>

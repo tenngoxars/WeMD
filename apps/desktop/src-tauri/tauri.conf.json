@@ -26,7 +26,19 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "template": "nsis/installer.nsi",
+        "installerHooks": "nsis/welcome.nsh",
+        "installerIcon": "icons/installer.ico",
+        "uninstallerIcon": "icons/installer.ico",
+        "headerImage": "icons/nsis/header.bmp",
+        "sidebarImage": "icons/nsis/sidebar.bmp",
+        "uninstallerHeaderImage": "icons/nsis/header.bmp",
+        "languages": ["SimpChinese"]
+      }
+    }
   },
   "plugins": {
     "updater": {

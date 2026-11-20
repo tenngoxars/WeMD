@@ -5,6 +5,30 @@
   const ua = navigator.userAgent;
   const platform = /Mac/.test(ua) ? "darwin" : /Win/.test(ua) ? "win32" : "linux";
 
+  // WebView2 的旧 PWA worker 会从缓存启动上一版界面。主动注销并只清理 Workbox 预缓存，保留字体缓存与用户数据。
+  if (platform === "win32" && location.hostname === "tauri.localhost" && "serviceWorker" in navigator) {
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    void navigator.serviceWorker
+      .getRegistrations()
+      .then(async (registrations) => {
+        if (!registrations.length) return;
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(
+            keys
+              .filter((key) => key.startsWith("workbox-precache"))
+              .map((key) => caches.delete(key)),
+          );
+        }
+        if (hadController && !sessionStorage.getItem("wemd-sw-retired")) {
+          sessionStorage.setItem("wemd-sw-retired", "1");
+          location.reload();
+        }
+      })
+      .catch((error) => console.error("[WeMD] 无法停用旧版界面缓存", error));
+  }
+
   // 事件频道，对应 Electron 的 ipcRenderer.on/removeListener：on 返回的句柄用于解绑
   const listeners = {};
   const on = (channel, callback) => {
