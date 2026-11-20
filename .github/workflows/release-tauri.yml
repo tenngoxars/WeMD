@@ -36,9 +36,10 @@ jobs:
 
       - name: Extract release notes
         run: |
-          python3 - "${{ github.ref_name }}" /tmp/wemd-changelog.md /tmp/wemd-release-notes.md <<'PY'
+          python3 - "${{ github.ref_name }}" "${{ github.repository }}" /tmp/wemd-changelog.md /tmp/wemd-release-notes.md <<'PY'
           import re, sys
-          tag, src, dst = sys.argv[1], sys.argv[2], sys.argv[3]
+          tag, repo, src, dst = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+          ver = tag.lstrip("v")
           text = open(src, encoding="utf-8").read()
           # 匹配 "## vX.Y.Z ..." 整行标题，避免前缀误匹配（如 v2.0.0 不会命中 v2.0.0-beta.1）
           m = re.search(rf"^## {re.escape(tag)}(?: |$)[^\n]*\n", text, re.M)
@@ -47,7 +48,19 @@ jobs:
           start = m.end()
           nxt = re.search(r"^## v\d", text[start:], re.M)
           end = start + nxt.start() if nxt else len(text)
-          open(dst, "w", encoding="utf-8").write(text[start:end].strip() + "\n")
+          base = f"https://github.com/{repo}/releases/download/{tag}"
+          header = (
+              "### 下载安装包\n\n"
+              "| 平台 | 安装包 | 说明 |\n"
+              "| --- | --- | --- |\n"
+              f"| macOS（Apple Silicon） | [WeMD_{ver}_aarch64.dmg]({base}/WeMD_{ver}_aarch64.dmg) | 推荐，拖入「应用程序」即可 |\n"
+              f"| Windows（x64） | [WeMD_{ver}_x64-setup.exe]({base}/WeMD_{ver}_x64-setup.exe) | 安装包，支持应用内自动更新 |\n"
+              f"| Linux（Debian / Ubuntu） | [WeMD_{ver}_amd64.deb]({base}/WeMD_{ver}_amd64.deb) | 推荐 |\n"
+              f"| Linux（通用） | [WeMD_{ver}_amd64.AppImage]({base}/WeMD_{ver}_amd64.AppImage) | 实验性 |\n\n"
+              f"> 底部列表中的 `latest.json` 与 `WeMD_{ver}_aarch64.app.tar.gz` 供应用内自动更新使用，无需手动下载。\n\n"
+              "<!-- download-table:end -->\n\n"
+          )
+          open(dst, "w", encoding="utf-8").write(header + text[start:end].strip() + "\n")
           PY
 
       # 重跑时同 tag 可能已有草稿：复用并更新；已公开的不覆盖
@@ -180,7 +193,7 @@ jobs:
           done
           jq -n --arg version "${TAG#v}" --arg pub_date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --argjson platforms "$platforms" --slurpfile release /tmp/release.json \
-            '{version: $version, notes: ($release[0].body // ""), pub_date: $pub_date, platforms: $platforms}' > latest.json
+            '{version: $version, notes: (($release[0].body // "") | split("<!-- download-table:end -->") | last | ltrimstr("\n")), pub_date: $pub_date, platforms: $platforms}' > latest.json
           # 草稿 Release 用 tag 名查经常撞 untagged 报错，改按 release id 的 upload_url 直接上传；重跑时先删同名旧资产
           old_id=$(jq -r '.[] | select(.name == "latest.json") | .id' <<<"$assets")
           if [[ -n "$old_id" ]]; then
@@ -192,6 +205,10 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @latest.json \
             "${upload_url}?name=latest.json" > /dev/null
+          # 签名已写入 latest.json，清理所有 .sig 中间文件，保持 Release 资产列表简洁
+          for sig_id in $(jq -r '.[] | select(.name | endswith(".sig")) | .id' <<<"$assets"); do
+            gh api -X DELETE "$api/assets/$sig_id"
+          done
 
   publish:
     needs: [release-notes, build-macos, build-windows, build-linux, updater-json]
