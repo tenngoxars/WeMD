@@ -66,9 +66,11 @@ jobs:
             exit 1
           fi
           if [[ -z "$existing" ]]; then
-            gh release create "$TAG" -R "$GITHUB_REPOSITORY" --draft --prerelease="$prerelease" --verify-tag \
-              --title "WeMD $TAG" --notes-file /tmp/wemd-release-notes.md
-            id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$TAG\") | .id")
+            # 直接用 POST 返回的 id，避免 gh release create 后立即列表查询撞 GitHub 最终一致性拿到空值
+            id=$(jq -n --rawfile body /tmp/wemd-release-notes.md \
+              --arg tag "$TAG" --arg name "WeMD $TAG" --argjson pre "$prerelease" \
+              '{tag_name: $tag, name: $name, body: $body, draft: true, prerelease: $pre}' \
+              | gh api -X POST "repos/$GITHUB_REPOSITORY/releases" --input - --jq '.id')
           else
             read -r id draft <<<"$existing"
             if [[ "$draft" != "true" ]]; then
@@ -78,6 +80,10 @@ jobs:
             jq -n --rawfile body /tmp/wemd-release-notes.md --arg name "WeMD $TAG" --argjson pre "$prerelease" \
               '{name: $name, body: $body, prerelease: $pre}' \
               | gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$id" --input - > /dev/null
+          fi
+          if [[ -z "$id" ]]; then
+            echo "::error::无法获取草稿 Release ID"
+            exit 1
           fi
           echo "release-id=$id" >> "$GITHUB_OUTPUT"
 
