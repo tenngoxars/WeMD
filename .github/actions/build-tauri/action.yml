@@ -1,0 +1,87 @@
+name: build-tauri
+description: 构建 Tauri 2 桌面端安装包（三平台复用）
+
+inputs:
+  bundles:
+    description: "传给 tauri build --bundles 的打包格式"
+    required: true
+  is-tag:
+    description: "是否为 tag 正式发版（true/false）"
+    required: true
+  release-id:
+    description: "草稿 Release ID（仅 tag 发版需要）"
+    required: false
+    default: ""
+  github-token:
+    description: "GitHub Token"
+    required: true
+  signing-private-key:
+    description: "Tauri updater 签名私钥"
+    required: false
+    default: ""
+  signing-private-key-password:
+    description: "Tauri updater 签名私钥密码"
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PNPM
+      uses: pnpm/action-setup@v6
+      with:
+        version: 9.0.2
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: pnpm
+
+    - uses: dtolnay/rust-toolchain@stable
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: apps/desktop/src-tauri
+
+    - name: Install dependencies
+      shell: bash
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      run: pnpm install --frozen-lockfile
+
+    # 发版：签名更新包，安装包与 .sig 上传到草稿 Release；latest.json 由 updater-json 统一生成，避免并发读改写丢平台
+    - name: Build and upload release assets
+      if: inputs.is-tag == 'true'
+      uses: tauri-apps/tauri-action@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        TAURI_SIGNING_PRIVATE_KEY: ${{ inputs.signing-private-key }}
+        TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ inputs.signing-private-key-password }}
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      with:
+        projectPath: apps/desktop
+        tauriScript: pnpm tauri
+        args: --bundles ${{ inputs.bundles }} --config src-tauri/tauri.release.conf.json
+        releaseId: ${{ inputs.release-id }}
+        uploadUpdaterJson: false
+
+    # 验证：只构建，不签名、不发布
+    - name: Build only
+      if: inputs.is-tag != 'true'
+      shell: bash
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      run: pnpm --filter @wemd/desktop tauri build --bundles ${{ inputs.bundles }}
+
+    - name: Upload workflow artifacts
+      if: inputs.is-tag != 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: wemd-tauri-${{ runner.os }}
+        retention-days: 7
+        path: |
+          apps/desktop/src-tauri/target/release/bundle/deb/*.deb
+          apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+          apps/desktop/src-tauri/target/release/bundle/dmg/*.dmg
+          apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
+        if-no-files-found: error

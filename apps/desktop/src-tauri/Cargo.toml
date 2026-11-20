@@ -31,10 +31,9 @@ tauri-plugin-process = "2.4.0"
 # 测试构建专用，正式包不启用
 automation = []
 
-# 体积优先：安装包大小是原型的验收项之一
+# 体积与构建速度均衡：ThinLTO 保留绝大部分体积收益，同时允许并行链接缩短 CI 编译时间
 [profile.release]
 opt-level = "s"
-lto = true
-codegen-units = 1
+lto = "thin"
 panic = "abort"
 strip = true
