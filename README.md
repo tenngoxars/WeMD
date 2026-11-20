@@ -70,11 +70,11 @@
 
 从 [Releases](https://github.com/tenngoxars/WeMD/releases/latest) 下载对应平台的安装包：
 
-| 平台                   | 安装包                        |
-| ---------------------- | ----------------------------- |
-| macOS（Apple Silicon） | `WeMD-<版本号>-arm64-mac.zip` |
-| Windows                | `WeMD.Setup.<版本号>.exe`     |
-| Linux                  | `WeMD-<版本号>.AppImage`      |
+| 平台                   | 安装包                                                                   |
+| ---------------------- | ------------------------------------------------------------------------ |
+| macOS（Apple Silicon） | `WeMD_<版本号>_aarch64.dmg`                                              |
+| Windows（x64）         | `WeMD_<版本号>_x64-setup.exe`                                            |
+| Linux（x86_64）        | `WeMD_<版本号>_amd64.deb`（另提供实验性 `WeMD_<版本号>_amd64.AppImage`） |
 
 Intel Mac 暂无安装包，可以使用网页版或从源码构建。
 
@@ -83,7 +83,7 @@ Intel Mac 暂无安装包，可以使用网页版或从源码构建。
 
 - **macOS 提示「应用已损坏」**：在终端执行 `xattr -cr /Applications/WeMD.app`
 - **Windows 提示「未知发布者」**：点击「更多信息」，再点「仍要运行」
-- **Linux 无法运行**：先设置可执行权限 `chmod +x WeMD-<版本号>.AppImage`
+- **Linux 安装与运行**：推荐使用 `sudo apt install ./WeMD_<版本号>_amd64.deb`；使用 AppImage 需先执行 `chmod +x WeMD_<版本号>_amd64.AppImage`
 
 </details>
 
